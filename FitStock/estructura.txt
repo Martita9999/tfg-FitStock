@@ -1,0 +1,36 @@
+proyecto-FitStock/
+├── index.php
+├── config/
+│   └── database.php
+├── controllers/
+│   ├── UsuarioController.php
+│   ├── MaterialController.php
+│   ├── PrestamoController.php
+│   ├── IncidenciaController.php
+│   ├── ProductoController.php
+│   └── AccesoController.php
+├── models/
+│   ├── Usuario.php
+│   ├── Material.php
+│   ├── Prestamo.php
+│   ├── Incidencia.php
+│   ├── Producto.php
+│   └── Acceso.php
+├── views/
+│   ├── usuarios/
+│   │   ├── list.php
+│   │   └── form.php
+│   ├── material/
+│   │   ├── list.php
+│   │   └── form.php
+│   ├── prestamos/   
+│   │   └── list.php
+│   ├── incidencias/
+│   │   └── list.php
+│   └── productos/
+│       └── list.php
+├── public/
+│   └── style.css
+└── routes/
+    └── router.php
+    
