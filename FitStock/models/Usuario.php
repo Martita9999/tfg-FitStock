@@ -1,5 +1,5 @@
 <?php
-    require_once "../config/database.sql";
+    require_once __DIR__ . "/../conexion.php";
 
     class Usuario {
         private $id_usuario;
