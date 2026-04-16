@@ -12,7 +12,7 @@
         require_once $archivoControlador;
         $objeto = new $nombreControlador();
         if (method_exists($objeto, $a)) {
-            $objeto->$a(); // Esto llama al controlador, y el controlador carga la vista
+            $objeto->$a(); 
         }
     } else {
         header("Location: index.php?c=usuario&a=listar");
