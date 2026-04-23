@@ -1,68 +1,87 @@
 <?php
-    session_start();
-    require_once "config/database.php";
+// FitStock/register.php
+session_start();
 
-    $error = "";
-    $success = "";
+/**
+ * 1. Corregimos la ruta de la conexión. 
+ * Usamos conexion.php que está en tu raíz.
+ */
+require_once "conexion.php"; 
 
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+$error = "";
+$success = "";
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    
+    if (!empty($_POST['nombre']) && !empty($_POST['email']) && !empty($_POST['password'])) {
         
-        if (isset($_POST['nombre'], $_POST['email'], $_POST['password'])) {
-            
-            $nombre = trim($_POST['nombre']);
-            $email = trim($_POST['email']);
-            $password = $_POST['password'];
+        $nombre = trim($_POST['nombre']);
+        $email = trim($_POST['email']);
+        $password = $_POST['password'];
 
-           
-            $password_hash = password_hash($password, PASSWORD_DEFAULT);
+        // Ciframos la contraseña para seguridad
+        $password_hash = password_hash($password, PASSWORD_DEFAULT);
 
-            try {
-                $conexion = obtenerConexion();
+        try {
+            /**
+             * 2. Usamos tu método estático Conexion::conectar().
+             */
+            $conexion = Conexion::conectar();
 
-                $sql = "INSERT INTO usuarios (nombre, email, password_hash, rol) VALUES (?, ?, ?, 'cliente')";
-                $stmt = $conexion->prepare($sql);
-                $stmt->execute([$nombre, $email, $password_hash]);
+            // 3. Verificamos que la tabla sea 'usuarios'.
+            $sql = "INSERT INTO usuarios (nombre, email, password_hash, rol) VALUES (?, ?, ?, 'cliente')";
+            $stmt = $conexion->prepare($sql);
+            $stmt->execute([$nombre, $email, $password_hash]);
 
-                $success = "Usuario registrado correctamente";
+            $success = "Usuario registrado correctamente. ¡Ya puedes iniciar sesión!";
 
-            } catch (PDOException $e) {
-                if ($e->getCode() == 23000) { // '23000' registrar un email que ya existe en la tabla usuarios
-                    $error = "El correo ya está registrado";
-                } else {
-                    $error = "Error al registrar el usuario";
-                }
+        } catch (PDOException $e) {
+            // Código 23000 suele ser por email duplicado (Unique Key)
+            if ($e->getCode() == 23000) { 
+                $error = "El correo ya está registrado";
+            } else {
+                $error = "Error en el registro: " . $e->getMessage();
             }
-        } else {
-            $error = "Todos los campos son obligatorios";
         }
+    } else {
+        $error = "Todos los campos son obligatorios";
     }
+}
 ?>
 
-<main>
-     <h2>Registro</h2>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Registro - FitStock</title>
     <link rel="stylesheet" href="public/style.css">
+</head>
+<body>
+<main class="contenedor-registro">
+    <h2>Crear Cuenta</h2>
 
-    <?php 
-        if ($error) {
-            echo "<p style='color:red;'>" . htmlspecialchars($error) . "</p>";
-        }
-        if ($success) {
-            echo "<p style='color:green;'>" . htmlspecialchars($success) . "</p>";
-        }
-    ?>
+    <?php if ($error): ?>
+        <p class="alerta-error" style="color:red;"><?= htmlspecialchars($error) ?></p>
+    <?php endif; ?>
+
+    <?php if ($success): ?>
+        <p class="alerta-exito" style="color:green;"><?= htmlspecialchars($success) ?></p>
+    <?php endif; ?>
 
     <form method="post" action="" class="formulario">
-        <label>Nombre:</label><br>
-        <input type="text" name="nombre" required><br><br>
+        <label>Nombre Completo:</label><br>
+        <input type="text" name="nombre" required placeholder="Ej: Juan Pérez"><br><br>
 
-        <label>Email:</label><br>
-        <input type="email" name="email" required><br><br>
+        <label>Correo Electrónico:</label><br>
+        <input type="email" name="email" required placeholder="email@ejemplo.com"><br><br>
 
         <label>Contraseña:</label><br>
-        <input type="password" name="password" required><br><br>
+        <input type="password" name="password" required placeholder="Mínimo 6 caracteres"><br><br>
 
-        <button type="submit">Registrarse</button><br><br>
+        <button type="submit" class="btn-principal">Registrarse</button>
     </form>
 
-    <p><a href="login.php"> Ya tengo cuenta</a></p>
+    <p><a href="index.php?c=usuario&a=login">¿Ya tienes cuenta? Inicia sesión aquí</a></p>
 </main>
+</body>
+</html>
