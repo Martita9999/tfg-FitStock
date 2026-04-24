@@ -1,4 +1,5 @@
 <?php
+// controllers/UsuarioController.php
 require_once "models/Usuario.php";
 
 class UsuarioController {
@@ -12,23 +13,17 @@ class UsuarioController {
         require "views/usuarios/form.php";
     }
 
-    // --- NUEVO MÉTODO PARA PROCESAR EL FORMULARIO ---
     public function guardar() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // Recogemos los datos del formulario (names del input)
             $nombre   = $_POST['nombre'];
             $email    = $_POST['email'];
             $password = $_POST['password'];
-            $rol      = $_POST['rol'];
+            $rol      = $_POST['rol']; // Captura el rol del select
 
-            // Llamamos al método crear del modelo
-            $exito = Usuario::crear($nombre, $email, $password, $rol);
-
-            if ($exito) {
-                // Si sale bien, volvemos al listado
+            if (Usuario::crear($nombre, $email, $password, $rol)) {
                 header("Location: index.php?c=Usuario&a=listar");
             } else {
-                echo "Hubo un error al guardar el usuario.";
+                echo "Error al guardar el usuario.";
             }
         }
     }
