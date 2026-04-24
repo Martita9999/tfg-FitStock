@@ -1,0 +1,57 @@
+<div class="dashboard-wrapper">
+  
+  <app-admin-sidebar></app-admin-sidebar>
+
+  <main class="main-content">
+    
+    <header class="top-bar">
+      <div class="header-info">
+        <h1>Panel de Inventario</h1>
+        <p>Gestiona el stock de material</p>
+      </div>
+      <button class="btn-add">
+        <span class="icon">+</span> Añadir Nuevo Producto
+      </button>
+    </header>
+
+    <section class="stats-strip">
+      <div class="stat-item"><strong>Total:</strong> {{ listaProductos.length }} artículos</div>
+      <div class="stat-item"><strong>Estado:</strong> Sistema Online</div>
+    </section>
+
+    <div class="grid-productos">
+      
+      <div class="card" *ngFor="let item of listaProductos">
+        <div class="card-header">
+          <span class="category-tag">{{ item.categoria }}</span>
+          <div class="icon-box">📦</div>
+        </div>
+        
+        <div class="card-body">
+          <h3>{{ item.nombre }}</h3>
+          <div class="stock-info">
+            <span class="label">Disponibles:</span>
+            <span class="value" [style.color]="item.stockDisponible > 0 ? '#10b981' : '#ef4444'">
+              {{ item.stockDisponible }}
+            </span>
+          </div>
+        </div>
+
+        <div class="card-actions">
+          <button class="btn-edit">
+            <i>✏️</i> Editar
+          </button>
+          <button class="btn-delete">
+            <i>🗑️</i> Borrar
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <div *ngIf="listaProductos.length === 0" class="empty-state">
+      <p>No hay productos en stock. Pulsa el botón para añadir uno.</p>
+    </div>
+
+  </main>
+</div>
