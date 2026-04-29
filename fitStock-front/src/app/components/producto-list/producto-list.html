@@ -1,1 +1,51 @@
-<p>producto-list works!</p>
+<!-- Vista de listado de productos con estadísticas -->
+<div class="dashboard-wrapper">
+  <app-admin-sidebar></app-admin-sidebar>
+
+  <main class="main-content">
+    <!-- Cabecera de la sección -->
+    <header class="top-bar">
+      <div class="header-info">
+        <h1>Productos</h1>
+        <p>Listado completo de material</p>
+      </div>
+    </header>
+
+    <!-- Estadísticas rápidas del inventario -->
+    <section class="stats-strip">
+      <div class="stat-item"><strong>Total:</strong> {{ listaProductos.length }} artículos</div>
+      <div class="stat-item"><strong>En stock:</strong> {{ listaProductos.filter(p => p.stockDisponible > 0).length }}</div>
+      <div class="stat-item"><strong>Sin stock:</strong> {{ listaProductos.filter(p => p.stockDisponible === 0).length }}</div>
+    </section>
+
+    <!-- Tarjetas de productos en cuadrícula -->
+    <div class="grid-productos">
+      <div class="card" *ngFor="let item of listaProductos">
+        <div class="card-header">
+          <span class="category-tag">{{ item.categoria }}</span>
+          <div class="icon-box">📦</div>
+        </div>
+        <div class="card-body">
+          <h3>{{ item.nombre }}</h3>
+          <p class="detail" *ngIf="item.resistencia">Resistencia: {{ item.resistencia }}</p>
+          <p class="detail" *ngIf="item.tamano">Tamaño: {{ item.tamano }}</p>
+          <div class="stock-info">
+            <span class="label">Disponibles:</span>
+            <span class="value" [style.color]="item.stockDisponible > 0 ? '#10b981' : '#ef4444'">
+              {{ item.stockDisponible }}
+            </span>
+          </div>
+        </div>
+        <div class="card-actions">
+          <button class="btn-edit"><i>✏️</i> Editar</button>
+          <button class="btn-delete"><i>🗑️</i> Borrar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mensaje cuando no hay productos -->
+    <div *ngIf="listaProductos.length === 0" class="empty-state">
+      <p>No hay productos registrados.</p>
+    </div>
+  </main>
+</div>

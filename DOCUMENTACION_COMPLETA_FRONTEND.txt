@@ -1,0 +1,1015 @@
+================================================================================
+              DOCUMENTACION COMPLETA - FitStock Frontend
+                    Explicacion linea a linea
+================================================================================
+
+Fecha: Abril 2026
+Framework: Angular 21.2.0 (standalone components)
+Lenguaje: TypeScript 5.9.2
+Archivos totales: 33 (.ts + .html + .css)
+
+================================================================================
+1. ARCHIVOS DE CONFIGURACION
+================================================================================
+
+----------------------------------------
+1.1 package.json
+----------------------------------------
+Define las dependencias y scripts del proyecto:
+
+name: "fit-stock-front" - Nombre del paquete npm
+version: "0.0.0" - Version inicial del proyecto
+
+scripts:
+  "ng"       -> Comando ng de Angular CLI
+  "start"    -> Ejecuta ng serve (servidor de desarrollo)
+  "build"    -> Compila para produccion
+  "watch"    -> Compila en modo desarrollo y vigila cambios
+  "test"     -> Ejecuta tests unitarios con Vitest
+  "serve:ssr"-> Ejecuta servidor SSR (Express)
+
+dependencies (lo que necesita la app en runtime):
+  @angular/*       -> Modulos de Angular 21 (core, router, forms, etc.)
+  rxjs             -> Libreria de programacion reactiva (Observables)
+  express          -> Servidor Node.js para SSR
+  zone.js          -> Polyfill para deteccion de cambios en Angular
+
+devDependencies (herramientas de desarrollo, no van al bundle final):
+  @angular/build   -> Builder basado en Vite (compilacion rapida)
+  @angular/cli     -> Herramienta de linea de comandos
+  typescript       -> Compilador TS -> JS
+  vitest           -> Framework de tests
+  jsdom            -> Simula un navegador para los tests
+  prettier         -> Formateador de codigo
+
+----------------------------------------
+1.2 angular.json
+----------------------------------------
+Configuracion principal de Angular CLI. Define:
+
+projectType: "application" - Es una app SPA, no una libreria
+sourceRoot: "src" - Donde esta el codigo fuente
+prefix: "app" - Prefijo de selectores HTML
+
+architect.build:
+  browser: "src/main.ts" - Punto de entrada
+  styles: ["src/styles.css"] - Estilos globales
+  polyfills: ["zone.js"] - Polyfills necesarios
+  
+  configurations.production:
+    budgets - Limites de tamaño (max 500kB inicial, 1MB error)
+    outputHashing: "all" - Anade hash a los archivos para cache
+
+architect.serve:
+  defaultConfiguration: "development" - Usa dev por defecto
+
+----------------------------------------
+1.3 src/main.ts
+----------------------------------------
+PUNTO DE ENTRADA de la aplicacion:
+
+import 'zone.js' - Carga el polyfill de zone.js (deteccion de cambios)
+bootstrapApplication(App, appConfig) - Arranca Angular con:
+  - Componente raiz: App
+  - Configuracion: appConfig (rutas, HTTP, etc.)
+.catch() - Captura errores de arranque
+
+----------------------------------------
+1.4 src/app/app.config.ts
+----------------------------------------
+Configuracion global de la app:
+
+provideZoneChangeDetection({ eventCoalescing: true })
+  -> Optimiza la deteccion de cambios agrupando eventos
+
+provideRouter(routes)
+  -> Registra el enrutador con las rutas definidas en app.routes.ts
+
+provideHttpClient()
+  -> Habilita HttpClient para hacer peticiones HTTP al backend
+
+----------------------------------------
+1.5 src/app/app.ts
+----------------------------------------
+Componente raiz de la aplicacion:
+
+selector: 'app-root' - Se usa como <app-root> en index.html
+imports: [RouterOutlet] - Importa el outlet donde se renderizan las rutas
+title = signal('fitStock-front') - Signal con el titulo (no se usa en template)
+
+----------------------------------------
+1.6 src/app/app.html
+----------------------------------------
+<router-outlet></router-outlet>
+  -> Placeholder donde Angular renderiza el componente de la ruta activa
+
+----------------------------------------
+1.7 src/app/app.config.server.ts
+----------------------------------------
+Configuracion para Server-Side Rendering (SSR):
+
+provideServerRendering(withRoutes(serverRoutes))
+  -> Configura Express para renderizar las rutas en el servidor
+
+mergeApplicationConfig(appConfig, serverConfig)
+  -> Fusiona la config del browser con la del servidor
+
+----------------------------------------
+1.8 src/app/app.routes.ts
+----------------------------------------
+Definicion de todas las rutas de la app:
+
+import { Routes } from '@angular/router' - Tipo para definir rutas
+Importa todos los componentes de las paginas
+
+Rutas definidas:
+  '/admin/dashboard'   -> AdminDashboardSectionComponent (vista principal)
+  '/admin/inventario'  -> AdminDashboardComponent (grid de productos)
+  '/admin/productos'   -> ProductoListComponent (listado productos)
+  '/admin/prestamos'   -> PrestamoListComponent (tabla de prestamos)
+  '/admin/incidencias' -> IncidenciaListComponent (cards de incidencias)
+  '/admin/usuarios'    -> UsuarioListComponent (tabla de usuarios)
+  ''                   -> Redirige a '/admin/dashboard'
+  'admin'              -> Redirige a '/admin/dashboard'
+
+================================================================================
+2. INTERFACES DE DATOS
+================================================================================
+
+----------------------------------------
+2.1 src/app/interfaces/app.interfaces.ts
+----------------------------------------
+Define los modelos de datos que usa toda la app:
+
+interface Producto:
+  id: number              -> Identificador unico
+  nombre: string          -> Nombre del material
+  categoria: string       -> Categoria (ej: "Accesorios")
+  resistencia?: string    -> OPCIONAL: resistencia de bandas (media/alta)
+  tamano?: string         -> OPCIONAL: tamaño de esterillas/pelotas
+  stockDisponible: number -> Unidades disponibles en almacen
+  imagenUrl?: string      -> OPCIONAL: URL de imagen (futuro)
+
+interface Prestamo:
+  id: number              -> Identificador unico
+  productoId: number      -> FK al producto prestado
+  productoNombre: string  -> Nombre del producto (para mostrar)
+  usuarioNombre: string   -> Nombre de quien presta
+  usuarioTelefono: string -> Telefono de contacto
+  cantidad: number        -> Cantidad de unidades
+  diasPrestamo: number    -> Dias de duracion del prestamo
+  observaciones?: string  -> OPCIONAL: notas adicionales
+  estado: 'Pendiente' | 'Entregado' | 'Devuelto' -> Estado literal
+
+interface Incidencia:
+  id: number              -> Identificador unico
+  area: string            -> Zona del gimnasio
+  maquinaEquipo?: string  -> OPCIONAL: maquina especifica
+  titulo: string          -> Resumen del problema
+  descripcion: string     -> Descripcion detallada
+  urgencia: 'Baja' | 'Moderada' | 'Alta' | 'Crítica' -> Nivel literal
+  usuarioNombre: string   -> Quien reporta
+  estado: 'Abierta' | 'En Proceso' | 'Resuelta' -> Estado literal
+
+================================================================================
+3. SERVICIOS
+================================================================================
+
+----------------------------------------
+3.1 src/app/services/mock-data.service.ts
+----------------------------------------
+Servicio que SIMULA datos de la API para desarrollo:
+
+@Injectable({ providedIn: 'root' })
+  -> Se registra como singleton global, disponible en toda la app
+
+Datos mock:
+  productosMock: 4 productos (bandas, esterilla, pelota)
+  prestamosMock: 1 prestamo (Juan Perez - banda elastica)
+  incidenciasMock: 1 incidencia (Ana Garcia - cinta de cardio)
+
+Metodos:
+  getProductos(): Observable<Producto[]>
+    -> Usa RxJS `of()` para convertir el array en Observable
+    -> Simula una llamada HTTP GET /productos
+
+  getPrestamos(): Observable<Prestamo[]>
+    -> Idem para prestamos
+
+  getIncidencias(): Observable<Incidencia[]>
+    -> Idem para incidencias
+
+NOTA: Cuando se conecte al backend real, solo hay que cambiar
+el interior de estos metodos por `this.http.get()`
+
+----------------------------------------
+3.2 src/app/services/usuario.ts
+----------------------------------------
+Servicio para GESTION DE USUARIOS conectado al backend real:
+
+@Injectable({ providedIn: 'root' })
+  -> Singleton global
+
+private API_URL = 'http://localhost/proyecto-fitStock/index.php'
+  -> URL base del backend PHP
+
+getUsuarios()
+  -> this.http.get(`${this.API_URL}/usuarios`)
+  -> Hace peticion GET real al endpoint del backend
+
+NOTA: Este es el unico servicio que conecta con el backend.
+Los demas usan MockDataService para desarrollo.
+
+================================================================================
+4. COMPONENTE: ADMIN-DASHBOARD-SECTION (Dashboard principal)
+================================================================================
+
+Carpeta: src/app/components/admin-dashboard-section/
+
+----------------------------------------
+4.1 admin-dashboard-section.ts
+----------------------------------------
+Dashboard principal con estadisticas generales del sistema:
+
+Imports:
+  Component, OnInit -> Decorador e interface de ciclo de vida
+  CommonModule      -> Directivas como *ngFor, *ngIf
+  AdminSidebarComponent -> Barra lateral compartida
+  MockDataService   -> Servicio de datos mock
+  Producto, Prestamo, Incidencia -> Interfaces
+
+Propiedades:
+  listaProductos: Producto[] = []     -> Array vacio, se llena en ngOnInit
+  listaPrestamos: Prestamo[] = []     -> Idem
+  listaIncidencias: Incidencia[] = [] -> Idem
+
+constructor(private mockService: MockDataService)
+  -> Inyecta el servicio de datos mock
+
+ngOnInit(): void
+  -> Se ejecuta al crear el componente
+  -> Lanza 3 subscripciones paralelas para cargar los 3 tipos de datos
+  -> Al recibir datos, los asigna a las propiedades
+
+getCategoriasUnicas(): number
+  -> Mapea productos a sus categorias: p.categoria
+  -> Crea un Set (elimina duplicados automaticamente)
+  -> Devuelve la longitud del Set
+
+getSociosUnicos(): number
+  -> Mapea prestamos a nombres de usuario: p.usuarioNombre
+  -> Crea un Set para eliminar duplicados
+  -> Devuelve el tamaño o 0 si no hay datos
+
+getStockTotal(): number
+  -> Usa reduce() para sumar todos los stockDisponible
+  -> Acumula: (sum, p) => sum + p.stockDisponible, empezando en 0
+
+----------------------------------------
+4.2 admin-dashboard-section.html
+----------------------------------------
+Estructura visual del dashboard:
+
+dashboard-wrapper
+  -> Contenedor flex con sidebar + contenido
+
+admin-sidebar
+  -> Componente de barra lateral de navegacion
+
+main.main-content
+  -> Area principal de contenido
+
+header.top-bar
+  -> Cabecera con titulo "Dashboard" y subtitulo
+
+section.stats-grid
+  -> Cuadricula de 6 tarjetas de estadisticas (3x2):
+  
+  stat-productos: muestra listaProductos.length
+  stock-card: llama a getStockTotal() (suma de stock)
+  stat-prestamos: muestra listaPrestamos.length
+  stat-incidencias: muestra listaIncidencias.length
+  stat-socios: llama a getSociosUnicos() (usuarios unicos)
+  stat-categorias: llama a getCategoriasUnicas() (categorias unicas)
+
+panels-row
+  -> Fila de 3 paneles con listados:
+
+  panel-productos (panel-inventario):
+    -> *ngFor sobre listaProductos
+    -> Muestra nombre y stock con color condicional:
+       naranja si hay stock, rojo si no hay
+
+  panel-prestamos:
+    -> *ngFor sobre listaPrestamos
+    -> Muestra nombre del producto y badge de estado
+
+  panel-incidencias:
+    -> *ngFor sobre listaIncidencias
+    -> Muestra titulo y badge de urgencia
+
+----------------------------------------
+4.3 admin-dashboard-section.css
+----------------------------------------
+Estilos del dashboard principal:
+
+dashboard-wrapper
+  -> flex, fondo gradiente naranja->azul (#fff7ed -> #eff6ff)
+
+main-content
+  -> flex:1, margin-left:250px (espacio para sidebar)
+  -> Mismo gradiente de fondo
+
+top-bar
+  -> flex con justify-content: space-between
+
+stats-grid
+  -> grid de 3 columnas, gap 18px
+
+stat-card
+  -> Fondo blanco, border-radius 14px, padding 22px
+  -> Border-left de 4px con color segun el tipo
+  -> Hover: translateY(-3px) + sombra mayor
+
+Colores de border-left por tipo:
+  stat-productos: #f97316 (naranja)
+  stock-card: #10b981 (verde)
+  stat-prestamos: #3b82f6 (azul)
+  stat-incidencias: #f97316 (naranja)
+  stat-socios: #3b82f6 (azul)
+  stat-categorias: #f97316 (naranja)
+
+Fondos de iconos por tipo:
+  productos/incidencias/categorias -> gradiente naranja (#ffedd5 -> #fed7aa)
+  stock -> gradiente verde (#d1fae5 -> #a7f3d0)
+  prestamos/socios -> gradiente azul (#dbeafe -> #bfdbfe)
+
+panels-row
+  -> grid de 3 columnas, gap 20px
+
+panel
+  -> Fondo blanco, border-radius 16px, overflow:hidden
+
+panel h3
+  -> border-bottom de 2px con color segun panel:
+     productos: #f97316, prestamos: #3b82f6, incidencias: #f97316
+
+panel-body
+  -> max-height:300px, overflow-y:auto (scroll interno)
+
+item-row
+  -> flex con justify-content:space-between
+  -> border-bottom: 1px solid #f1f5f9
+
+badge-prestamo: fondo azul, texto azul
+badge-incidencia: fondo naranja, texto naranja
+
+================================================================================
+5. COMPONENTE: ADMIN-DASHBOARD (Inventario)
+================================================================================
+
+Carpeta: src/app/components/admin-dashboard/
+
+----------------------------------------
+5.1 admin-dashboard.ts
+----------------------------------------
+Vista de inventario con grid de productos:
+
+Propiedad:
+  listaProductos: Producto[] = [] -> Se llena desde el servicio
+
+ngOnInit():
+  -> Subscribe a mockService.getProductos()
+  -> Asigna los datos recibidos a listaProductos
+
+----------------------------------------
+5.2 admin-dashboard.html
+----------------------------------------
+Estructura:
+
+header.top-bar
+  -> Titulo "Inventario", subtitulo "Listado completo de material"
+  -> Boton "Añadir Producto" (sin funcion implementada)
+
+section.stats-strip
+  -> 3 estadisticas en linea:
+     Total articulos
+     En stock (filtra p.stockDisponible > 0)
+     Sin stock (filtra p.stockDisponible === 0)
+
+grid-productos
+  -> *ngFor sobre listaProductos
+  -> Cada card muestra:
+     - Tag de categoria
+     - Icono de caja
+     - Nombre del producto
+     - Stock con color condicional (naranja/rojo)
+     - Botones Editar y Borrar (sin funcion)
+
+empty-state
+  -> *ngIf cuando listaProductos.length === 0
+
+----------------------------------------
+5.3 admin-dashboard.css
+----------------------------------------
+btn-add
+  -> Gradiente naranja->azul, sombra, hover con elevacion
+
+stats-strip
+  -> flex con gap 15px
+
+stat-item
+  -> Fondo blanco, border-radius 20px (forma de pill)
+  -> border-left 3px naranja
+
+grid-productos
+  -> grid responsive: auto-fill, minmax 280px
+
+card
+  -> Fondo blanco, border-radius 16px
+  -> Hover: elevacion + sombra azul
+
+category-tag
+  -> Fondo gradiente azul (#dbeafe -> #bfdbfe)
+  -> Texto azul #3b82f6
+
+stock-info
+  -> Fondo gradiente naranja->azul (#fff7ed -> #eff6ff)
+
+btn-edit:hover -> fondo azul, borde azul
+btn-delete:hover -> fondo naranja, borde naranja
+
+================================================================================
+6. COMPONENTE: ADMIN-SIDEBAR (Barra lateral)
+================================================================================
+
+Carpeta: src/app/components/admin-sidebar/
+
+----------------------------------------
+6.1 admin-sidebar.component.ts
+----------------------------------------
+Componente de navegacion lateral:
+
+Imports:
+  CommonModule  -> Para directivas en el template
+  RouterModule  -> Para routerLink y routerLinkActive
+
+No tiene logica TS, solo el decorador @Component
+
+----------------------------------------
+6.2 admin-sidebar.html
+----------------------------------------
+Estructura:
+
+aside.sidebar
+  -> Contenedor lateral fijo
+
+div.logo
+  -> h2 "FitStock" + span "Gestion de Material"
+
+nav > ul
+  -> Lista de 5 items de navegacion:
+
+  li con routerLink="/admin/dashboard"
+     + routerLinkActive="active"
+     + [routerLinkActiveOptions]="{exact: true}"
+     -> El "exact: true" asegura que solo se active cuando la URL
+        coincide exactamente con '/admin/dashboard', no cuando es
+        '/admin/dashboard/...'
+
+  li con routerLink="/admin/inventario" + routerLinkActive="active"
+  li con routerLink="/admin/prestamos" + routerLinkActive="active"
+  li con routerLink="/admin/incidencias" + routerLinkActive="active"
+  li con routerLink="/admin/usuarios" + routerLinkActive="active"
+
+----------------------------------------
+6.3 admin-sidebar.css
+----------------------------------------
+.sidebar
+  -> width: 250px, height: 100vh (pantalla completa)
+  -> position: fixed (se queda fijo al hacer scroll)
+  -> background: gradiente vertical #f97316 -> #3b82f6
+  -> box-shadow en el lado derecho
+
+.logo
+  -> Centrado, border-bottom con transparencia
+
+.sidebar li
+  -> padding 12px 16px, border-radius 10px
+  -> Hover: fondo blanco con 15% opacidad
+
+.sidebar li.active
+  -> Fondo blanco con 25% opacidad
+  -> font-weight: 600 (negrita)
+
+================================================================================
+7. COMPONENTE: PRODUCTO-LIST
+================================================================================
+
+Carpeta: src/app/components/producto-list/
+
+----------------------------------------
+7.1 producto-list.ts
+----------------------------------------
+Listado detallado de productos:
+
+Propiedades:
+  listaProductos: Producto[] = [] -> Se llena desde MockDataService
+
+ngOnInit():
+  -> Subscribe a mockService.getProductos()
+
+getDetalleExtra(producto: Producto): string
+  -> Devuelve info adicional segun lo que tenga el producto:
+     Si tiene resistencia -> "Resistencia: X"
+     Si tiene tamano -> "Tamaño: X"
+     Si no tiene ninguno -> "" (cadena vacia)
+
+----------------------------------------
+7.2 producto-list.html
+----------------------------------------
+Estructura similar a admin-dashboard pero con detalle extra:
+
+stats-strip
+  -> Total, En stock, Sin stock
+
+grid-productos
+  -> Cards con:
+     - Categoria
+     - Nombre
+     - p class="detail" *ngIf="item.resistencia" -> Muestra resistencia
+     - p class="detail" *ngIf="item.tamano" -> Muestra tamaño
+     - Stock con color (verde si hay, rojo si no)
+     - Botones Editar y Borrar
+
+----------------------------------------
+7.3 producto-list.css
+----------------------------------------
+Similar a admin-dashboard.css con diferencias:
+
+.detail
+  -> margin 0 0 5px 0, color #64748b, font-size 0.9rem
+
+================================================================================
+8. COMPONENTE: PRESTAMO-LIST
+================================================================================
+
+Carpeta: src/app/components/prestamo-list/
+
+----------------------------------------
+8.1 prestamo-list.ts
+----------------------------------------
+Tabla de prestamos con gestion de modal:
+
+Propiedades:
+  listaPrestamos: Prestamo[] = []
+  modalAbierto = false -> Controla la visibilidad del modal
+
+ngOnInit():
+  -> Subscribe a mockService.getPrestamos()
+
+abrirModal():
+  -> Pone modalAbierto = true
+
+getEstadoClass(estado: string): string
+  -> Mapea el estado del prestamo a clase CSS:
+     'Pendiente'  -> 'status-pendiente' (fondo naranja)
+     'Entregado'  -> 'status-entregado' (fondo azul)
+     'Devuelto'   -> 'status-devuelto' (fondo verde)
+
+----------------------------------------
+8.2 prestamo-list.html
+----------------------------------------
+Estructura:
+
+header.top-bar
+  -> Boton "Nuevo Prestamo" con (click)="abrirModal()"
+
+stats-strip
+  -> Total prestamos
+  -> Pendientes (filtra p.estado === 'Pendiente')
+  -> Entregados (filtra p.estado === 'Entregado')
+
+tabla-container
+  -> table.tabla *ngIf="listaPrestamos.length > 0"
+  -> Cabecera: Producto, Usuario, Telefono, Cantidad, Dias, Estado, Acciones
+  
+  -> Cada fila (*ngFor):
+     - productoNombre
+     - usuarioNombre
+     - usuarioTelefono
+     - cantidad
+     - diasPrestamo
+     - span.status-badge con [class]="getEstadoClass(p.estado)"
+     - Botones: Ver detalle, Editar
+
+app-prestamo-form-modal *ngIf="modalAbierto"
+  -> Modal que aparece cuando modalAbierto es true
+  -> (cerrar)="modalAbierto = false" lo cierra al recibir evento
+
+----------------------------------------
+8.3 prestamo-list.css
+----------------------------------------
+tabla-container
+  -> border-top: 3px solid #3b82f6 (franja azul arriba)
+
+tabla
+  -> width:100%, border-collapse:collapse
+
+tabla th
+  -> Texto en mayusculas, color #64748b, fondo #f8fafc
+
+status-badge
+  -> Forma de pill (border-radius: 9999px)
+
+Colores por estado:
+  status-pendiente: fondo #ffedd5, texto #ea580c (naranja)
+  status-entregado: fondo #dbeafe, texto #3b82f6 (azul)
+  status-devuelto: fondo #d1fae5, texto #10b981 (verde)
+
+================================================================================
+9. COMPONENTE: PRESTAMO-FORM-MODAL
+================================================================================
+
+Carpeta: src/app/components/prestamo-form-modal/
+
+----------------------------------------
+9.1 prestamo-form-modal.ts
+----------------------------------------
+Modal con formulario para crear prestamo:
+
+@Output() cerrar = new EventEmitter<void>()
+  -> Evento que emite al componente padre para cerrarse
+
+prestamo = { ... }
+  -> Modelo del formulario con valores por defecto:
+     productoId: ''
+     usuarioNombre: ''
+     usuarioTelefono: ''
+     cantidad: 1
+     diasPrestamo: 1
+     observaciones: ''
+
+cerrarModal()
+  -> Emite el evento cerrar para notificar al padre
+
+----------------------------------------
+9.2 prestamo-form-modal.html
+----------------------------------------
+Estructura del modal:
+
+div.modal-overlay (click)="cerrarModal()"
+  -> Capa oscura de fondo. Click fuera cierra el modal
+
+div.modal-content (click)="$event.stopPropagation()"
+  -> Contenido del modal. stopPropagation() evita que el click
+     se propague al overlay (no se cierra al hacer click dentro)
+
+modal-header
+  -> h2 "Nuevo Prestamo"
+  -> Boton X con (click)="cerrarModal()"
+
+form.modal-form
+  -> Grupos de campos con [(ngModel)] para two-way binding:
+  
+  select productoId (required)
+    -> Opciones vacias por ahora (se llenarian con productos del backend)
+  
+  input usuarioNombre (required)
+  input usuarioTelefono (required)
+  
+  form-row (dos campos en horizontal):
+    -> input cantidad (min=1, required)
+    -> input diasPrestamo (min=1, required)
+  
+  textarea observaciones (3 filas)
+  
+  modal-actions:
+    -> Boton Cancelar (cierra el modal)
+    -> Boton Guardar Prestamo (submit)
+
+----------------------------------------
+9.3 prestamo-form-modal.css
+----------------------------------------
+modal-overlay
+  -> position:fixed, top:0, left:0, width:100%, height:100%
+  -> background: rgba(0,0,0,0.5) (semi-transparente)
+  -> z-index:1000 (por encima de todo)
+  -> Centra el contenido con flexbox
+
+modal-content
+  -> Fondo blanco, border-radius 16px, padding 30px
+  -> max-width:500px, width:90% (responsive)
+
+modal-form
+  -> display:flex, flex-direction:column, gap:18px
+
+form-group
+  -> display:flex, flex-direction:column, gap:6px
+
+Inputs/select/textarea:
+  -> padding 10px 14px, border 1px #e2e8f0
+  -> Focus: border azul + sombra azul
+
+form-row
+  -> grid de 2 columnas
+
+btn-submit
+  -> Gradiente naranja->azul
+  -> Hover: gradiente mas oscuro
+
+btn-cancel
+  -> Fondo blanco, borde gris
+  -> Hover: fondo #f1f5f9
+
+================================================================================
+10. COMPONENTE: INCIDENCIA-LIST
+================================================================================
+
+Carpeta: src/app/components/incidencia-list/
+
+----------------------------------------
+10.1 incidencia-list.ts
+----------------------------------------
+Listado de incidencias con badges de urgencia y estado:
+
+Propiedades:
+  listaIncidencias: Incidencia[] = []
+  modalAbierto = false
+
+ngOnInit():
+  -> Subscribe a mockService.getIncidencias()
+
+abrirModal():
+  -> Pone modalAbierto = true
+
+getUrgenciaClass(urgencia: string): string
+  -> Mapea urgencia a clase CSS:
+     'Baja'     -> 'urg-baja' (verde)
+     'Moderada' -> 'urg-moderada' (naranja)
+     'Alta'     -> 'urg-alta' (naranja claro)
+     'Critica'  -> 'urg-critica' (rojo)
+
+getEstadoClass(estado: string): string
+  -> Mapea estado a clase CSS:
+     'Abierta'    -> 'est-abierta' (rojo)
+     'En Proceso' -> 'est-proceso' (azul)
+     'Resuelta'   -> 'est-resuelta' (verde)
+
+----------------------------------------
+10.2 incidencia-list.html
+----------------------------------------
+Estructura:
+
+header.top-bar
+  -> Boton "Nueva Incidencia" con (click)="abrirModal()"
+
+stats-strip
+  -> Total incidencias
+  -> Abiertas (filtra i.estado === 'Abierta')
+  -> En proceso (filtra i.estado === 'En Proceso')
+
+lista-incidencias
+  -> Lista vertical de cards (*ngFor):
+
+  card-incidencia:
+    -> card-header:
+       - area-tag (badge de area)
+       - maquina (*ngIf="i.maquinaEquipo")
+       - urg-badge con [class]="getUrgenciaClass(i.urgencia)"
+       - estado-badge con [class]="getEstadoClass(i.estado)"
+
+    -> card-body:
+       - h3 titulo
+       - p descripcion
+       - div.meta: usuarioNombre con emoji
+
+    -> card-actions:
+       - Boton Editar
+       - Boton Cerrar (con check)
+
+----------------------------------------
+10.3 incidencia-list.css
+----------------------------------------
+lista-incidencias
+  -> flex-direction:column (vertical, no grid)
+
+card-incidencia
+  -> border-left: 4px solid #f97316 (franja naranja)
+
+Colores de urgencia:
+  urg-baja: fondo #d1fae5, texto #10b981 (verde)
+  urg-moderada: fondo #ffedd5, texto #ea580c (naranja)
+  urg-alta: fondo #fed7aa, texto #f97316 (naranja claro)
+  urg-critica: fondo #fecaca, texto #dc2626 (rojo)
+
+Colores de estado:
+  est-abierta: fondo #fee2e2, texto #dc2626 (rojo)
+  est-proceso: fondo #dbeafe, texto #3b82f6 (azul)
+  est-resuelta: fondo #d1fae5, texto #10b981 (verde)
+
+================================================================================
+11. COMPONENTE: INCIDENCIA-FORM-MODAL
+================================================================================
+
+Carpeta: src/app/components/incidencia-form-modal/
+
+----------------------------------------
+11.1 incidencia-form-modal.ts
+----------------------------------------
+Modal con formulario para reportar incidencia:
+
+@Output() cerrar = new EventEmitter<void>()
+
+incidencia = { ... }
+  -> Modelo del formulario con valores por defecto:
+     area: ''
+     maquinaEquipo: ''
+     titulo: ''
+     descripcion: ''
+     urgencia: 'Moderada' (valor por defecto)
+     usuarioNombre: ''
+
+cerrarModal()
+  -> Emite evento cerrar
+
+----------------------------------------
+11.2 incidencia-form-modal.html
+----------------------------------------
+Estructura:
+
+form.modal-form:
+  -> form-row:
+     - input area (placeholder: "Ej: Zona de Cardio")
+     - input maquinaEquipo (placeholder: "Ej: Cinta #3")
+  
+  -> input titulo (placeholder: "Resumen del problema")
+  
+  -> textarea descripcion (4 filas)
+  
+  -> form-row:
+     - select urgencia (4 opciones: Baja, Moderada, Alta, Critica)
+     - input usuarioNombre
+
+  -> modal-actions:
+     - Cancelar
+     - Reportar Incidencia
+
+----------------------------------------
+11.3 incidencia-form-modal.css
+----------------------------------------
+Identico a prestamo-form-modal.css (comparten estructura de modal)
+
+================================================================================
+12. COMPONENTE: USUARIO-LIST
+================================================================================
+
+Carpeta: src/app/components/usuario-list/
+
+----------------------------------------
+12.1 usuario-list.ts
+----------------------------------------
+Listado de usuarios conectado al backend real:
+
+Importa UsuarioService (NO MockDataService)
+
+Propiedades:
+  listaUsuarios: any[] = [] -> Array generico (sin interfaz definida)
+
+ngOnInit():
+  -> this.usuarioService.getUsuarios().subscribe((data: any) => {
+       this.listaUsuarios = Array.isArray(data) ? data : [];
+     });
+  -> Proteccion: si la respuesta no es un array, usa array vacio
+  -> Esto evita errores si el backend devuelve un objeto o null
+
+----------------------------------------
+12.2 usuario-list.html
+----------------------------------------
+Estructura:
+
+header.top-bar
+  -> Titulo "Usuarios", sin boton de accion
+
+stats-strip
+  -> Solo una estadistica: Total usuarios
+
+tabla-container:
+  -> Tabla con columnas: ID, Nombre, Email, Rol, Acciones
+  
+  -> Cada fila:
+     - u.id
+     - u.nombre
+     - u.email
+     - u.rol || 'usuario' (si no tiene rol, muestra 'usuario')
+     - Botones: Editar, Eliminar
+
+----------------------------------------
+12.3 usuario-list.css
+----------------------------------------
+Similar a prestamo-list.css:
+
+tabla-container
+  -> border-top: 3px solid #f97316 (franja naranja)
+
+btn-edit:hover -> fondo azul
+btn-delete:hover -> fondo naranja
+
+================================================================================
+13. SISTEMA DE COLORES - REFERENCIA RAPIDA
+================================================================================
+
+| Variable       | Valor    | Uso                                    |
+|----------------|----------|----------------------------------------|
+| Naranja        | #f97316  | Botones, bordes, badges, stock         |
+| Naranja oscuro | #ea580c  | Hover botones, urgencia moderada       |
+| Azul           | #3b82f6  | Botones, tags, badges, estados         |
+| Azul claro     | #dbeafe  | Fondos de tags y badges                |
+| Fondo start    | #fff7ed  | Gradiente de fondo (inicio)            |
+| Fondo end      | #eff6ff  | Gradiente de fondo (fin)               |
+| Verde          | #10b981  | Stock positivo, resuelto, baja urgencia|
+| Rojo           | #ef4444  | Sin stock, critico, abierta            |
+| Texto principal| #1e293b  | Titulos, valores importantes           |
+| Texto secundario| #64748b | Subtitulos, etiquetas, placeholders    |
+| Bordes         | #e2e8f0  | Separadores, bordes de inputs          |
+
+================================================================================
+14. PATRONES DE CODIGO RECURRENTES
+================================================================================
+
+14.1 Componentes standalone
+   -> Todos usan standalone: true
+   -> Importan explicitamente lo que necesitan en imports: []
+   -> No usan NgModules
+
+14.2 Carga de datos
+   -> Se inyecta el servicio en el constructor
+   -> En ngOnInit() se suscribe al Observable
+   -> Se asigna el resultado a una propiedad del componente
+   -> El template usa *ngFor para iterar
+
+14.3 Modales
+   -> Propiedad booleana `modalAbierto` controla visibilidad
+   -> @Output() cerrar para emitir evento al padre
+   -> Click en overlay cierra, click en contenido no
+   -> stopPropagation() para evitar cerrar al click dentro
+
+14.4 Estilos compartidos
+   -> dashboard-wrapper, main-content, top-bar se repiten
+   -> btn-add, stats-strip, stat-item son comunes
+   -> Cada componente mantiene su propio CSS
+
+14.5 Condicionales en template
+   -> *ngIf="array.length === 0" para estado vacio
+   -> *ngIf="array.length > 0" para mostrar tabla
+   -> [style.color]="condicion ? '#color1' : '#color2'"
+   -> [class]="getClase(valor)" para clases dinamicas
+
+================================================================================
+15. ERRORES CONOCIDOS Y SOLUCIONES
+================================================================================
+
+ERROR: "Unexpected token '?'" / "Cannot find module '@angular/build'"
+Causa: Node.js v12.18.4 es incompatible con Angular 21
+Solucion: Usar Node.js v24.14.0
+  -> fnm use 24
+  -> fnm default 24.14.0 (para que sea permanente)
+  -> Abrir nueva terminal
+  -> npm install
+  -> ng serve
+
+ERROR: Componentes sin navegacion
+Causa: Sidebar sin routerLink
+Solucion: Añadir RouterModule a imports y routerLink a cada <li>
+
+ERROR: Modal no aparece
+Causa: Falta importar el componente modal en el componente padre
+Solucion: Añadir PrestamoFormModal/IncidenciaFormModal en imports: []
+
+================================================================================
+16. COMANDOS PARA DESARROLLO
+================================================================================
+
+Instalar dependencias:
+  npm install
+
+Arrancar servidor de desarrollo:
+  ng serve           (http://localhost:4200)
+  ng serve -o        (abre navegador automatico)
+
+Compilar para produccion:
+  ng build
+
+Compilar con watch (desarrollo):
+  npm run watch
+
+Ejecutar tests:
+  npm run test
+
+Cambiar version de Node:
+  fnm use 24
+  fnm default 24.14.0
+
+================================================================================
+                    FIN DE LA DOCUMENTACION
+================================================================================

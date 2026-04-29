@@ -1,1 +1,61 @@
-<p>prestamo-list works!</p>
+<!-- Vista de listado y gestión de préstamos -->
+<div class="dashboard-wrapper">
+  <app-admin-sidebar></app-admin-sidebar>
+
+  <main class="main-content">
+    <!-- Cabecera con título y botón para nuevo préstamo -->
+    <header class="top-bar">
+      <div class="header-info">
+        <h1>Préstamos</h1>
+        <p>Gestión de préstamos de material</p>
+      </div>
+      <button class="btn-add" (click)="abrirModal()">
+        <span class="icon">+</span> Nuevo Préstamo
+      </button>
+    </header>
+
+    <!-- Estadísticas rápidas de préstamos -->
+    <section class="stats-strip">
+      <div class="stat-item"><strong>Total:</strong> {{ listaPrestamos.length }} préstamos</div>
+      <div class="stat-item"><strong>Pendientes:</strong> {{ listaPrestamos.filter(p => p.estado === 'Pendiente').length }}</div>
+      <div class="stat-item"><strong>Entregados:</strong> {{ listaPrestamos.filter(p => p.estado === 'Entregado').length }}</div>
+    </section>
+
+    <!-- Tabla con listado de préstamos -->
+    <div class="tabla-container">
+      <table class="tabla" *ngIf="listaPrestamos.length > 0">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Usuario</th>
+            <th>Teléfono</th>
+            <th>Cantidad</th>
+            <th>Días</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let p of listaPrestamos">
+            <td>{{ p.productoNombre }}</td>
+            <td>{{ p.usuarioNombre }}</td>
+            <td>{{ p.usuarioTelefono }}</td>
+            <td>{{ p.cantidad }}</td>
+            <td>{{ p.diasPrestamo }}</td>
+            <td><span class="status-badge" [class]="getEstadoClass(p.estado)">{{ p.estado }}</span></td>
+            <td class="acciones">
+              <button class="btn-action btn-view" title="Ver detalle">👁️</button>
+              <button class="btn-action btn-edit" title="Editar">✏️</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div *ngIf="listaPrestamos.length === 0" class="empty-state">
+        <p>No hay préstamos registrados.</p>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Modal para crear nuevo préstamo -->
+<app-prestamo-form-modal *ngIf="modalAbierto" (cerrar)="modalAbierto = false"></app-prestamo-form-modal>

@@ -1,3 +1,4 @@
+// Modelo de datos para productos del inventario
 export interface Producto {
   id: number;
   nombre: string;
@@ -8,6 +9,7 @@ export interface Producto {
   imagenUrl?: string;  
 }
 
+// Modelo de datos para préstamos de material
 export interface Prestamo {
   id: number;
   productoId: number;
@@ -20,6 +22,7 @@ export interface Prestamo {
   estado: 'Pendiente' | 'Entregado' | 'Devuelto'; 
 }
 
+// Modelo de datos para incidencias reportadas
 export interface Incidencia {
   id: number;
   area: string;

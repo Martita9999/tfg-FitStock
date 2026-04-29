@@ -1,57 +1,52 @@
+<!-- Vista de inventario con listado de productos -->
 <div class="dashboard-wrapper">
-  
   <app-admin-sidebar></app-admin-sidebar>
 
   <main class="main-content">
-    
+    <!-- Cabecera con título y botón para añadir producto -->
     <header class="top-bar">
       <div class="header-info">
-        <h1>Panel de Inventario</h1>
-        <p>Gestiona el stock de material</p>
+        <h1>Inventario</h1>
+        <p>Listado completo de material</p>
       </div>
       <button class="btn-add">
-        <span class="icon">+</span> Añadir Nuevo Producto
+        <span class="icon">+</span> Añadir Producto
       </button>
     </header>
 
+    <!-- Franja de estadísticas rápidas del inventario -->
     <section class="stats-strip">
       <div class="stat-item"><strong>Total:</strong> {{ listaProductos.length }} artículos</div>
-      <div class="stat-item"><strong>Estado:</strong> Sistema Online</div>
+      <div class="stat-item"><strong>En stock:</strong> {{ listaProductos.filter(p => p.stockDisponible > 0).length }}</div>
+      <div class="stat-item"><strong>Sin stock:</strong> {{ listaProductos.filter(p => p.stockDisponible === 0).length }}</div>
     </section>
 
+    <!-- Cuadrícula de tarjetas de productos -->
     <div class="grid-productos">
-      
       <div class="card" *ngFor="let item of listaProductos">
         <div class="card-header">
           <span class="category-tag">{{ item.categoria }}</span>
           <div class="icon-box">📦</div>
         </div>
-        
         <div class="card-body">
           <h3>{{ item.nombre }}</h3>
           <div class="stock-info">
             <span class="label">Disponibles:</span>
-            <span class="value" [style.color]="item.stockDisponible > 0 ? '#10b981' : '#ef4444'">
+            <span class="value" [style.color]="item.stockDisponible > 0 ? '#f97316' : '#ef4444'">
               {{ item.stockDisponible }}
             </span>
           </div>
         </div>
-
         <div class="card-actions">
-          <button class="btn-edit">
-            <i>✏️</i> Editar
-          </button>
-          <button class="btn-delete">
-            <i>🗑️</i> Borrar
-          </button>
+          <button class="btn-edit"><i>✏️</i> Editar</button>
+          <button class="btn-delete"><i>🗑️</i> Borrar</button>
         </div>
       </div>
-
     </div>
 
+    <!-- Mensaje cuando no hay productos en el inventario -->
     <div *ngIf="listaProductos.length === 0" class="empty-state">
-      <p>No hay productos en stock. Pulsa el botón para añadir uno.</p>
+      <p>No hay productos en stock.</p>
     </div>
-
   </main>
 </div>

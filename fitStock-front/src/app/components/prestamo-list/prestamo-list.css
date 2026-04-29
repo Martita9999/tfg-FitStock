@@ -1,0 +1,169 @@
+/* Contenedor principal con sidebar y contenido */
+.dashboard-wrapper {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  background: linear-gradient(135deg, #fff7ed 0%, #eff6ff 100%);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Área principal de contenido */
+.main-content {
+  flex: 1;
+  padding: 40px;
+  margin-left: 250px;
+  background: linear-gradient(135deg, #fff7ed 0%, #eff6ff 100%);
+  min-height: 100vh;
+}
+
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.header-info h1 {
+  margin: 0;
+  font-size: 2rem;
+  color: #1e293b;
+}
+
+.header-info p {
+  margin: 5px 0 0 0;
+  color: #64748b;
+}
+
+.btn-add {
+  background: linear-gradient(135deg, #f97316, #3b82f6);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.25);
+}
+
+.btn-add:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(249, 115, 22, 0.35);
+}
+
+.stats-strip {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.stat-item {
+  background: white;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  color: #475569;
+  border-left: 3px solid #f97316;
+}
+
+/* Contenedor de la tabla de préstamos */
+.tabla-container {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.06);
+  overflow-x: auto;
+  border-top: 3px solid #3b82f6;
+}
+
+/* Estilos base de la tabla */
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* Celdas de la tabla */
+.tabla th, .tabla td {
+  padding: 14px 16px;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+/* Cabecera de la tabla */
+.tabla th {
+  color: #64748b;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  font-weight: 600;
+  background: #f8fafc;
+}
+
+.tabla td {
+  color: #334155;
+  font-size: 0.95rem;
+}
+
+.tabla tbody tr:hover {
+  background: #f8fafc;
+}
+
+/* Badge para estados de préstamo */
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+/* Estado: Pendiente */
+.status-pendiente {
+  background: #ffedd5;
+  color: #ea580c;
+}
+
+/* Estado: Entregado */
+.status-entregado {
+  background: #dbeafe;
+  color: #3b82f6;
+}
+
+/* Estado: Devuelto */
+.status-devuelto {
+  background: #d1fae5;
+  color: #10b981;
+}
+
+.acciones {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-action {
+  background: none;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-view:hover {
+  background: #dbeafe;
+  border-color: #3b82f6;
+}
+
+.btn-edit:hover {
+  background: #dbeafe;
+  border-color: #3b82f6;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #64748b;
+  font-size: 1.1rem;
+}

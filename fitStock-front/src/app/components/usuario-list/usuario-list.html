@@ -1,1 +1,50 @@
-<p>usuario-list works!</p>
+<!-- Vista de listado de usuarios -->
+<div class="dashboard-wrapper">
+  <app-admin-sidebar></app-admin-sidebar>
+
+  <main class="main-content">
+    <!-- Cabecera de la sección -->
+    <header class="top-bar">
+      <div class="header-info">
+        <h1>Usuarios</h1>
+        <p>Gestión de usuarios del sistema</p>
+      </div>
+    </header>
+
+    <!-- Estadística rápida de usuarios -->
+    <section class="stats-strip">
+      <div class="stat-item"><strong>Total:</strong> {{ listaUsuarios.length }} usuarios</div>
+    </section>
+
+    <!-- Tabla con listado de usuarios -->
+    <div class="tabla-container">
+      <table class="tabla" *ngIf="listaUsuarios.length > 0">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Email</th>
+            <th>Rol</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let u of listaUsuarios">
+            <td>{{ u.id }}</td>
+            <td>{{ u.nombre }}</td>
+            <td>{{ u.email }}</td>
+            <td>{{ u.rol || 'usuario' }}</td>
+            <td class="acciones">
+              <button class="btn-action btn-edit" title="Editar">✏️</button>
+              <button class="btn-action btn-delete" title="Eliminar">🗑️</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <!-- Mensaje cuando no hay usuarios -->
+      <div *ngIf="listaUsuarios.length === 0" class="empty-state">
+        <p>No hay usuarios registrados.</p>
+      </div>
+    </div>
+  </main>
+</div>

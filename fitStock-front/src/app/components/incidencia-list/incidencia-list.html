@@ -1,1 +1,59 @@
-<p>incidencia-list works!</p>
+<!-- Vista de listado y gestión de incidencias -->
+<div class="dashboard-wrapper">
+  <app-admin-sidebar></app-admin-sidebar>
+
+  <main class="main-content">
+    <!-- Cabecera con título y botón para nueva incidencia -->
+    <header class="top-bar">
+      <div class="header-info">
+        <h1>Incidencias</h1>
+        <p>Reportes y seguimiento de incidencias</p>
+      </div>
+      <button class="btn-add" (click)="abrirModal()">
+        <span class="icon">+</span> Nueva Incidencia
+      </button>
+    </header>
+
+    <!-- Estadísticas rápidas de incidencias -->
+    <section class="stats-strip">
+      <div class="stat-item"><strong>Total:</strong> {{ listaIncidencias.length }} incidencias</div>
+      <div class="stat-item"><strong>Abiertas:</strong> {{ listaIncidencias.filter(i => i.estado === 'Abierta').length }}</div>
+      <div class="stat-item"><strong>En proceso:</strong> {{ listaIncidencias.filter(i => i.estado === 'En Proceso').length }}</div>
+    </section>
+
+    <!-- Lista de tarjetas de incidencias -->
+    <div class="lista-incidencias">
+      <div class="card-incidencia" *ngFor="let i of listaIncidencias">
+        <div class="card-header">
+          <div class="header-left">
+            <span class="area-tag">{{ i.area }}</span>
+            <span *ngIf="i.maquinaEquipo" class="maquina">{{ i.maquinaEquipo }}</span>
+          </div>
+          <div class="badges">
+            <span class="urg-badge" [class]="getUrgenciaClass(i.urgencia)">{{ i.urgencia }}</span>
+            <span class="estado-badge" [class]="getEstadoClass(i.estado)">{{ i.estado }}</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <h3>{{ i.titulo }}</h3>
+          <p class="descripcion">{{ i.descripcion }}</p>
+          <div class="meta">
+            <span>👤 {{ i.usuarioNombre }}</span>
+          </div>
+        </div>
+        <div class="card-actions">
+          <button class="btn-edit"><i>✏️</i> Editar</button>
+          <button class="btn-delete"><i>✅</i> Cerrar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mensaje cuando no hay incidencias -->
+    <div *ngIf="listaIncidencias.length === 0" class="empty-state">
+      <p>No hay incidencias registradas.</p>
+    </div>
+  </main>
+</div>
+
+<!-- Modal para crear nueva incidencia -->
+<app-incidencia-form-modal *ngIf="modalAbierto" (cerrar)="modalAbierto = false"></app-incidencia-form-modal>

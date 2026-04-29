@@ -1,7 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AdminSidebarComponent } from '../admin-sidebar/admin-sidebar.component';
+import { MockDataService } from '../../services/mock-data.service';
+import { Producto } from '../../interfaces/app.interfaces';
 
+// Componente para gestionar y visualizar el inventario de productos
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
@@ -10,16 +13,13 @@ import { AdminSidebarComponent } from '../admin-sidebar/admin-sidebar.component'
   styleUrl: './admin-dashboard.css'       
 })
 export class AdminDashboardComponent implements OnInit {
-  
-  // Datos hardcodeados directamente aquí para probar rápido
-  listaProductos = [
-    { id: 1, nombre: 'Banda elástica', categoria: 'Accesorios', resistencia: 'media', stockDisponible: 8 },
-    { id: 2, nombre: 'Banda elástica', categoria: 'Accesorios', resistencia: 'alta', stockDisponible: 5 },
-    { id: 3, nombre: 'Esterilla yoga', categoria: 'Yoga & Pilates', stockDisponible: 12 },
-    { id: 4, nombre: 'Pelota pilates', categoria: 'Yoga & Pilates', stockDisponible: 6 }
-  ];
+  // Lista de productos obtenidos del servicio
+  listaProductos: Producto[] = [];
 
-  constructor() { }
+  constructor(private mockService: MockDataService) { }
 
-  ngOnInit(): void { }
+  // Carga los productos al inicializar el componente
+  ngOnInit(): void {
+    this.mockService.getProductos().subscribe(data => this.listaProductos = data);
+  }
 }

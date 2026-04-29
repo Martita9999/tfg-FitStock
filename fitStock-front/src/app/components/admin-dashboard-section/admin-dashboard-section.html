@@ -1,0 +1,104 @@
+<!-- Estructura principal del dashboard con sidebar y contenido -->
+<div class="dashboard-wrapper">
+  <app-admin-sidebar></app-admin-sidebar>
+
+  <main class="main-content">
+    <!-- Cabecera con título del dashboard -->
+    <header class="top-bar">
+      <div class="header-info">
+        <h1>Dashboard</h1>
+        <p>Resumen general del sistema</p>
+      </div>
+    </header>
+
+    <!-- Tarjetas de estadísticas generales -->
+    <section class="stats-grid">
+      <div class="stat-card stat-productos">
+        <div class="stat-icon">📦</div>
+        <div class="stat-info">
+          <span class="stat-value">{{ listaProductos.length }}</span>
+          <span class="stat-label">Productos</span>
+        </div>
+      </div>
+
+      <div class="stat-card stock-card">
+        <div class="stat-icon">✅</div>
+        <div class="stat-info">
+          <span class="stat-value">{{ getStockTotal() }}</span>
+          <span class="stat-label">Stock total</span>
+        </div>
+      </div>
+
+      <div class="stat-card stat-prestamos">
+        <div class="stat-icon">🤝</div>
+        <div class="stat-info">
+          <span class="stat-value">{{ listaPrestamos.length }}</span>
+          <span class="stat-label">Préstamos</span>
+        </div>
+      </div>
+
+      <div class="stat-card stat-incidencias">
+        <div class="stat-icon">⚠️</div>
+        <div class="stat-info">
+          <span class="stat-value">{{ listaIncidencias.length }}</span>
+          <span class="stat-label">Incidencias</span>
+        </div>
+      </div>
+
+      <div class="stat-card stat-socios">
+        <div class="stat-icon">👥</div>
+        <div class="stat-info">
+          <span class="stat-value">{{ getSociosUnicos() }}</span>
+          <span class="stat-label">Socios</span>
+        </div>
+      </div>
+
+      <div class="stat-card stat-categorias">
+        <div class="stat-icon">📂</div>
+        <div class="stat-info">
+          <span class="stat-value">{{ getCategoriasUnicas() }}</span>
+          <span class="stat-label">Categorías</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Paneles con listados de inventario, préstamos e incidencias -->
+    <div class="panels-row">
+      <!-- Panel de productos en inventario -->
+      <div class="panel panel-productos">
+        <h3>Inventario</h3>
+        <div class="panel-body">
+          <div class="item-row" *ngFor="let item of listaProductos">
+            <span class="item-name">{{ item.nombre }}</span>
+            <span class="item-stock" [style.color]="item.stockDisponible > 0 ? '#f97316' : '#ef4444'">{{ item.stockDisponible }} uds</span>
+          </div>
+          <p *ngIf="listaProductos.length === 0" class="empty">Sin productos</p>
+        </div>
+      </div>
+
+      <!-- Panel de préstamos recientes -->
+      <div class="panel panel-prestamos">
+        <h3>Préstamos recientes</h3>
+        <div class="panel-body">
+          <div class="item-row" *ngFor="let p of listaPrestamos">
+            <span class="item-name">{{ p.productoNombre }}</span>
+            <span class="item-estado badge-prestamo">{{ p.estado }}</span>
+          </div>
+          <p *ngIf="listaPrestamos.length === 0" class="empty">Sin préstamos</p>
+        </div>
+      </div>
+
+      <!-- Panel de incidencias abiertas -->
+      <div class="panel panel-incidencias">
+        <h3>Incidencias abiertas</h3>
+        <div class="panel-body">
+          <div class="item-row" *ngFor="let i of listaIncidencias">
+            <span class="item-name">{{ i.titulo }}</span>
+            <span class="item-estado badge-incidencia">{{ i.urgencia }}</span>
+          </div>
+          <p *ngIf="listaIncidencias.length === 0" class="empty">Sin incidencias</p>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

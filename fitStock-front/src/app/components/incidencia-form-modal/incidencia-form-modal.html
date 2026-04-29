@@ -1,1 +1,51 @@
-<p>incidencia-form-modal works!</p>
+<!-- Modal para reportar una nueva incidencia -->
+<div class="modal-overlay" (click)="cerrarModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <!-- Cabecera del modal -->
+    <div class="modal-header">
+      <h2>Nueva Incidencia</h2>
+      <button class="btn-close" (click)="cerrarModal()">✕</button>
+    </div>
+    <!-- Formulario con datos de la incidencia -->
+    <form class="modal-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Área</label>
+          <input type="text" [(ngModel)]="incidencia.area" name="area" placeholder="Ej: Zona de Cardio" required>
+        </div>
+        <div class="form-group">
+          <label>Máquina / Equipo</label>
+          <input type="text" [(ngModel)]="incidencia.maquinaEquipo" name="maquinaEquipo" placeholder="Ej: Cinta #3">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Título</label>
+        <input type="text" [(ngModel)]="incidencia.titulo" name="titulo" placeholder="Resumen del problema" required>
+      </div>
+      <div class="form-group">
+        <label>Descripción</label>
+        <textarea [(ngModel)]="incidencia.descripcion" name="descripcion" rows="4" placeholder="Describe el problema con detalle..." required></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Urgencia</label>
+          <select [(ngModel)]="incidencia.urgencia" name="urgencia" required>
+            <option value="Baja">Baja</option>
+            <option value="Moderada">Moderada</option>
+            <option value="Alta">Alta</option>
+            <option value="Crítica">Crítica</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Nombre del reportador</label>
+          <input type="text" [(ngModel)]="incidencia.usuarioNombre" name="usuarioNombre" placeholder="Tu nombre" required>
+        </div>
+      </div>
+      <!-- Botones de acción del formulario -->
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" (click)="cerrarModal()">Cancelar</button>
+        <button type="submit" class="btn-submit">Reportar Incidencia</button>
+      </div>
+    </form>
+  </div>
+</div>

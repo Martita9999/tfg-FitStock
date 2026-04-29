@@ -1,0 +1,190 @@
+/* Contenedor principal con sidebar y área de contenido */
+.dashboard-wrapper {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  background: linear-gradient(135deg, #fff7ed 0%, #eff6ff 100%);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Área principal de contenido con margen para el sidebar */
+.main-content {
+  flex: 1;
+  padding: 30px 40px;
+  margin-left: 250px;
+  background: linear-gradient(135deg, #fff7ed 0%, #eff6ff 100%);
+  min-height: 100vh;
+}
+
+/* Barra superior con título y acciones */
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+/* Estilo del título en la cabecera */
+.header-info h1 {
+  margin: 0;
+  font-size: 2rem;
+  color: #1e293b;
+}
+
+.header-info p {
+  margin: 5px 0 0 0;
+  color: #64748b;
+}
+
+/* Cuadrícula de tarjetas de estadísticas */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin-bottom: 30px;
+}
+
+/* Estilo base de cada tarjeta de estadística */
+.stat-card {
+  background: white;
+  border-radius: 14px;
+  padding: 22px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: transform 0.2s, box-shadow 0.2s;
+  border-left: 4px solid transparent;
+}
+
+.stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.stat-productos { border-left-color: #f97316; }
+.stock-card { border-left-color: #10b981; }
+.stat-prestamos { border-left-color: #3b82f6; }
+.stat-incidencias { border-left-color: #f97316; }
+.stat-socios { border-left-color: #3b82f6; }
+.stat-categorias { border-left-color: #f97316; }
+
+.stat-icon {
+  font-size: 2rem;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+}
+
+.stat-productos .stat-icon, .stat-incidencias .stat-icon, .stat-categorias .stat-icon {
+  background: linear-gradient(135deg, #ffedd5, #fed7aa);
+}
+
+.stock-card .stat-icon { background: linear-gradient(135deg, #d1fae5, #a7f3d0); }
+.stat-prestamos .stat-icon, .stat-socios .stat-icon {
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+}
+
+.stat-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+/* Fila de paneles con listados */
+.panels-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+/* Estilo base de cada panel */
+.panel {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.panel h3 {
+  margin: 0;
+  padding: 16px 20px;
+  font-size: 1rem;
+  color: #1e293b;
+  font-weight: 700;
+}
+
+.panel-productos h3 { border-bottom: 2px solid #f97316; }
+.panel-prestamos h3 { border-bottom: 2px solid #3b82f6; }
+.panel-incidencias h3 { border-bottom: 2px solid #f97316; }
+
+.panel-body {
+  padding: 12px 16px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+/* Fila de elemento en los paneles de listado */
+.item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 4px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+/* Elimina el borde en la última fila */
+.item-row:last-child {
+  border-bottom: none;
+}
+
+.item-name {
+  font-size: 0.9rem;
+  color: #334155;
+}
+
+.item-stock {
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.item-estado {
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* Badge para estados de préstamos */
+.badge-prestamo {
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+  color: #3b82f6;
+}
+
+/* Badge para niveles de urgencia de incidencias */
+.badge-incidencia {
+  background: linear-gradient(135deg, #ffedd5, #fed7aa);
+  color: #ea580c;
+}
+
+.panel .empty {
+  text-align: center;
+  padding: 30px 10px;
+  color: #94a3b8;
+  font-size: 0.9rem;
+}

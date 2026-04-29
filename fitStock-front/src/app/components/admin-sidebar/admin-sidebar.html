@@ -1,19 +1,18 @@
+<!-- Barra lateral con logo y menú de navegación -->
 <aside class="sidebar">
   <div class="logo">
     <h2>FitStock</h2>
-    <span>Panel Admin</span>
+    <span>Gestión de Material</span>
   </div>
 
+  <!-- Menú de navegación con enlaces a las secciones -->
   <nav>
     <ul>
-      <li class="active">📦 Inventario</li>
-      <li>🤝 Préstamos</li>
-      <li>⚠️ Incidencias</li>
-      <li>👥 Usuarios</li>
+      <li routerLink="/admin/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">📊 Dashboard</li>
+      <li routerLink="/admin/inventario" routerLinkActive="active">📦 Inventario</li>
+      <li routerLink="/admin/prestamos" routerLinkActive="active">🤝 Préstamos</li>
+      <li routerLink="/admin/incidencias" routerLinkActive="active">⚠️ Incidencias</li>
+      <li routerLink="/admin/usuarios" routerLinkActive="active">👥 Usuarios</li>
     </ul>
   </nav>
-
-  <div class="user-footer">
-    <p>Admin Mode</p>
-  </div>
 </aside>
