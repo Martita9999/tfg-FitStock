@@ -1,5 +1,7 @@
 proyecto-FitStock/
-├── index.php
+
+├── api
+│     ├──index.php
 ├── config/
 │   └── database.php
 ├── controllers/
@@ -16,21 +18,6 @@ proyecto-FitStock/
 │   ├── Incidencia.php
 │   ├── Producto.php
 │   └── Acceso.php
-├── views/
-│   ├── usuarios/
-│   │   ├── list.php
-│   │   └── form.php
-│   ├── material/
-│   │   ├── list.php
-│   │   └── form.php
-│   ├── prestamos/   
-│   │   └── list.php
-│   ├── incidencias/
-│   │   └── list.php
-│   └── productos/
-│       └── list.php
-├── public/
-│   └── style.css
-└── routes/
-    └── router.php
+└── router.php
+    
     

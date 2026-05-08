@@ -1,0 +1,20 @@
+/* Badge de estado del material */
+.status-badge {
+  display: inline-block;        /* Se ajusta al contenido */
+  padding: 4px 12px;            /* Relleno */
+  border-radius: 999px;         /* Forma de píldora */
+  font-size: 12px;              /* Tamaño pequeño */
+  font-weight: 600;             /* Negrita */
+}
+
+/* Estado operativo: verde */
+.status-badge.operativo {
+  background: #dcfce7;          /* Fondo verde claro */
+  color: #16a34a;               /* Texto verde */
+}
+
+/* Estado averiado: rojo */
+.status-badge.averiado {
+  background: #fef2f2;          /* Fondo rojo claro */
+  color: #dc2626;               /* Texto rojo */
+}

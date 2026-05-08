@@ -1,19 +1,30 @@
+<!-- Barra lateral de navegación del panel de administración -->
 <aside class="sidebar">
+  <!-- Logo y título del panel -->
   <div class="logo">
-    <h2>FitStock</h2>
+    <h2><img src="icono.jpg" class="logo-icon" alt="FitStock"> FitStock</h2>
     <span>Panel Admin</span>
   </div>
 
+  <!-- Menú de navegación principal -->
   <nav>
     <ul>
-      <li class="active">📦 Inventario</li>
-      <li>🤝 Préstamos</li>
-      <li>⚠️ Incidencias</li>
-      <li>👥 Usuarios</li>
+      <!-- Cada opción tiene un emoji, enlace y resaltado cuando está activa -->
+      <li routerLink="/admin/inventario" routerLinkActive="active">📦 Productos</li>
+      <li routerLink="/admin/prestamos" routerLinkActive="active">🤝 Préstamos</li>
+      <li routerLink="/admin/incidencias" routerLinkActive="active">⚠️ Incidencias</li>
+      <li routerLink="/admin/materiales" routerLinkActive="active">🏋️ Máquinas</li>
+      <!-- Usuarios: visible solo para admin y entrenador -->
+      <li routerLink="/admin/usuarios" routerLinkActive="active" *ngIf="user?.rol === 'admin' || user?.rol === 'entrenador'">👥 Usuarios</li>
     </ul>
   </nav>
 
+  <!-- Pie del sidebar: info del usuario y botón de cierre de sesión -->
   <div class="user-footer">
-    <p>Admin Mode</p>
+    <div class="user-info" *ngIf="user">
+      <span class="user-name">{{ user.nombre }}</span>
+      <span class="user-role">{{ user.rol }}</span>
+    </div>
+    <button class="btn-logout" (click)="logout()">Cerrar Sesion</button>
   </div>
 </aside>

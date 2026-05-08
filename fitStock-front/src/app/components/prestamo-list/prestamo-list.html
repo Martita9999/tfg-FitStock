@@ -1,1 +1,104 @@
-<p>prestamo-list works!</p>
+<div>
+  <div class="header-actions">
+    <h2 class="page-title">🤝 Préstamos de Material</h2>
+  </div>
+
+  @if (error) {
+    <div class="error-msg">{{ error }}</div>
+  }
+
+  <h3 class="section-title">Material Disponible para Prestar</h3>
+
+  <div class="card-grid" *ngIf="grupos.length > 0">
+    <div class="group-card" *ngFor="let g of grupos">
+      <div class="card-header">
+        <h3 class="group-name">{{ g.nombre }}</h3>
+        <span class="stock-badge" [class.bajo]="g.disponibles === 0"
+              [class.medio]="g.disponibles > 0 && g.disponibles <= 3">
+          {{ g.disponibles }} disp.
+        </span>
+      </div>
+      <p class="group-desc">{{ g.descripcion || 'Sin descripción' }}</p>
+
+      <div class="qty-selector">
+        <button class="qty-btn" (click)="decrementar(g)" [disabled]="g.seleccionados === 0">−</button>
+        <span class="qty-value">{{ g.seleccionados }}</span>
+        <button class="qty-btn" (click)="incrementar(g)" [disabled]="g.seleccionados >= g.disponibles">+</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="empty-state" *ngIf="grupos.length === 0">
+    <p>No hay materiales disponibles.</p>
+  </div>
+
+  <div class="footer-actions" *ngIf="haySeleccion">
+    <span class="total-seleccion">{{ totalSeleccionados }} material(es) seleccionado(s)</span>
+    <button class="btn-prestamo" (click)="userRole === 'cliente' ? prestarSeleccion() : abrirModalUsuario()">
+      🤝 Solicitar Préstamo
+    </button>
+  </div>
+
+  <h3 class="section-title" style="margin-top: 40px;">
+    {{ userRole === 'cliente' ? 'Mis Préstamos' : 'Todos los Préstamos' }}
+  </h3>
+  <table class="data-table" *ngIf="prestamosUser.length > 0">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th *ngIf="userRole !== 'cliente'">Usuario</th>
+        <th>Material</th>
+        <th>Fecha</th>
+        <th>Devolución</th>
+        <th *ngIf="userRole !== 'cliente'">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let p of prestamosUser">
+        <td>{{ p.id }}</td>
+        <td *ngIf="userRole !== 'cliente'">{{ p.usuario }}</td>
+        <td><strong>{{ p.material }}</strong></td>
+        <td>{{ p.fecha | date:'dd/MM/yyyy' }}</td>
+        <td>
+          <span *ngIf="p.devolucion; else pendiente">{{ p.devolucion | date:'dd/MM/yyyy' }}</span>
+          <ng-template #pendiente><span class="status-open">Pendiente</span></ng-template>
+        </td>
+        <td *ngIf="userRole !== 'cliente'">
+          <button class="btn-delete" (click)="borrarPrestamo(p.id)" title="Borrar préstamo">🗑️</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="empty-state" *ngIf="prestamosUser.length === 0">
+    <p>No hay préstamos registrados.</p>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showUserModal" (click)="cerrarModalUsuario()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Seleccionar Usuario</h3>
+      <button class="btn-close" (click)="cerrarModalUsuario()">✕</button>
+    </div>
+    <div class="modal-body">
+      @if (error) {
+        <div class="error-msg">{{ error }}</div>
+      }
+      <div class="field">
+        <label>Usuario</label>
+        <select [(ngModel)]="newPrestamoUsuario" name="id_usuario">
+          <option value="0" disabled>Selecciona un usuario</option>
+          <option *ngFor="let u of usuarios" [value]="u.id">{{ u.nombre }}</option>
+        </select>
+      </div>
+      <p style="font-size:13px;color:var(--text-secondary);margin-top:8px;">
+        Se crearán {{ totalSeleccionados }} préstamo(s)
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="cerrarModalUsuario()">Cancelar</button>
+      <button class="btn-save" (click)="confirmarUsuario()">Confirmar</button>
+    </div>
+  </div>
+</div>

@@ -1,40 +1,40 @@
-// src/app/services/mock-data.service.ts
 import { Injectable } from '@angular/core';
-import { Producto, Prestamo, Incidencia } from '../interfaces/app.interfaces';
-import { Observable, of } from 'rxjs'; // Importante para simular asincronía
+import { ProductoStock, Prestamo, Incidencia } from '../interfaces/app.interfaces';
+import { Observable, of } from 'rxjs';
 
+// Servicio de datos mock para desarrollo/pruebas sin conexión a la API real
 @Injectable({
   providedIn: 'root'
 })
 export class MockDataService {
 
-  // 👇 AQUÍ ESTÁN TUS DATOS HARDCODEADOS
-  private productosMock: Producto[] = [
-    { id: 1, nombre: 'Banda elástica', categoria: 'Accesorios', resistencia: 'media', stockDisponible: 8 },
-    { id: 2, nombre: 'Banda elástica', categoria: 'Accesorios', resistencia: 'alta', stockDisponible: 5 },
-    { id: 3, nombre: 'Esterilla yoga', categoria: 'Yoga & Pilates', tamano: 'Estándar', stockDisponible: 12 },
-    { id: 4, nombre: 'Pelota pilates', categoria: 'Yoga & Pilates', tamano: '65cm', stockDisponible: 6 },
+  // Datos mock de productos
+  private productosMock: ProductoStock[] = [
+    { id: 1, nombre: 'Banda elástica', cantidad: 8, stock_minimo: 2, precio: 5 },
+    { id: 2, nombre: 'Esterilla yoga', cantidad: 12, stock_minimo: 3, precio: 15 },
   ];
 
+  // Datos mock de préstamos
   private prestamosMock: Prestamo[] = [
-    { id: 101, productoId: 1, productoNombre: 'Banda elástica - media', usuarioNombre: 'Juan Pérez', usuarioTelefono: '612345678', cantidad: 1, diasPrestamo: 3, estado: 'Pendiente' },
+    { id: 101, usuario: 'Juan Pérez', material: 'Banda elástica', fecha: '2026-05-01', devolucion: null },
   ];
 
+  // Datos mock de incidencias
   private incidenciasMock: Incidencia[] = [
-    { id: 201, area: 'Zona de Cardio', maquinaEquipo: 'Cinta #3', titulo: 'Ruido extraño en el motor', descripcion: 'Hace un chirrido al subir la velocidad.', urgencia: 'Moderada', usuarioNombre: 'Ana García', estado: 'Abierta' },
+    { id: 201, descripcion: 'Ruido extraño en el motor', prioridad: 'media', estado: 'Abierta' },
   ];
 
-  constructor() { }
-
-  // Métodos que simulan peticiones HTTP a la API (devuelven Observables)
-  getProductos(): Observable<Producto[]> {
-    return of(this.productosMock); // 'of' convierte un array en un Observable
+  // Devuelve productos mock como Observable
+  getProductos(): Observable<ProductoStock[]> {
+    return of(this.productosMock);
   }
 
+  // Devuelve préstamos mock como Observable
   getPrestamos(): Observable<Prestamo[]> {
     return of(this.prestamosMock);
   }
 
+  // Devuelve incidencias mock como Observable
   getIncidencias(): Observable<Incidencia[]> {
     return of(this.incidenciasMock);
   }

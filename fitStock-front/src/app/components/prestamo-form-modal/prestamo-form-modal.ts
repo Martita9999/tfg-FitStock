@@ -1,8 +1,11 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
 
+// Componente stub para modal de creación de préstamos (pendiente de implementar)
 @Component({
   selector: 'app-prestamo-form-modal',
-  imports: [],
+  standalone: true,
+  imports: [CommonModule],
   templateUrl: './prestamo-form-modal.html',
   styleUrl: './prestamo-form-modal.css',
 })

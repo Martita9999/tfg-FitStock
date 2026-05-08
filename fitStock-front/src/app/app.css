@@ -1,0 +1,5 @@
+/* Componente raíz: ocupa toda la altura de la ventana */
+:host {
+  display: block;          /* Comportamiento de bloque */
+  min-height: 100vh;       /* Altura mínima = toda la ventana */
+}

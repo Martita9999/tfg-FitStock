@@ -1,1 +1,91 @@
-<p>incidencia-list works!</p>
+<!-- Página de gestión de incidencias -->
+<div>
+  <!-- Cabecera con título y botón de crear (visible para todos los roles) -->
+  <div class="header-actions">
+    <h2 class="page-title">⚠️ Incidencias</h2>
+    <button class="btn-create" (click)="abrirModal()">+ Crear Incidencia</button>
+  </div>
+
+  <!-- Tabla de incidencias -->
+  <table class="data-table" *ngIf="lista.length > 0">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Descripción</th>
+        <th>Prioridad</th>
+        <th>Estado</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let inc of lista">
+        <td>{{ inc.id }}</td>
+        <td>{{ inc.descripcion }}</td>
+        <td>
+          <!-- Badge de prioridad con color según nivel -->
+          <span [class.priority-high]="inc.prioridad === 'alta' || inc.prioridad === 'critica'"
+                [class.priority-medium]="inc.prioridad === 'media'"
+                [class.priority-low]="inc.prioridad === 'baja'">
+            {{ inc.prioridad | uppercase }}
+          </span>
+        </td>
+        <td>
+          <!-- Badge de estado con color según valor -->
+          <span [class.status-open]="inc.estado === 'abierta'"
+                [class.status-progress]="inc.estado === 'en_proceso'"
+                [class.status-resolved]="inc.estado === 'resuelta'">
+            {{ inc.estado === 'abierta' ? 'Abierta' : inc.estado === 'en_proceso' ? 'En Proceso' : 'Resuelta' }}
+          </span>
+        </td>
+        <td>
+          <!-- Botón eliminar: oculto para clientes -->
+          <button class="btn-delete" (click)="borrarIncidencia(inc.id)" title="Borrar incidencia" *ngIf="userRole !== 'cliente'">🗑️</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Mensaje cuando no hay incidencias -->
+  <div class="empty-state" *ngIf="lista.length === 0">
+    <p>No hay incidencias registradas.</p>
+  </div>
+</div>
+
+<!-- Modal para crear nueva incidencia -->
+<div class="modal-overlay" *ngIf="showModal" (click)="cerrarModal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Crear Incidencia</h3>
+      <button class="btn-close" (click)="cerrarModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      @if (error) {
+        <div class="error-msg">{{ error }}</div>
+      }
+      <div class="field">
+        <label>Material</label>
+        <select [(ngModel)]="newIncidencia.id_material" name="id_material">
+          <option value="0" disabled>Selecciona un material</option>
+          <option *ngFor="let m of materiales" [value]="m.id">{{ m.nombre }}</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Descripción</label>
+        <textarea [(ngModel)]="newIncidencia.descripcion" name="descripcion" rows="3" placeholder="Describe la incidencia"></textarea>
+      </div>
+      <div class="field">
+        <label>Prioridad</label>
+        <select [(ngModel)]="newIncidencia.prioridad" name="prioridad">
+          <option value="baja">Baja</option>
+          <option value="media">Media</option>
+          <option value="alta">Alta</option>
+          <option value="critica">Crítica</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="cerrarModal()">Cancelar</button>
+      <button class="btn-save" (click)="crearIncidencia()">Guardar</button>
+    </div>
+  </div>
+</div>

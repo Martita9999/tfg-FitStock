@@ -1,25 +1,23 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterOutlet } from '@angular/router';
 import { AdminSidebarComponent } from '../admin-sidebar/admin-sidebar.component';
+import { UsuarioService } from '../../services/usuario';
 
+// Componente layout del panel de administración (sidebar + contenido)
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [CommonModule, AdminSidebarComponent],
-  templateUrl: './admin-dashboard.html', 
-  styleUrl: './admin-dashboard.css'       
+  imports: [CommonModule, AdminSidebarComponent, RouterOutlet],
+  templateUrl: './admin-dashboard.html',
+  styleUrl: './admin-dashboard.css'
 })
 export class AdminDashboardComponent implements OnInit {
-  
-  // Datos hardcodeados directamente aquí para probar rápido
-  listaProductos = [
-    { id: 1, nombre: 'Banda elástica', categoria: 'Accesorios', resistencia: 'media', stockDisponible: 8 },
-    { id: 2, nombre: 'Banda elástica', categoria: 'Accesorios', resistencia: 'alta', stockDisponible: 5 },
-    { id: 3, nombre: 'Esterilla yoga', categoria: 'Yoga & Pilates', stockDisponible: 12 },
-    { id: 4, nombre: 'Pelota pilates', categoria: 'Yoga & Pilates', stockDisponible: 6 }
-  ];
+  private usuarioService = inject(UsuarioService);   // Servicio para obtener el rol del usuario
+  userRole = '';                                       // Rol del usuario actual
 
-  constructor() { }
-
-  ngOnInit(): void { }
+  // Al iniciar, se suscribe al usuario actual para conocer su rol
+  ngOnInit() {
+    this.usuarioService.currentUser$.subscribe(u => this.userRole = u?.rol ?? '');
+  }
 }
