@@ -1,0 +1,45 @@
+.section-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--orange);
+  display: inline-block;
+}
+
+.inc-active-title {
+  border-bottom-color: #dc2626;
+}
+
+.resolved-title {
+  border-bottom-color: #16a34a;
+}
+
+.mt-4 {
+  margin-top: 40px;
+}
+
+.action-btns {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-badge.averiado {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.status-badge.en_reparacion {
+  background: #ffedd5;
+  color: #ea580c;
+}

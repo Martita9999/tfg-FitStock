@@ -1,0 +1,164 @@
+<div>
+  <div class="header-actions">
+    <h2 class="page-title">⚠️ Incidencias</h2>
+    <button class="btn-create" (click)="abrirModal()">+ Crear Incidencia</button>
+  </div>
+
+  <h3 class="section-title inc-active-title">🔴 Incidencias Activas</h3>
+  <table class="data-table" *ngIf="incidenciasActivas.length > 0">
+    <thead>
+      <tr>
+        <th>Máquina</th>
+        <th>Descripción</th>
+        <th>Prioridad</th>
+        <th>Estado</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let inc of incidenciasActivas">
+        <td><strong>{{ inc.nombre_material || '—' }}</strong></td>
+        <td>{{ inc.descripcion }}</td>
+        <td>
+          <span [class.priority-high]="inc.prioridad === 'alta' || inc.prioridad === 'critica'"
+                [class.priority-medium]="inc.prioridad === 'media'"
+                [class.priority-low]="inc.prioridad === 'baja'">
+            {{ inc.prioridad | uppercase }}
+          </span>
+        </td>
+        <td>
+          <span class="status-badge"
+                [class.averiado]="inc.estado === 'abierta'"
+                [class.en_reparacion]="inc.estado === 'en_proceso'">
+            {{ getEstadoLabel(inc.estado) }}
+          </span>
+        </td>
+        <td>
+          <div class="action-btns">
+            <button class="btn-edit" (click)="abrirEditar(inc)" title="Editar incidencia" *ngIf="userRole !== 'cliente'">✏️</button>
+            <button class="btn-delete" (click)="borrarIncidencia(inc.id)" title="Borrar incidencia" *ngIf="userRole !== 'cliente'">🗑️</button>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="empty-state" *ngIf="incidenciasActivas.length === 0">
+    <p>No hay incidencias activas.</p>
+  </div>
+
+  <h3 class="section-title resolved-title" [class.mt-4]="incidenciasActivas.length > 0">✅ Incidencias Resueltas</h3>
+  <table class="data-table" *ngIf="incidenciasResueltas.length > 0">
+    <thead>
+      <tr>
+        <th>Máquina</th>
+        <th>Descripción</th>
+        <th>Prioridad</th>
+        <th>Inicio</th>
+        <th>Fin</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let inc of incidenciasResueltas">
+        <td><strong>{{ inc.nombre_material || '—' }}</strong></td>
+        <td>{{ inc.descripcion }}</td>
+        <td>
+          <span [class.priority-high]="inc.prioridad === 'alta' || inc.prioridad === 'critica'"
+                [class.priority-medium]="inc.prioridad === 'media'"
+                [class.priority-low]="inc.prioridad === 'baja'">
+            {{ inc.prioridad | uppercase }}
+          </span>
+        </td>
+        <td>{{ inc.created_at ? (inc.created_at | date:'dd/MM/yyyy') : '—' }}</td>
+        <td>{{ inc.fecha_resolucion ? (inc.fecha_resolucion | date:'dd/MM/yyyy') : '—' }}</td>
+        <td>
+          <div class="action-btns">
+            <button class="btn-edit" (click)="abrirEditar(inc)" title="Editar incidencia" *ngIf="userRole !== 'cliente'">✏️</button>
+            <button class="btn-delete" (click)="borrarIncidencia(inc.id)" title="Borrar incidencia" *ngIf="userRole !== 'cliente'">🗑️</button>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="empty-state" *ngIf="incidenciasResueltas.length === 0">
+    <p>No hay incidencias resueltas.</p>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showModal" (click)="cerrarModal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Crear Incidencia</h3>
+      <button class="btn-close" (click)="cerrarModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      @if (error) {
+        <div class="error-msg">{{ error }}</div>
+      }
+      <div class="field">
+        <label>Máquina</label>
+        <select [(ngModel)]="newIncidencia.id_material" name="id_material">
+          <option value="0" disabled>Selecciona una máquina</option>
+          <option *ngFor="let m of materiales" [value]="m.id">{{ m.nombre }} ({{ m.qr }})</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Descripción</label>
+        <textarea [(ngModel)]="newIncidencia.descripcion" name="descripcion" rows="3" placeholder="Describe la incidencia"></textarea>
+      </div>
+      <div class="field">
+        <label>Prioridad</label>
+        <select [(ngModel)]="newIncidencia.prioridad" name="prioridad">
+          <option value="baja">Baja</option>
+          <option value="media">Media</option>
+          <option value="alta">Alta</option>
+          <option value="critica">Crítica</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="cerrarModal()">Cancelar</button>
+      <button class="btn-save" (click)="crearIncidencia()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showEditModal" (click)="cerrarEditar()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Editar Incidencia #{{ editIncidencia?.id }}</h3>
+      <button class="btn-close" (click)="cerrarEditar()">✕</button>
+    </div>
+    <div class="modal-body">
+      @if (error) {
+        <div class="error-msg">{{ error }}</div>
+      }
+      <p style="font-size:14px;color:var(--text-secondary);margin-bottom:16px;">
+        {{ editIncidencia?.descripcion }}
+      </p>
+      <div class="field">
+        <label>Estado</label>
+        <select [(ngModel)]="editData.estado" name="edit_estado">
+          <option value="abierta">Averiado</option>
+          <option value="en_proceso">En Reparación</option>
+          <option value="resuelta">Resuelta</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Prioridad</label>
+        <select [(ngModel)]="editData.prioridad" name="edit_prioridad">
+          <option value="baja">Baja</option>
+          <option value="media">Media</option>
+          <option value="alta">Alta</option>
+          <option value="critica">Crítica</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="cerrarEditar()">Cancelar</button>
+      <button class="btn-save" (click)="guardarEditar()">Guardar Cambios</button>
+    </div>
+  </div>
+</div>

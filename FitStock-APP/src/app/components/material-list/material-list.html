@@ -1,0 +1,169 @@
+<div>
+  <div class="header-actions">
+    <h2 class="page-title">🏋️ Máquinas</h2>
+    <button class="btn-create" (click)="abrirModal()" *ngIf="userRole !== 'cliente'">+ Crear Máquina</button>
+  </div>
+
+  @if (maquinasNoOperativas.length > 0) {
+    <h3 class="section-title inc-title">🔧 Incidencias Activas</h3>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Ubicación</th>
+          <th>Estado</th>
+          <th>Incidencias</th>
+          <th>Última Revisión</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let m of maquinasNoOperativas">
+          <td>
+            <strong>{{ m.nombre }}</strong>
+            @if (m.qr) {
+              <span class="id-tag">{{ m.qr }}</span>
+            }
+          </td>
+          <td>{{ m.ubicacion || m.descripcion || '—' }}</td>
+          <td>
+            <span class="status-badge"
+                  [class.averiado]="m.estado === 'averiado'"
+                  [class.en_reparacion]="m.estado === 'en_reparacion'">
+              {{ getEstadoLabel(m.estado) }}
+            </span>
+          </td>
+          <td>
+            <div class="desc-cell">
+              @if (getIncidenciaActiva(m.id); as inc) {
+                <div class="incidencia-info" [class.inc-abierta]="inc.estado === 'abierta'"
+                     [class.inc-proceso]="inc.estado === 'en_proceso'">
+                  <span class="inc-label">{{ inc.estado === 'abierta' ? '⚠️ Avería' : '🔧 En proceso' }}:</span>
+                  <span class="inc-desc">{{ inc.descripcion }}</span>
+                </div>
+              } @else {
+                <span class="desc-text">—</span>
+              }
+            </div>
+          </td>
+          <td>{{ m.ultima_rev || 'No revisado' }}</td>
+          <td>
+            <div class="action-btns">
+              <button class="btn-edit" (click)="abrirEditar(m)" title="Editar máquina" *ngIf="userRole !== 'cliente'">✏️</button>
+              <button class="btn-delete" (click)="borrarMaterial(m.id, m.nombre)" title="Borrar material" *ngIf="userRole !== 'cliente'">🗑️</button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  }
+
+  <h3 class="section-title" [class.mt-3]="maquinasNoOperativas.length > 0">✅ Máquinas Operativas</h3>
+  <table class="data-table" *ngIf="maquinasOperativas.length > 0">
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Ubicación</th>
+        <th>Estado</th>
+        <th>Última Revisión</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let m of maquinasOperativas">
+        <td>
+          <strong>{{ m.nombre }}</strong>
+          @if (m.qr) {
+            <span class="id-tag">{{ m.qr }}</span>
+          }
+        </td>
+        <td>{{ m.ubicacion || m.descripcion || '—' }}</td>
+        <td>
+          <span class="status-badge operativo">Operativo</span>
+        </td>
+        <td>{{ m.ultima_rev || 'No revisado' }}</td>
+        <td>
+          <div class="action-btns">
+            <button class="btn-edit" (click)="abrirEditar(m)" title="Editar máquina" *ngIf="userRole !== 'cliente'">✏️</button>
+            <button class="btn-delete" (click)="borrarMaterial(m.id, m.nombre)" title="Borrar material" *ngIf="userRole !== 'cliente'">🗑️</button>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="empty-state" *ngIf="lista.length === 0">
+    <p>No hay máquinas registradas.</p>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showModal" (click)="cerrarModal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Crear Máquina</h3>
+      <button class="btn-close" (click)="cerrarModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      @if (error) {
+        <div class="error-msg">{{ error }}</div>
+      }
+      <div class="field">
+        <label>Nombre del Equipo</label>
+        <input type="text" [(ngModel)]="newMaterial.nombre" name="nombre" placeholder="Ej: Cinta de correr">
+      </div>
+      <div class="field">
+        <label>Ubicación</label>
+        <input type="text" [(ngModel)]="newMaterial.ubicacion" name="ubicacion" placeholder="Ej: Zona de cardio, junto ventana">
+      </div>
+      <div class="field">
+        <label>Estado</label>
+        <select [(ngModel)]="newMaterial.estado" name="estado">
+          <option *ngFor="let e of estadosDisponibles" [value]="e.value">{{ e.label }}</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="cerrarModal()">Cancelar</button>
+      <button class="btn-save" (click)="crearMaterial()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showEditModal" (click)="cerrarEditar()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Editar Máquina — {{ editMaterial?.nombre }} ({{ editMaterial?.qr }})</h3>
+      <button class="btn-close" (click)="cerrarEditar()">✕</button>
+    </div>
+    <div class="modal-body">
+      @if (error) {
+        <div class="error-msg">{{ error }}</div>
+      }
+      <div class="field">
+        <label>Nombre del Equipo</label>
+        <input type="text" [(ngModel)]="editData.nombre" name="edit_nombre" placeholder="Nombre de la máquina">
+      </div>
+      <div class="field">
+        <label>Ubicación</label>
+        <input type="text" [(ngModel)]="editData.ubicacion" name="edit_ubicacion" placeholder="Ej: Zona de cardio, junto ventana">
+      </div>
+      <div class="field">
+        <label>Descripción / Notas</label>
+        <textarea [(ngModel)]="editData.descripcion" name="edit_descripcion" rows="2" placeholder="Descripción adicional"></textarea>
+      </div>
+      <div class="field">
+        <label>Estado</label>
+        <select [(ngModel)]="editData.estado" name="edit_estado">
+          <option *ngFor="let e of estadosDisponibles" [value]="e.value">{{ e.label }}</option>
+        </select>
+      </div>
+      <p style="font-size:12px;color:var(--text-secondary);margin-top:4px;">
+        * La fecha de revisión se actualizará automáticamente al guardar
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="cerrarEditar()">Cancelar</button>
+      <button class="btn-save" (click)="guardarEditar()">Guardar Cambios</button>
+    </div>
+  </div>
+</div>

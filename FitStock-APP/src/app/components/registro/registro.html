@@ -1,0 +1,35 @@
+<div class="registro-wrapper">
+  <div class="registro-card">
+    <div class="registro-header">
+      <div class="logo-icon">F</div>
+      <h2>Crear Cuenta</h2>
+      <p>Regístrate en FitStock</p>
+    </div>
+    <div class="registro-body">
+      @if (error) {
+        <div class="error-msg">{{ error }}</div>
+      }
+      @if (success) {
+        <div class="success-msg">Cuenta creada. Redirigiendo...</div>
+      }
+      <form (ngSubmit)="registrar()">
+        <div class="field">
+          <label>Nombre</label>
+          <input type="text" [(ngModel)]="nombre" name="nombre" required placeholder="Tu nombre">
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input type="email" [(ngModel)]="email" name="email" required placeholder="tu@email.com">
+        </div>
+        <div class="field">
+          <label>Contraseña</label>
+          <input type="password" [(ngModel)]="password" name="password" required placeholder="••••••">
+        </div>
+        <button type="submit" class="btn-primary">Registrarse</button>
+      </form>
+      <div class="login-link">
+        ¿Ya tienes cuenta? <a (click)="goToLogin()">Inicia sesión</a>
+      </div>
+    </div>
+  </div>
+</div>

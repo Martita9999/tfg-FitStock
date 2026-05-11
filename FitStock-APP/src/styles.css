@@ -1,0 +1,291 @@
+/* Importa la fuente Inter desde Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+/* Variables CSS globales con la paleta de colores de la aplicación */
+:root {
+  --blue-dark: #1e3a5f;       /* Azul oscuro (fondos, headers) */
+  --blue: #3b82f6;            /* Azul primario (botones, enlaces) */
+  --blue-light: #60a5fa;      /* Azul claro (detalles) */
+  --orange: #f97316;          /* Naranja principal (acciones, acentos) */
+  --orange-dark: #ea580c;     /* Naranja oscuro (hover) */
+  --orange-light: #fed7aa;    /* Naranja claro (fondos de badges) */
+  --bg: linear-gradient(135deg, #fff7ed 0%, #eff6ff 100%);              /* Color de fondo general */
+  --card: #ffffff;            /* Fondo de tarjetas y paneles */
+  --text: #1e293b;            /* Color de texto principal */
+  --text-secondary: #64748b;  /* Color de texto secundario */
+  --border: #e2e8f0;          /* Color de bordes */
+}
+
+/* Animación sutil para botones principales */
+@keyframes btnPulse {
+  0% { box-shadow: 0 4px 12px rgba(249, 115, 22, 0.25); }
+  50% { box-shadow: 0 4px 20px rgba(249, 115, 22, 0.45); }
+  100% { box-shadow: 0 4px 12px rgba(249, 115, 22, 0.25); }
+}
+
+/* Reset básico: elimina márgenes y paddings por defecto */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Estilos base del body */
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;  /* Fuente principal */
+  background: linear-gradient(135deg, #fff7ed 0%, #eff6ff 100%);      /* Fondo general */
+  color: var(--text);         /* Color de texto */
+  line-height: 1.6;           /* Altura de línea */
+}
+
+/* Shared: cabecera con título y botón de acción (crear) */
+.header-actions {
+  display: flex;               /* Diseño flexible */
+  justify-content: space-between;  /* Separa título y botón */
+  align-items: center;         /* Centra verticalmente */
+  margin-bottom: 20px;         /* Espaciado inferior */
+}
+.header-actions .page-title {
+  margin-bottom: 0;            /* Elimina el margen inferior por defecto del título */
+}
+
+/* Botón de editar (icono) */
+.btn-edit {
+  padding: 6px 8px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-edit:hover { background: #dbeafe; border-color: var(--blue); }
+
+/* Botón genérico de crear (gradiente naranja → azul) */
+.btn-create {
+  background: linear-gradient(135deg, var(--orange), var(--blue));
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: inherit;
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.25);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.btn-create:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(249, 115, 22, 0.4);
+}
+.btn-create:active {
+  transform: translateY(0);
+}
+
+/* Botón genérico de eliminar */
+.btn-delete {
+  background: none;
+  border: 1px solid var(--border);
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+.btn-delete:hover {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.15);
+}
+
+/* Shared: estilos del modal overlay */
+.modal-overlay {
+  position: fixed;                     /* Cubre toda la pantalla */
+  inset: 0;                            /* Sin espacio en ningún lado */
+  background: rgba(0,0,0,0.5);        /* Fondo semitransparente */
+  display: flex;                       /* Para centrar el modal */
+  align-items: center;                 /* Centrado vertical */
+  justify-content: center;             /* Centrado horizontal */
+  z-index: 1000;                       /* Por encima de todo */
+  padding: 20px;                       /* Espaciado en móvil */
+}
+.modal-card {
+  background: white;                   /* Fondo blanco */
+  border-radius: 16px;                 /* Esquinas redondeadas */
+  width: 100%;                         /* Ancho completo */
+  max-width: 440px;                    /* Ancho máximo */
+  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.3);  /* Sombra */
+  overflow: hidden;                    /* Oculta contenido que sobresale */
+}
+.modal-header {
+  display: flex;                       /* Título + botón cerrar en fila */
+  justify-content: space-between;      /* Separa elementos */
+  align-items: center;                 /* Centra verticalmente */
+  padding: 20px 24px;                  /* Relleno */
+  border-bottom: 1px solid var(--border);  /* Línea separadora */
+}
+.modal-header h3 {
+  font-size: 18px;                     /* Tamaño del título */
+  font-weight: 700;                    /* Negrita */
+  color: var(--text);                  /* Color del texto */
+  margin: 0;                           /* Sin margen */
+}
+.btn-close {
+  background: none;                    /* Sin fondo */
+  border: none;                        /* Sin borde */
+  font-size: 18px;                     /* Tamaño del icono */
+  cursor: pointer;                     /* Cursor de mano */
+  color: var(--text-secondary);        /* Color secundario */
+  padding: 4px;                        /* Relleno mínimo */
+}
+.btn-close:hover {
+  color: var(--text);                  /* Más oscuro al hover */
+}
+.modal-body {
+  padding: 24px;                       /* Relleno interior */
+}
+.modal-footer {
+  display: flex;                       /* Botones en fila */
+  justify-content: flex-end;           /* Alineados a la derecha */
+  gap: 10px;                           /* Espacio entre botones */
+  padding: 16px 24px;                  /* Relleno */
+  border-top: 1px solid var(--border); /* Línea separadora */
+}
+
+/* Shared: estilos de campos de formulario */
+.field {
+  margin-bottom: 18px;                 /* Espaciado entre campos */
+}
+.field label {
+  display: block;                      /* La etiqueta ocupa toda la línea */
+  font-size: 13px;                     /* Tamaño pequeño */
+  font-weight: 600;                    /* Negrita */
+  color: var(--text-secondary);        /* Color secundario */
+  margin-bottom: 6px;                  /* Espacio debajo de la etiqueta */
+}
+.field input,
+.field select,
+.field textarea {
+  width: 100%;                         /* Ancho completo */
+  padding: 10px 14px;                  /* Relleno */
+  border: 2px solid var(--border);     /* Borde */
+  border-radius: 10px;                 /* Esquinas redondeadas */
+  font-size: 14px;                     /* Tamaño de fuente */
+  outline: none;                       /* Sin outline al focus */
+  transition: border-color 0.2s;       /* Transición suave */
+  font-family: inherit;                /* Hereda la fuente */
+  background: white;                   /* Fondo blanco */
+}
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: var(--blue);           /* Borde azul al enfocar */
+}
+.field textarea {
+  resize: vertical;                    /* Solo redimensionable vertical */
+}
+.field-row {
+  display: flex;                       /* Campos en fila */
+  gap: 12px;                           /* Espacio entre campos */
+}
+.field-row .field {
+  flex: 1;                             /* Cada campo ocupa el mismo espacio */
+}
+
+/* Mensaje de error genérico */
+.error-msg {
+  background: #fef2f2;                 /* Fondo rojo claro */
+  color: #dc2626;                      /* Texto rojo */
+  padding: 10px;                       /* Relleno */
+  border-radius: 8px;                  /* Esquinas redondeadas */
+  font-size: 13px;                     /* Tamaño pequeño */
+  margin-bottom: 16px;                 /* Espaciado inferior */
+  border: 1px solid #fecaca;           /* Borde rojo claro */
+}
+
+/* Shared: tabla de datos */
+.data-table {
+  width: 100%;                         /* Ancho completo */
+  border-collapse: separate;           /* Bordes separados */
+  border-spacing: 0;                   /* Sin espacio entre celdas */
+  background: var(--card);             /* Fondo blanco */
+  border-radius: 14px;                 /* Esquinas redondeadas */
+  overflow: hidden;                    /* Oculta bordes que sobresalen */
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);  /* Sombra sutil */
+  border: 1px solid var(--border);     /* Borde */
+}
+.data-table th {
+  text-align: left;                    /* Alineación izquierda */
+  padding: 14px 16px;                  /* Relleno */
+  font-size: 12px;                     /* Tamaño pequeño */
+  font-weight: 600;                    /* Negrita */
+  color: var(--text-secondary);        /* Color secundario */
+  text-transform: uppercase;           /* Mayúsculas */
+  background: var(--bg);               /* Fondo del header */
+  border-bottom: 1px solid var(--border);  /* Línea separadora */
+}
+.data-table td {
+  padding: 14px 16px;                  /* Relleno */
+  font-size: 14px;                     /* Tamaño de fuente */
+  border-bottom: 1px solid var(--border);  /* Línea entre filas */
+}
+.data-table tr:last-child td {
+  border-bottom: none;                 /* Última fila sin borde */
+}
+.data-table code {
+  background: var(--bg);               /* Fondo del código */
+  padding: 2px 8px;                    /* Relleno */
+  border-radius: 4px;                  /* Esquinas redondeadas */
+  font-size: 12px;                     /* Tamaño pequeño */
+}
+
+/* Estado vacío: cuando no hay datos que mostrar */
+.empty-state {
+  text-align: center;                  /* Centrado */
+  padding: 60px 20px;                  /* Relleno grande */
+  color: var(--text-secondary);        /* Color secundario */
+  font-size: 15px;                     /* Tamaño de fuente */
+}
+
+/* Botón de cancelar (modal) */
+.btn-cancel {
+  padding: 10px 20px;
+  border: 1px solid var(--border);
+  background: white;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+.btn-cancel:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+/* Botón de guardar (modal) */
+.btn-save {
+  padding: 10px 20px;
+  background: linear-gradient(135deg, var(--orange), var(--blue));
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.25);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.btn-save:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(249, 115, 22, 0.4);
+}
+.btn-save:active {
+  transform: translateY(0);
+}

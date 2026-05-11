@@ -1,0 +1,28 @@
+<div class="login-wrapper">
+  <div class="login-card">
+    <div class="login-header">
+      <div class="logo-icon">F</div>
+      <h2>FitStock</h2>
+      <p>Inicia sesión para continuar</p>
+    </div>
+    <div class="login-body">
+      @if (error) {
+        <div class="error-msg">{{ error }}</div>
+      }
+      <form (ngSubmit)="login()">
+        <div class="field">
+          <label>Email</label>
+          <input type="email" [(ngModel)]="email" name="email" required placeholder="tu@email.com">
+        </div>
+        <div class="field">
+          <label>Contraseña</label>
+          <input type="password" [(ngModel)]="password" name="password" required placeholder="••••••">
+        </div>
+        <button type="submit" class="btn-primary">Iniciar Sesión</button>
+      </form>
+      <div class="register-link">
+        ¿No tienes cuenta? <a (click)="goToRegistro()">Regístrate</a>
+      </div>
+    </div>
+  </div>
+</div>

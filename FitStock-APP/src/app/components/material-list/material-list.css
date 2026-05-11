@@ -1,0 +1,101 @@
+.section-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--orange);
+  display: inline-block;
+}
+
+.inc-title {
+  border-bottom-color: #dc2626;
+}
+
+.mt-3 {
+  margin-top: 32px;
+}
+
+.action-btns {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.desc-cell {
+  max-width: 300px;
+}
+
+.desc-text {
+  font-size: 13px;
+  color: var(--text-secondary);
+  display: block;
+}
+
+.incidencia-info {
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  line-height: 1.4;
+}
+
+.inc-abierta {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+}
+
+.inc-proceso {
+  background: #ffedd5;
+  border: 1px solid #fed7aa;
+}
+
+.inc-label {
+  font-weight: 600;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.inc-desc {
+  color: var(--text);
+}
+
+.id-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--border);
+  color: var(--text-secondary);
+  vertical-align: middle;
+  letter-spacing: 0.3px;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-badge.operativo {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.status-badge.en_proceso {
+  background: #ffedd5;
+  color: #ea580c;
+}
+
+.status-badge.en_reparacion {
+  background: #ffedd5;
+  color: #ea580c;
+}
+
+.status-badge.averiado {
+  background: #fef2f2;
+  color: #dc2626;
+}
