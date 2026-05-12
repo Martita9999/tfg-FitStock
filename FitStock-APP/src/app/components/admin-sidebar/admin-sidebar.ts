@@ -10,11 +10,13 @@ import { UsuarioService, Usuario } from '../../services/usuario';
   templateUrl: './admin-sidebar.html',
   styleUrl: './admin-sidebar.css'
 })
+// Componente de la barra lateral de navegación del panel admin
 export class AdminSidebarComponent implements OnInit {
-  private usuarioService = inject(UsuarioService);
-  private router = inject(Router);
-  user: Usuario | null = null;
+  private usuarioService = inject(UsuarioService);   // Servicio de autenticación
+  private router = inject(Router);                   // Router para navegación
+  user: Usuario | null = null;                        // Usuario actual (para mostrar nombre y rol en la sidebar)
 
+  // Al iniciar, restaura sesión desde localStorage y se suscribe al usuario actual
   ngOnInit() {
     this.usuarioService.checkSession();
     this.usuarioService.currentUser$.subscribe(u => this.user = u);

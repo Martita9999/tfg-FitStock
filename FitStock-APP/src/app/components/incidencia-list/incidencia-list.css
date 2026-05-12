@@ -1,3 +1,8 @@
+/* Espaciado derecho para separar el contenido del borde */
+.page-content {
+  padding-right: 16px;
+}
+
 .section-title {
   font-size: 18px;
   font-weight: 700;
@@ -39,7 +44,30 @@
   color: #dc2626;
 }
 
+.id-tag {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--border);
+  color: var(--text-secondary);
+  vertical-align: middle;
+}
+
 .status-badge.en_reparacion {
   background: #ffedd5;
   color: #ea580c;
 }
+
+.priority-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.priority-badge.priority-high { background: #fef2f2; }
+.priority-badge.priority-medium { background: #fff7ed; }
+.priority-badge.priority-low { background: #eff6ff; }

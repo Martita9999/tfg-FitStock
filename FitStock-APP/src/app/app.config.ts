@@ -6,8 +6,8 @@ import { provideHttpClient, withFetch } from '@angular/common/http';
 // Configuración global de la aplicación Angular
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideZoneChangeDetection({ eventCoalescing: true }),    // Optimización de detección de cambios
+    provideZoneChangeDetection({ eventCoalescing: true }),    // Optimización de detección de cambios (reduce número de detecciones)
     provideRouter(routes),                                    // Proveedor de enrutamiento con las rutas definidas
-    provideHttpClient(withFetch())                            // Cliente HTTP con API fetch
+    provideHttpClient(withFetch())                            // Cliente HTTP con API fetch para peticiones al backend
   ]
 };

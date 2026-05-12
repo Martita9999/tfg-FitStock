@@ -1,18 +1,21 @@
 <?php
 require_once __DIR__ . "/../conexion.php";
 
+// Clase modelo para la tabla 'incidencias' - gestiona reportes de problemas en materiales
 class Incidencia {
-    private $id_incidencia;
-    private $id_material;
-    private $id_user_rep;
-    private $descripcion;
-    private $prioridad;
-    private $estado_inc;
-    private $created_at;
-    private $fecha_resolucion;
-    private $nombre_material;
+    private $id_incidencia;       // ID único de la incidencia
+    private $id_material;         // ID del material afectado
+    private $id_user_rep;         // ID del usuario que reportó
+    private $descripcion;         // Descripción del problema
+    private $prioridad;           // Prioridad: 'baja', 'media', 'alta'
+    private $estado_inc;          // Estado: 'abierta', 'en_proceso', 'resuelta'
+    private $created_at;          // Fecha de creación (de la BD)
+    private $fecha_resolucion;    // Fecha de resolución (de la BD)
+    private $nombre_material;     // Nombre del material (de JOIN)
+    private $id_tag_material;     // Identificador del material (de JOIN)
+    private $ubicacion;           // Ubicación del material (de JOIN)
 
-    public function __construct($id_incidencia, $id_material, $id_user_rep, $descripcion, $prioridad, $estado_inc, $created_at = null, $fecha_resolucion = null, $nombre_material = null) {
+    public function __construct($id_incidencia, $id_material, $id_user_rep, $descripcion, $prioridad, $estado_inc, $created_at = null, $fecha_resolucion = null, $nombre_material = null, $id_tag_material = null, $ubicacion = null) {
         $this->id_incidencia = $id_incidencia;
         $this->id_material = $id_material;
         $this->id_user_rep = $id_user_rep;
@@ -22,25 +25,18 @@ class Incidencia {
         $this->created_at = $created_at;
         $this->fecha_resolucion = $fecha_resolucion;
         $this->nombre_material = $nombre_material;
+        $this->id_tag_material = $id_tag_material;
+        $this->ubicacion = $ubicacion;
     }
 
-    private static function columnasExtra($conexion) {
-        $existentes = [];
-        foreach (['created_at', 'fecha_resolucion'] as $col) {
-            try {
-                $conexion->query("SELECT $col FROM incidencias LIMIT 0");
-                $existentes[] = "i.$col";
-            } catch (Exception $e) {}
-        }
-        return $existentes;
-    }
-
+    // Obtiene todas las incidencias con el nombre del material asociado
     public static function obtenerTodos() {
         $conexion = Conexion::conectar();
-        $base = ['i.id_incidencia', 'i.id_material', 'i.id_user_rep', 'i.descripcion', 'i.prioridad', 'i.estado_inc'];
-        $extra = self::columnasExtra($conexion);
-        $cols = implode(', ', array_merge($base, $extra));
-        $sql = "SELECT $cols, COALESCE(m.nombre_equipo, '—') as nombre_material
+        $sql = "SELECT i.id_incidencia, i.id_material, i.id_user_rep, i.descripcion,
+                       i.prioridad, i.estado_inc, i.created_at, i.fecha_resolucion,
+                       COALESCE(m.nombre_equipo, '—') as nombre_material,
+                       m.id_tag_material as id_tag_material,
+                       m.ubicacion as ubicacion
                 FROM incidencias i
                 LEFT JOIN material m ON i.id_material = m.id_material
                 ORDER BY i.id_incidencia DESC";
@@ -50,8 +46,9 @@ class Incidencia {
             $incidencias[] = new Incidencia(
                 $fila['id_incidencia'], $fila['id_material'], $fila['id_user_rep'],
                 $fila['descripcion'], $fila['prioridad'], $fila['estado_inc'],
-                $fila['created_at'] ?? null, $fila['fecha_resolucion'] ?? null,
-                $fila['nombre_material']
+                $fila['created_at'], $fila['fecha_resolucion'],
+                $fila['nombre_material'], $fila['id_tag_material'],
+                $fila['ubicacion']
             );
         }
         return $incidencias;
@@ -59,10 +56,11 @@ class Incidencia {
 
     public static function obtenerPorId($id) {
         $conexion = Conexion::conectar();
-        $base = ['i.id_incidencia', 'i.id_material', 'i.id_user_rep', 'i.descripcion', 'i.prioridad', 'i.estado_inc'];
-        $extra = self::columnasExtra($conexion);
-        $cols = implode(', ', array_merge($base, $extra));
-        $sql = "SELECT $cols, COALESCE(m.nombre_equipo, '—') as nombre_material
+        $sql = "SELECT i.id_incidencia, i.id_material, i.id_user_rep, i.descripcion,
+                       i.prioridad, i.estado_inc, i.created_at, i.fecha_resolucion,
+                       COALESCE(m.nombre_equipo, '—') as nombre_material,
+                       m.id_tag_material as id_tag_material,
+                       m.ubicacion as ubicacion
                 FROM incidencias i
                 LEFT JOIN material m ON i.id_material = m.id_material
                 WHERE i.id_incidencia = ?";
@@ -73,13 +71,15 @@ class Incidencia {
             return new Incidencia(
                 $fila['id_incidencia'], $fila['id_material'], $fila['id_user_rep'],
                 $fila['descripcion'], $fila['prioridad'], $fila['estado_inc'],
-                $fila['created_at'] ?? null, $fila['fecha_resolucion'] ?? null,
-                $fila['nombre_material']
+                $fila['created_at'], $fila['fecha_resolucion'],
+                $fila['nombre_material'], $fila['id_tag_material'],
+                $fila['ubicacion']
             );
         }
         return null;
     }
 
+    // Crea una nueva incidencia en la base de datos
     public static function crear($id_material, $id_user_rep, $descripcion, $prioridad, $estado_inc = 'abierta') {
         $conexion = Conexion::conectar();
         $stmt = $conexion->prepare("INSERT INTO incidencias (id_material, id_user_rep, descripcion, prioridad, estado_inc) VALUES (?, ?, ?, ?, ?)");
@@ -87,10 +87,15 @@ class Incidencia {
         return $conexion->lastInsertId();
     }
 
-    public static function actualizar($id, $prioridad, $estado_inc) {
+    // Actualiza la descripción, prioridad y/o estado de una incidencia
+    public static function actualizar($id, $prioridad, $estado_inc, $descripcion = null) {
         $conexion = Conexion::conectar();
         $campos = [];
         $valores = [];
+        if ($descripcion !== null) {
+            $campos[] = "descripcion = ?";
+            $valores[] = $descripcion;
+        }
         if ($prioridad !== null) {
             $campos[] = "prioridad = ?";
             $valores[] = $prioridad;
@@ -98,11 +103,8 @@ class Incidencia {
         if ($estado_inc !== null) {
             $campos[] = "estado_inc = ?";
             $valores[] = $estado_inc;
-            try {
-                $conexion->query("SELECT fecha_resolucion FROM incidencias LIMIT 0");
-                $campos[] = "fecha_resolucion = IF(? = 'resuelta', NOW(), NULL)";
-                $valores[] = $estado_inc;
-            } catch (Exception $e) {}
+            $campos[] = "fecha_resolucion = IF(? = 'resuelta', NOW(), NULL)";
+            $valores[] = $estado_inc;
         }
         if (empty($campos)) return true;
         $valores[] = $id;
@@ -111,12 +113,14 @@ class Incidencia {
         return $stmt->execute($valores);
     }
 
+    // Elimina una incidencia por su ID
     public static function eliminar($id) {
         $conexion = Conexion::conectar();
         $stmt = $conexion->prepare("DELETE FROM incidencias WHERE id_incidencia = ?");
         return $stmt->execute([$id]);
     }
 
+    // Getters para acceder a las propiedades privadas
     public function getId() { return $this->id_incidencia; }
     public function getIdMaterial() { return $this->id_material; }
     public function getIdUser() { return $this->id_user_rep; }
@@ -126,4 +130,6 @@ class Incidencia {
     public function getCreatedAt() { return $this->created_at; }
     public function getFechaResolucion() { return $this->fecha_resolucion; }
     public function getNombreMaterial() { return $this->nombre_material; }
+    public function getIdTagMaterial() { return $this->id_tag_material; }
+    public function getUbicacion() { return $this->ubicacion; }
 }

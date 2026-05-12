@@ -92,9 +92,9 @@
 }
 
 /* Colores de prioridad (incidencias) */
-.priority-high { color: #dc2626; font-weight: 600; }    /* Rojo para alta/crítica */
-.priority-medium { color: var(--orange); font-weight: 600; }  /* Naranja para media */
-.priority-low { color: var(--blue); font-weight: 600; }       /* Azul para baja */
+.priority-high { color: #dc2626; font-weight: 600; }
+.priority-medium { color: var(--orange); font-weight: 600; }
+.priority-low { color: var(--blue); font-weight: 600; }
 
 /* Colores de estado (incidencias) */
 .status-open { color: var(--orange); font-weight: 500; }         /* Naranja para abierta */

@@ -19,8 +19,8 @@ export class IncidenciasService {
     return this.http.post<{ success: boolean }>(`${this.API_URL}/incidencias`, data, this.opts);
   }
 
-  // Actualiza una incidencia (prioridad y/o estado)
-  updateIncidencia(id: number, data: { prioridad?: string; estado?: string }) {
+  // Actualiza una incidencia (descripción, prioridad y/o estado)
+  updateIncidencia(id: number, data: { descripcion?: string; prioridad?: string; estado?: string }) {
     return this.http.put<{ success: boolean }>(`${this.API_URL}/incidencias/${id}`, data, this.opts);
   }
 

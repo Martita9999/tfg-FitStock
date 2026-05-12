@@ -3,7 +3,7 @@
 $DB_HOST = "127.0.0.1";   // Dirección del servidor de base de datos (localhost)
 $DB_NAME = "fitstock";     // Nombre de la base de datos
 $DB_USER = "fitstock";     // Usuario de la base de datos
-$DB_PASS = "fitstock";     // Contraseña del usuario de la base de datos
+$DB_PASS = "Tokio2324";     // Contraseña del usuario de la base de datos
 
 // Función que crea y devuelve una conexión PDO a la base de datos
 function obtenerConexion() {

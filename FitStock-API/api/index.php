@@ -22,6 +22,7 @@ require_once __DIR__ . "/../models/Material.php";
 require_once __DIR__ . "/../models/Prestamo.php";
 require_once __DIR__ . "/../models/Incidencia.php";
 require_once __DIR__ . "/../models/Producto.php";
+require_once __DIR__ . "/../models/Compra.php";
 
 // Variables de ruteo: método HTTP, URI y segmentos de la ruta
 $method = $_SERVER['REQUEST_METHOD'];
@@ -61,18 +62,16 @@ function handleApi($method, $resource, $path) {
         // LOGIN - Inicio de sesión (POST /api/login)
     
         case 'login':
-            if ($method === 'POST') {                                  // Solo acepta POST
-                $email = trim($data['email'] ?? '');                   // Email del formulario
-                $password = $data['password'] ?? '';                   // Contraseña del formulario
+            if ($method === 'POST') {
+                $email = trim($data['email'] ?? '');
+                $password = $data['password'] ?? '';
                 
-                if ($email && $password) {                             // Si ambos campos están presentes
-                    $usuario = Usuario::obtenerPorEmail($email);       // Busca usuario por email
-                    if ($usuario && password_verify($password, $usuario->getPasswordHash())) {   // Verifica contraseña
-                        // Guarda datos del usuario en la sesión
+                if ($email && $password) {
+                    $usuario = Usuario::obtenerPorEmail($email);
+                    if ($usuario && password_verify($password, $usuario->getPasswordHash())) {
                         $_SESSION['usuario_id'] = $usuario->getId();
                         $_SESSION['usuario_nombre'] = $usuario->getNombre();
                         $_SESSION['usuario_rol'] = $usuario->getRol();
-                        // Responde con los datos del usuario
                         jsonResponse([
                             "success" => true,
                             "user" => [
@@ -84,7 +83,7 @@ function handleApi($method, $resource, $path) {
                         ]);
                     }
                 }
-                jsonResponse(["error" => "Credenciales inválidas"], 401);   // 401 - No autorizado
+                jsonResponse(["error" => "Credenciales inválidas"], 401);
             }
             break;
 
@@ -117,29 +116,8 @@ function handleApi($method, $resource, $path) {
             jsonResponse(["success" => true]);               // Confirma el cierre de sesión
             break;
 
-        
-        // PERFIL - Obtener/actualizar perfil del usuario autenticado
-       
-        case 'perfil':
-            requireSession();                                // Requiere autenticación
-            if ($method === 'GET') {                         // GET /api/perfil - Obtener perfil
-                $usuario = Usuario::obtenerPorId($_SESSION['usuario_id']);   // Busca usuario por ID de sesión
-                jsonResponse([
-                    "id" => $usuario->getId(),
-                    "nombre" => $usuario->getNombre(),
-                    "email" => $usuario->getEmail(),
-                    "rol" => $usuario->getRol()
-                ]);
-            } elseif ($method === 'PUT') {                   // PUT /api/perfil - Actualizar perfil
-                $nombre = trim($data['nombre'] ?? '');
-                $email = trim($data['email'] ?? '');
-                $password = $data['password'] ?? null;       // Contraseña opcional
-                
-                Usuario::actualizar($_SESSION['usuario_id'], $nombre, $email, $password);   // Actualiza en BD
-                $_SESSION['usuario_nombre'] = $nombre;       // Actualiza el nombre en sesión
-                jsonResponse(["success" => true]);
-            }
-            break;
+
+
 
         
         // USUARIOS - CRUD de usuarios (solo admin y entrenador)
@@ -151,7 +129,7 @@ function handleApi($method, $resource, $path) {
             }
             if ($method === 'GET') {                         // GET /api/usuarios - Listar todos (admin/entrenador)
                 $usuarios = Usuario::obtenerTodos();
-                $list = array_map(function($u) {             // Mapea a arrays sin password_hash
+                $list = array_map(function($u) {
                     return [
                         "id" => $u->getId(),
                         "nombre" => $u->getNombre(),
@@ -167,10 +145,36 @@ function handleApi($method, $resource, $path) {
                 $nombre = trim($data['nombre'] ?? '');
                 $email = trim($data['email'] ?? '');
                 $password = $data['password'] ?? '';
-                $rol = $data['rol'] ?? 'cliente';            // Rol por defecto: cliente
+                $rol = $data['rol'] ?? 'cliente';
                 
                 Usuario::crear($nombre, $email, $password, $rol);
                 jsonResponse(["success" => true]);
+            } elseif ($method === 'PUT' && isset($path[2])) {
+                if ($_SESSION['usuario_rol'] !== 'admin') {
+                    jsonResponse(["error" => "Acceso denegado"], 403);
+                }
+                $nombre = trim($data['nombre'] ?? '');
+                $email = trim($data['email'] ?? '');
+                $password = $data['password'] ?? null;
+                $rol = $data['rol'] ?? null;
+                if ($nombre && $email) {
+                    Usuario::actualizarAdmin($path[2], $nombre, $email, $password, $rol);
+                    jsonResponse(["success" => true]);
+                } else {
+                    jsonResponse(["error" => "Datos inválidos"], 400);
+                }
+            } elseif ($method === 'PUT' && isset($path[2]) && $path[2] === 'cambiar-password') {
+                $password = $data['password'] ?? '';
+                if ($password) {
+                    $password_hash = password_hash($password, PASSWORD_DEFAULT);
+                    $conexion = Conexion::conectar();
+                    $stmt = $conexion->prepare("UPDATE usuarios SET password_hash = ? WHERE id_usuario = ?");
+                    $stmt->execute([$password_hash, $_SESSION['usuario_id']]);
+                    jsonResponse(["success" => true]);
+                } else {
+                    jsonResponse(["error" => "Contraseña inválida"], 400);
+                }
+                break;
             } elseif ($method === 'DELETE' && isset($path[2])) {   // DELETE /api/usuarios/{id} (solo admin)
                 if ($_SESSION['usuario_rol'] !== 'admin') {
                     jsonResponse(["error" => "Acceso denegado"], 403);
@@ -200,7 +204,7 @@ function handleApi($method, $resource, $path) {
                         "ubicacion" => $m->getUbicacion(),
                         "estado" => $m->getEstado(),
                         "tipo" => $m->getTipo(),
-                        "qr" => $m->getQrIdentificador(),
+                        "id_tag_material" => $m->getIdTagMaterial(),
                         "ultima_rev" => $m->getUltimaRev()
                     ];
                 }, $materiales);
@@ -210,10 +214,10 @@ function handleApi($method, $resource, $path) {
                 $descripcion = trim($data['descripcion'] ?? '');
                 $estado = $data['estado'] ?? 'operativo';    // Estado por defecto
                 $tipo = $data['tipo'] ?? 'maquina';          // Tipo por defecto
-                $qr = trim($data['qr'] ?? '');
+                $id_tag_material = trim($data['id_tag_material'] ?? '');
                 $ubicacion = trim($data['ubicacion'] ?? '');
                 if ($nombre) {
-                    Material::crear($nombre, $descripcion, $estado, $tipo, $qr, null, $ubicacion ?: null);
+                    Material::crear($nombre, $descripcion, $estado, $tipo, $id_tag_material, null, $ubicacion ?: null);
                     jsonResponse(["success" => true]);
                 }
                 jsonResponse(["error" => "Datos inválidos"], 400);
@@ -223,8 +227,9 @@ function handleApi($method, $resource, $path) {
                 $estado = $data['estado'] ?? null;
                 $ultima_rev = $data['ultima_rev'] ?? null;
                 $ubicacion = trim($data['ubicacion'] ?? '');
+                $id_tag_material = trim($data['id_tag_material'] ?? '');
                 if ($nombre && $estado) {
-                    Material::actualizar($path[2], $nombre, $descripcion, $estado, $ultima_rev, $ubicacion ?: null);
+                    Material::actualizar($path[2], $nombre, $descripcion, $estado, $ultima_rev, $ubicacion ?: null, $id_tag_material ?: null);
                     jsonResponse(["success" => true]);
                 }
                 jsonResponse(["error" => "Datos inválidos"], 400);
@@ -339,6 +344,41 @@ function handleApi($method, $resource, $path) {
             break;
 
         
+        // COMPRAS - Registro de compras de productos por usuarios
+        case 'compras':
+            requireSession();
+            if ($method === 'GET') {
+                if ($_SESSION['usuario_rol'] === 'cliente') {
+                    $compras = Compra::obtenerTodos($_SESSION['usuario_id']);
+                } else {
+                    $id_usuario = $_GET['id_usuario'] ?? null;
+                    $compras = Compra::obtenerTodos($id_usuario);
+                }
+                $list = array_map(function($c) {
+                    return [
+                        "id" => $c->getId(),
+                        "id_usuario" => $c->getIdUsuario(),
+                        "id_producto" => $c->getIdProducto(),
+                        "nombre_producto" => $c->getNombreProducto(),
+                        "cantidad" => intval($c->getCantidad()),
+                        "precio_unitario" => floatval($c->getPrecioUnitario()),
+                        "total" => floatval($c->getTotal()),
+                        "fecha_compra" => $c->getFechaCompra()
+                    ];
+                }, $compras);
+                jsonResponse($list);
+            } elseif ($method === 'POST') {
+                $id_producto = $data['id_producto'] ?? '';
+                $cantidad = intval($data['cantidad'] ?? 1);
+                $precio_unitario = floatval($data['precio_unitario'] ?? 0);
+                if ($id_producto && $cantidad > 0 && $precio_unitario > 0) {
+                    Compra::crear($_SESSION['usuario_id'], $id_producto, $cantidad, $precio_unitario);
+                    jsonResponse(["success" => true]);
+                }
+                jsonResponse(["error" => "Datos inválidos"], 400);
+            }
+            break;
+
         // INCIDENCIAS - CRUD de incidencias en materiales
        
         case 'incidencias':
@@ -359,7 +399,9 @@ function handleApi($method, $resource, $path) {
                         "estado" => $inc->getEstado(),
                         "created_at" => $inc->getCreatedAt(),
                         "fecha_resolucion" => $inc->getFechaResolucion(),
-                        "nombre_material" => $inc->getNombreMaterial()
+                        "nombre_material" => $inc->getNombreMaterial(),
+                        "id_tag_material" => $inc->getIdTagMaterial(),
+                        "ubicacion" => $inc->getUbicacion()
                     ];
                 }, $incidencias);
                 jsonResponse($list);
@@ -377,10 +419,11 @@ function handleApi($method, $resource, $path) {
                     jsonResponse(["success" => true]);
                 }
                 jsonResponse(["error" => "Datos inválidos"], 400);
-            } elseif ($method === 'PUT' && isset($path[2])) {   // PUT /api/incidencias/{id} - Actualizar prioridad/estado
+            } elseif ($method === 'PUT' && isset($path[2])) {   // PUT /api/incidencias/{id} - Actualizar descripción/prioridad/estado
+                $descripcion = isset($data['descripcion']) ? trim($data['descripcion']) : null;
                 $prioridad = $data['prioridad'] ?? null;
                 $estado = $data['estado'] ?? null;
-                Incidencia::actualizar($path[2], $prioridad, $estado);
+                Incidencia::actualizar($path[2], $prioridad, $estado, $descripcion);
                 // Cambia el estado de la máquina según el estado de la incidencia
                 $inc = Incidencia::obtenerPorId($path[2]);
                 if ($inc && $inc->getIdMaterial()) {
@@ -397,6 +440,52 @@ function handleApi($method, $resource, $path) {
             } elseif ($method === 'DELETE' && isset($path[2])) {   // DELETE /api/incidencias/{id}
                 Incidencia::eliminar($path[2]);
                 jsonResponse(["success" => true]);
+            }
+            break;
+
+        
+        // RESUMEN - Dashboard de administración (GET /api/resumen)
+       
+        case 'resumen':
+            requireSession();
+            if ($method === 'GET') {
+                $conexion = Conexion::conectar();
+
+                // Conteo de incidencias por estado
+                $stmt = $conexion->query("SELECT estado_inc, COUNT(*) as total FROM incidencias GROUP BY estado_inc");
+                $incidencias = ['abierta' => 0, 'en_proceso' => 0, 'resuelta' => 0];
+                while ($fila = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                    $incidencias[$fila['estado_inc']] = intval($fila['total']);
+                }
+
+                // Productos con stock por debajo del mínimo
+                $stmt = $conexion->query("SELECT id_producto, nombre_prod, cant_actual, stock_minimo FROM productos_stock WHERE cant_actual < stock_minimo ORDER BY cant_actual ASC");
+                $stock_bajo = [];
+                while ($fila = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                    $stock_bajo[] = [
+                        "id" => intval($fila['id_producto']),
+                        "nombre" => $fila['nombre_prod'],
+                        "cantidad" => intval($fila['cant_actual']),
+                        "stock_minimo" => intval($fila['stock_minimo'])
+                    ];
+                }
+
+                // Conteo de máquinas por estado
+                $stmt = $conexion->query("SELECT estado, COUNT(*) as total FROM material WHERE tipo = 'maquina' GROUP BY estado");
+                $maquinas = [];
+                while ($fila = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                    $maquinas[$fila['estado']] = intval($fila['total']);
+                }
+                $total_maquinas = array_sum($maquinas);
+
+                jsonResponse([
+                    "incidencias" => $incidencias,
+                    "stock_bajo" => $stock_bajo,
+                    "maquinas" => [
+                        "por_estado" => $maquinas,
+                        "total" => $total_maquinas
+                    ]
+                ]);
             }
             break;
 

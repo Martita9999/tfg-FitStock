@@ -1,9 +1,8 @@
-// Interfaz para un usuario del sistema
 export interface Usuario {
-  id: number;           // ID único del usuario
-  nombre: string;       // Nombre completo
-  email: string;        // Correo electrónico
-  rol: string;          // Rol: 'admin', 'entrenador' o 'cliente'
+  id: number;
+  nombre: string;
+  email: string;
+  rol: string;
 }
 
 // Interfaz para un material/equipo deportivo
@@ -14,7 +13,7 @@ export interface Material {
   ubicacion?: string;     // Ubicación en el gimnasio
   estado: string;         // 'operativo', 'averiado', 'mantenimiento'
   tipo: string;           // 'maquina' o 'prestable'
-  qr?: string;            // Código QR identificador (opcional)
+  id_tag_material?: string;  // Identificador único del material
   ultima_rev?: string | null;  // Fecha de última revisión (nullable)
 }
 
@@ -39,15 +38,29 @@ export interface ProductoStock {
   precio: number;       // Precio unitario
 }
 
+// Interfaz para una compra de producto
+export interface Compra {
+  id: number;
+  id_usuario: number;
+  id_producto: number;
+  nombre_producto: string;
+  cantidad: number;
+  precio_unitario: number;
+  total: number;
+  fecha_compra: string;
+}
+
 // Interfaz para una incidencia reportada
 export interface Incidencia {
   id: number;               // ID único de la incidencia
   id_material?: number;     // ID del material relacionado
   id_user_rep?: number;     // ID del usuario que reportó
   descripcion: string;      // Descripción del problema
-  prioridad: string;        // 'baja', 'media', 'alta', 'critica'
+  prioridad: string;        // 'baja', 'media', 'alta'
   estado: string;           // 'abierta', 'en_proceso', 'resuelta'
   created_at?: string | null;       // Fecha de creación
   fecha_resolucion?: string | null;  // Fecha de resolución
   nombre_material?: string;          // Nombre del material (de JOIN)
+  id_tag_material?: string;          // Identificador del material (de JOIN)
+  ubicacion?: string;                // Ubicación del material (de JOIN)
 }

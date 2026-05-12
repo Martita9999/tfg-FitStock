@@ -1,42 +1,63 @@
-<div>
+<!-- Página de gestión de incidencias en máquinas -->
+<div class="page-content">
   <div class="header-actions">
     <h2 class="page-title">⚠️ Incidencias</h2>
     <button class="btn-create" (click)="abrirModal()">+ Crear Incidencia</button>
   </div>
 
+  <!-- Tabla de incidencias activas (no resueltas) -->
   <h3 class="section-title inc-active-title">🔴 Incidencias Activas</h3>
   <table class="data-table" *ngIf="incidenciasActivas.length > 0">
+    <colgroup>
+      <col style="width:18%">
+      <col style="width:13%">
+      <col style="width:20%">
+      <col style="width:12%">
+      <col style="width:12%">
+      <col style="width:13%">
+      @if (userRole !== 'cliente') {
+        <col style="width:12%">
+      }
+    </colgroup>
     <thead>
       <tr>
         <th>Máquina</th>
+        <th>Ubicación</th>
         <th>Descripción</th>
-        <th>Prioridad</th>
-        <th>Estado</th>
-        <th>Acciones</th>
+        <th class="td-center">Prioridad</th>
+        <th class="td-center">Estado</th>
+        <th class="td-center">Inicio</th>
+        <th class="td-center" *ngIf="userRole !== 'cliente'">Acciones</th>
       </tr>
     </thead>
     <tbody>
       <tr *ngFor="let inc of incidenciasActivas">
-        <td><strong>{{ inc.nombre_material || '—' }}</strong></td>
-        <td>{{ inc.descripcion }}</td>
         <td>
-          <span [class.priority-high]="inc.prioridad === 'alta' || inc.prioridad === 'critica'"
+          <strong>{{ inc.nombre_material || '—' }}</strong>
+          <span class="id-tag">{{ inc.id_tag_material || '—' }}</span>
+        </td>
+        <td>{{ inc.ubicacion || '—' }}</td>
+        <td>{{ inc.descripcion }}</td>
+        <td class="td-center">
+          <span class="priority-badge"
+                [class.priority-high]="inc.prioridad === 'alta'"
                 [class.priority-medium]="inc.prioridad === 'media'"
                 [class.priority-low]="inc.prioridad === 'baja'">
             {{ inc.prioridad | uppercase }}
           </span>
         </td>
-        <td>
+        <td class="td-center">
           <span class="status-badge"
                 [class.averiado]="inc.estado === 'abierta'"
                 [class.en_reparacion]="inc.estado === 'en_proceso'">
             {{ getEstadoLabel(inc.estado) }}
           </span>
         </td>
-        <td>
-          <div class="action-btns">
-            <button class="btn-edit" (click)="abrirEditar(inc)" title="Editar incidencia" *ngIf="userRole !== 'cliente'">✏️</button>
-            <button class="btn-delete" (click)="borrarIncidencia(inc.id)" title="Borrar incidencia" *ngIf="userRole !== 'cliente'">🗑️</button>
+        <td class="td-center">{{ inc.created_at ? (inc.created_at | date:'dd/MM/yyyy') : '—' }}</td>
+        <td class="td-center" *ngIf="userRole !== 'cliente'">
+          <div class="action-btns" style="justify-content:center">
+            <button class="btn-edit" (click)="abrirEditar(inc)" title="Editar incidencia">✏️</button>
+            <button class="btn-delete" (click)="borrarIncidencia(inc.id)" title="Borrar incidencia">🗑️</button>
           </div>
         </td>
       </tr>
@@ -47,35 +68,53 @@
     <p>No hay incidencias activas.</p>
   </div>
 
+  <!-- Tabla de incidencias resueltas -->
   <h3 class="section-title resolved-title" [class.mt-4]="incidenciasActivas.length > 0">✅ Incidencias Resueltas</h3>
   <table class="data-table" *ngIf="incidenciasResueltas.length > 0">
+    <colgroup>
+      <col style="width:16%">
+      <col style="width:12%">
+      <col style="width:18%">
+      <col style="width:10%">
+      <col style="width:12%">
+      <col style="width:12%">
+      @if (userRole !== 'cliente') {
+        <col style="width:8%">
+      }
+    </colgroup>
     <thead>
       <tr>
         <th>Máquina</th>
+        <th>Ubicación</th>
         <th>Descripción</th>
-        <th>Prioridad</th>
-        <th>Inicio</th>
-        <th>Fin</th>
-        <th>Acciones</th>
+        <th class="td-center">Prioridad</th>
+        <th class="td-center">Inicio</th>
+        <th class="td-center">Fin</th>
+        <th class="td-center" *ngIf="userRole !== 'cliente'">Acciones</th>
       </tr>
     </thead>
     <tbody>
       <tr *ngFor="let inc of incidenciasResueltas">
-        <td><strong>{{ inc.nombre_material || '—' }}</strong></td>
-        <td>{{ inc.descripcion }}</td>
         <td>
-          <span [class.priority-high]="inc.prioridad === 'alta' || inc.prioridad === 'critica'"
+          <strong>{{ inc.nombre_material || '—' }}</strong>
+          <span class="id-tag">{{ inc.id_tag_material || '—' }}</span>
+        </td>
+        <td>{{ inc.ubicacion || '—' }}</td>
+        <td>{{ inc.descripcion }}</td>
+        <td class="td-center">
+          <span class="priority-badge"
+                [class.priority-high]="inc.prioridad === 'alta'"
                 [class.priority-medium]="inc.prioridad === 'media'"
                 [class.priority-low]="inc.prioridad === 'baja'">
             {{ inc.prioridad | uppercase }}
           </span>
         </td>
-        <td>{{ inc.created_at ? (inc.created_at | date:'dd/MM/yyyy') : '—' }}</td>
-        <td>{{ inc.fecha_resolucion ? (inc.fecha_resolucion | date:'dd/MM/yyyy') : '—' }}</td>
-        <td>
-          <div class="action-btns">
-            <button class="btn-edit" (click)="abrirEditar(inc)" title="Editar incidencia" *ngIf="userRole !== 'cliente'">✏️</button>
-            <button class="btn-delete" (click)="borrarIncidencia(inc.id)" title="Borrar incidencia" *ngIf="userRole !== 'cliente'">🗑️</button>
+        <td class="td-center">{{ inc.created_at ? (inc.created_at | date:'dd/MM/yyyy') : '—' }}</td>
+        <td class="td-center">{{ inc.fecha_resolucion ? (inc.fecha_resolucion | date:'dd/MM/yyyy') : '—' }}</td>
+        <td class="td-center" *ngIf="userRole !== 'cliente'">
+          <div class="action-btns" style="justify-content:center">
+            <button class="btn-edit" (click)="abrirEditar(inc)" title="Editar incidencia">✏️</button>
+            <button class="btn-delete" (click)="borrarIncidencia(inc.id)" title="Borrar incidencia">🗑️</button>
           </div>
         </td>
       </tr>
@@ -87,6 +126,7 @@
   </div>
 </div>
 
+<!-- Modal para crear nueva incidencia -->
 <div class="modal-overlay" *ngIf="showModal" (click)="cerrarModal()">
   <div class="modal-card" (click)="$event.stopPropagation()">
     <div class="modal-header">
@@ -101,7 +141,7 @@
         <label>Máquina</label>
         <select [(ngModel)]="newIncidencia.id_material" name="id_material">
           <option value="0" disabled>Selecciona una máquina</option>
-          <option *ngFor="let m of materiales" [value]="m.id">{{ m.nombre }} ({{ m.qr }})</option>
+          <option *ngFor="let m of materiales" [value]="m.id">{{ m.nombre }} ({{ m.id_tag_material }})</option>
         </select>
       </div>
       <div class="field">
@@ -114,7 +154,7 @@
           <option value="baja">Baja</option>
           <option value="media">Media</option>
           <option value="alta">Alta</option>
-          <option value="critica">Crítica</option>
+
         </select>
       </div>
     </div>
@@ -125,6 +165,7 @@
   </div>
 </div>
 
+<!-- Modal para editar estado y prioridad de una incidencia -->
 <div class="modal-overlay" *ngIf="showEditModal" (click)="cerrarEditar()">
   <div class="modal-card" (click)="$event.stopPropagation()">
     <div class="modal-header">
@@ -135,9 +176,10 @@
       @if (error) {
         <div class="error-msg">{{ error }}</div>
       }
-      <p style="font-size:14px;color:var(--text-secondary);margin-bottom:16px;">
-        {{ editIncidencia?.descripcion }}
-      </p>
+      <div class="field">
+        <label>Descripción</label>
+        <textarea [(ngModel)]="editData.descripcion" name="edit_descripcion" rows="3" placeholder="Describe la incidencia"></textarea>
+      </div>
       <div class="field">
         <label>Estado</label>
         <select [(ngModel)]="editData.estado" name="edit_estado">
@@ -152,7 +194,7 @@
           <option value="baja">Baja</option>
           <option value="media">Media</option>
           <option value="alta">Alta</option>
-          <option value="critica">Crítica</option>
+
         </select>
       </div>
     </div>

@@ -218,6 +218,9 @@ body {
   box-shadow: 0 1px 3px rgba(0,0,0,0.06);  /* Sombra sutil */
   border: 1px solid var(--border);     /* Borde */
 }
+.data-table th.td-center, .data-table td.td-center {
+  text-align: center;
+}
 .data-table th {
   text-align: left;                    /* Alineación izquierda */
   padding: 14px 16px;                  /* Relleno */

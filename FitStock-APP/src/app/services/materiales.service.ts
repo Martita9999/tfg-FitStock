@@ -16,12 +16,12 @@ export class MaterialesService {
   }
 
   // Crea un nuevo material
-  createMaterial(data: { nombre: string; descripcion?: string; estado?: string; qr?: string; ubicacion?: string; tipo?: string }) {
+  createMaterial(data: { nombre: string; descripcion?: string; estado?: string; id_tag_material?: string; ubicacion?: string; tipo?: string }) {
     return this.http.post<{ success: boolean }>(`${this.API_URL}/materiales`, data, this.opts);
   }
 
   // Actualiza un material
-  updateMaterial(id: number, data: { nombre?: string; descripcion?: string; estado?: string; ultima_rev?: string | null; ubicacion?: string }) {
+  updateMaterial(id: number, data: { nombre?: string; descripcion?: string; estado?: string; ultima_rev?: string | null; ubicacion?: string; id_tag_material?: string }) {
     return this.http.put<{ success: boolean }>(`${this.API_URL}/materiales/${id}`, data, this.opts);
   }
 

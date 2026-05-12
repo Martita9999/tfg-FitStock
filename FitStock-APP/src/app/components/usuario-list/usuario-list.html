@@ -1,12 +1,9 @@
-<!-- Página de gestión de usuarios del sistema -->
 <div>
-  <!-- Cabecera con título y botón de crear (solo admin) -->
   <div class="header-actions">
     <h2 class="page-title">👥 Usuarios</h2>
     <button class="btn-create" (click)="abrirModal()" *ngIf="userRole === 'admin'">+ Crear Usuario</button>
   </div>
 
-  <!-- Tabla de usuarios -->
   <table class="data-table" *ngIf="lista.length > 0">
     <thead>
       <tr>
@@ -23,7 +20,6 @@
         <td><strong>{{ u.nombre }}</strong></td>
         <td>{{ u.email }}</td>
         <td>
-          <!-- Badge de rol con color según el valor -->
           <span class="role-badge" [class.admin]="u.rol === 'admin'"
                 [class.entrenador]="u.rol === 'entrenador'"
                 [class.cliente]="u.rol === 'cliente'">
@@ -31,20 +27,20 @@
           </span>
         </td>
         <td>
-          <!-- Botón eliminar: solo admin -->
-          <button class="btn-delete" (click)="borrarUsuario(u.id, u.nombre)" title="Borrar usuario" *ngIf="userRole === 'admin'">🗑️</button>
+          <div class="action-btns">
+            <button class="btn-edit" (click)="abrirEditar(u)" title="Editar usuario" *ngIf="userRole === 'admin'">✏️</button>
+            <button class="btn-delete" (click)="borrarUsuario(u.id, u.nombre)" title="Borrar usuario" *ngIf="userRole === 'admin'">🗑️</button>
+          </div>
         </td>
       </tr>
     </tbody>
   </table>
 
-  <!-- Mensaje cuando no hay usuarios -->
   <div class="empty-state" *ngIf="lista.length === 0">
     <p>No hay usuarios registrados.</p>
   </div>
 </div>
 
-<!-- Modal para crear nuevo usuario -->
 <div class="modal-overlay" *ngIf="showModal" (click)="cerrarModal()">
   <div class="modal-card" (click)="$event.stopPropagation()">
     <div class="modal-header">
@@ -79,6 +75,44 @@
     <div class="modal-footer">
       <button class="btn-cancel" (click)="cerrarModal()">Cancelar</button>
       <button class="btn-save" (click)="crearUsuario()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showEditModal" (click)="cerrarEditar()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Editar Usuario #{{ editUser?.id }}</h3>
+      <button class="btn-close" (click)="cerrarEditar()">✕</button>
+    </div>
+    <div class="modal-body">
+      @if (error) {
+        <div class="error-msg">{{ error }}</div>
+      }
+      <div class="field">
+        <label>Nombre</label>
+        <input type="text" [(ngModel)]="editUserData.nombre" name="edit_nombre" placeholder="Nombre completo">
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" [(ngModel)]="editUserData.email" name="edit_email" placeholder="email@ejemplo.com">
+      </div>
+      <div class="field">
+        <label>Nueva Contraseña (dejar en blanco para mantener)</label>
+        <input type="password" [(ngModel)]="editUserData.password" name="edit_password" placeholder="••••••">
+      </div>
+      <div class="field">
+        <label>Rol</label>
+        <select [(ngModel)]="editUserData.rol" name="edit_rol">
+          <option value="cliente">Cliente</option>
+          <option value="entrenador">Entrenador</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="cerrarEditar()">Cancelar</button>
+      <button class="btn-save" (click)="guardarEditar()">Guardar Cambios</button>
     </div>
   </div>
 </div>

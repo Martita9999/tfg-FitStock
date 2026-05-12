@@ -29,7 +29,7 @@ CREATE TABLE material (
     ubicacion VARCHAR(255) DEFAULT NULL,
     estado ENUM('operativo','averiado','mantenimiento','en_proceso','saliendo','en_reparacion','baja') NOT NULL DEFAULT 'operativo',
     tipo ENUM('maquina','prestable') NOT NULL DEFAULT 'prestable',
-    qr_identificador VARCHAR(100) UNIQUE,
+    id_tag_material VARCHAR(100) UNIQUE,
     ultima_rev DATE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -61,6 +61,21 @@ CREATE TABLE productos_stock (
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- ============================================================
+-- TABLA: compras
+-- ============================================================
+CREATE TABLE compras (
+    id_compra INT AUTO_INCREMENT PRIMARY KEY,
+    id_usuario INT NOT NULL,
+    id_producto INT NOT NULL,
+    cantidad INT NOT NULL DEFAULT 1,
+    precio_unitario DECIMAL(10,2) NOT NULL,
+    total DECIMAL(10,2) NOT NULL,
+    fecha_compra TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario) ON DELETE CASCADE,
+    FOREIGN KEY (id_producto) REFERENCES productos_stock(id_producto) ON DELETE CASCADE
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- ============================================================
 -- TABLA: incidencias
 -- ============================================================
 CREATE TABLE incidencias (
@@ -68,7 +83,7 @@ CREATE TABLE incidencias (
     id_material INT,
     id_user_rep INT,
     descripcion TEXT NOT NULL,
-    prioridad ENUM('baja','media','alta','critica') NOT NULL DEFAULT 'media',
+    prioridad ENUM('baja','media','alta') NOT NULL DEFAULT 'media',
     estado_inc ENUM('abierta','en_proceso','resuelta') NOT NULL DEFAULT 'abierta',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     fecha_resolucion DATETIME DEFAULT NULL,
@@ -77,28 +92,18 @@ CREATE TABLE incidencias (
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- ============================================================
--- TABLA: accesos_registro
--- ============================================================
-CREATE TABLE accesos_registro (
-    id_acceso INT AUTO_INCREMENT PRIMARY KEY,
-    id_usuario INT,
-    fecha_entrada TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario) ON DELETE SET NULL
-) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- ============================================================
 -- DATOS DE EJEMPLO
 -- ============================================================
 
 -- Usuarios (password para todos: "password")
 INSERT INTO usuarios (nombre, email, password_hash, rol) VALUES
-('Admin FitStock', 'admin@fitstock.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin'),
-('Carlos Garcia', 'carlos@gym.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'entrenador'),
-('ilsa', 'ilsa@fitstock.com', '$2y$12$dE331NPvgbrmQ9JCOYne.eJX45kU1JqP6ICsgDX5yCqIK1qocMlvm', 'cliente'),
-('marta', 'marta@fitstock.com', '$2y$12$6T/o1wM4J7YvC9y9DVBbFuN9z5z5XNkZkGvyk2bRLZBkHl89SC8LS', 'entrenador');
+('Admin FitStock', 'admin@fitstock.com', '$2y$12$EhlqrmMIGzBggJmnWwA5WO5m//kgIcCnp/Hh.JdGP8OJLFTf2K.d.', 'admin'),
+('Carlos Garcia', 'carlos@gym.com', '$2y$12$EhlqrmMIGzBggJmnWwA5WO5m//kgIcCnp/Hh.JdGP8OJLFTf2K.d.', 'entrenador'),
+('ilsa', 'ilsa@fitstock.com', '$2y$12$7lOqymM3DmBf91DYg5ELBuld63Pi7hym1jkUM44RL7Wu4a/70WqJ2', 'cliente'),
+('marta', 'marta@fitstock.com', '$2y$12$EOvv5koWLTsHua43cbDF0e4L6FbOG2d/45piyAOpyEBuiD5TKAYjm', 'entrenador');
 
 -- Material prestable
-INSERT INTO material (nombre_equipo, descripcion, estado, tipo, qr_identificador, ultima_rev) VALUES
+INSERT INTO material (nombre_equipo, descripcion, estado, tipo, id_tag_material, ultima_rev) VALUES
 ('Mancuerna 5kg',  'Mancuerna de 5kg para ejercicios de brazo',  'operativo', 'prestable', 'MAN-001', '2026-01-15'),
 ('Mancuerna 5kg',  'Mancuerna de 5kg para ejercicios de brazo',  'operativo', 'prestable', 'MAN-002', '2026-01-15'),
 ('Mancuerna 8kg',  'Mancuerna de 8kg para ejercicios de brazo',  'operativo', 'prestable', 'MAN-003', '2026-01-15'),
@@ -125,7 +130,7 @@ INSERT INTO material (nombre_equipo, descripcion, estado, tipo, qr_identificador
 ('Balon 15kg',     'Balon medicinal lastrado de 15kg',           'operativo', 'prestable', 'BAL-005', '2026-04-05');
 
 -- Maquinas
-INSERT INTO material (nombre_equipo, descripcion, ubicacion, estado, tipo, qr_identificador, ultima_rev) VALUES
+INSERT INTO material (nombre_equipo, descripcion, ubicacion, estado, tipo, id_tag_material, ultima_rev) VALUES
 ('Cinta de correr', 'Cinta de correr electrica profesional', 'Piso 1', 'operativo', 'maquina', 'CIN-001', '2026-05-11'),
 ('Cinta de correr', 'Cinta de correr electrica profesional', NULL,      'operativo', 'maquina', 'CIN-002', '2026-03-10'),
 ('Cinta de correr', 'Cinta de correr electrica profesional', NULL,      'operativo', 'maquina', 'CIN-003', '2026-03-10'),
@@ -141,9 +146,9 @@ INSERT INTO material (nombre_equipo, descripcion, ubicacion, estado, tipo, qr_id
 ('Pulsador pierna', 'Maquina de pulsador para piernas',       NULL,      'operativo', 'maquina', 'PUL-003', '2026-05-01');
 
 -- Items adicionales creados durante pruebas
-INSERT INTO material (nombre_equipo, descripcion, ubicacion, estado, tipo, qr_identificador, ultima_rev) VALUES
-('Cinta de correr', 'Cinta en ventana', NULL, 'operativo', 'maquina', '', '2026-05-11');
-INSERT INTO material (nombre_equipo, descripcion, estado, tipo, qr_identificador) VALUES
+INSERT INTO material (nombre_equipo, descripcion, ubicacion, estado, tipo, id_tag_material, ultima_rev) VALUES
+('Cinta de correr', 'Cinta en ventana', NULL, 'operativo', 'maquina', NULL, '2026-05-11');
+INSERT INTO material (nombre_equipo, descripcion, estado, tipo, id_tag_material) VALUES
 ('Balon 10kg', 'Balon medicinal lastrado de 10kg', 'operativo', 'prestable', 'BAL10-001');
 
 -- Productos en stock
@@ -161,9 +166,8 @@ INSERT INTO productos_stock (nombre_prod, descripcion, cant_actual, stock_minimo
 INSERT INTO incidencias (id_material, id_user_rep, descripcion, prioridad, estado_inc, fecha_resolucion) VALUES
 (26, 1, 'ROTO', 'media', 'resuelta', '2026-05-11 12:54:03');
 
--- ============================================================
--- Usuario de BD para la aplicacion
--- ============================================================
-CREATE USER IF NOT EXISTS fitstock IDENTIFIED BY 'fitstock';
+
+-- Usuario de BD para la aplicacion (ejecutar como root si no existe)
+CREATE USER IF NOT EXISTS fitstock IDENTIFIED BY 'Tokio2324';
 GRANT ALL ON fitstock.* TO fitstock;
 FLUSH PRIVILEGES;

@@ -1,0 +1,7 @@
+docker exec -i mysql-db mysql -uroot -pTokio2324 fitstock -e "SELECT i.id_incidencia, m.id_tag_material FROM incidencias i LEFT JOIN material m ON i.id_material = m.id_material;"
+mysql: [Warning] Using a password on the command line interface can be insecure.
+id_incidencia   id_tag_material
+2       CIN-001
+3       NULL
+4       NULL
+alex@Programador2:~$

@@ -1,0 +1,197 @@
+<div class="dashboard-home">
+  <!-- Admin / Entrenador -->
+  @if (user?.rol !== 'cliente') {
+    <div class="welcome-card">
+      <h2>Panel de Control</h2>
+      <p>Resumen general del estado del gimnasio</p>
+    </div>
+
+    @if (error) {
+      <div class="error-msg">{{ error }}</div>
+    }
+
+    @if (resumen) {
+      <div class="grid-cards">
+        <div class="card incidencias-card">
+          <div class="card-header inc">⚠️ Incidencias</div>
+          <div class="card-body">
+            <div class="stats">
+              <div class="stat">
+                <span class="stat-num alert">{{ resumen.incidencias.abierta }}</span>
+                <span class="stat-label">Abiertas</span>
+              </div>
+              <div class="stat">
+                <span class="stat-num warning">{{ resumen.incidencias.en_proceso }}</span>
+                <span class="stat-label">En proceso</span>
+              </div>
+              <div class="stat">
+                <span class="stat-num ok">{{ resumen.incidencias.resuelta }}</span>
+                <span class="stat-label">Resueltas</span>
+              </div>
+            </div>
+            <a routerLink="/admin/incidencias" class="card-link">Ver incidencias →</a>
+          </div>
+        </div>
+
+        <div class="card stock-card">
+          <div class="card-header stock">📦 Stock Bajo Mínimo</div>
+          <div class="card-body">
+            @if (resumen.stock_bajo.length === 0) {
+              <p class="no-data">Todo en orden, sin stock bajo</p>
+            } @else {
+              <div class="stock-list">
+                @for (item of resumen.stock_bajo; track item.id) {
+                  <div class="stock-item">
+                    <span class="item-name">{{ item.nombre }}</span>
+                    <span class="item-qty alert">{{ item.cantidad }} / {{ item.stock_minimo }}</span>
+                  </div>
+                }
+              </div>
+            }
+            <a routerLink="/admin/inventario" class="card-link">Gestionar stock →</a>
+          </div>
+        </div>
+
+        <div class="card maquinas-card">
+          <div class="card-header maq">🏋️ Máquinas</div>
+          <div class="card-body">
+            <div class="stats">
+              <div class="stat">
+                <span class="stat-num ok">{{ resumen.maquinas.por_estado['operativo'] || 0 }}</span>
+                <span class="stat-label">Operativas</span>
+              </div>
+              <div class="stat">
+                <span class="stat-num alert">{{ resumen.maquinas.por_estado['averiado'] || 0 }}</span>
+                <span class="stat-label">Averiadas</span>
+              </div>
+              <div class="stat">
+                <span class="stat-num warning">{{ resumen.maquinas.por_estado['mantenimiento'] || 0 }}</span>
+                <span class="stat-label">Mantenimiento</span>
+              </div>
+              <div class="stat">
+                <span class="stat-num">{{ resumen.maquinas.por_estado['en_reparacion'] || 0 }}</span>
+                <span class="stat-label">Reparación</span>
+              </div>
+            </div>
+            <a routerLink="/admin/materiales" class="card-link">Ver máquinas →</a>
+          </div>
+        </div>
+      </div>
+    }
+  }
+
+  <!-- Cliente -->
+  @if (user?.rol === 'cliente') {
+    <div class="welcome-card">
+      <h2>Bienvenido, {{ user?.nombre }}</h2>
+      <p>Panel de cliente — resumen de tu actividad</p>
+    </div>
+
+    @if (error) {
+      <div class="error-msg">{{ error }}</div>
+    }
+    @if (successMsg) {
+      <div class="success-msg">{{ successMsg }}</div>
+    }
+
+    <div class="grid-cards">
+      <!-- Mis Datos -->
+      <div class="card perfil-card">
+        <div class="card-header perfil">👤 Mis Datos</div>
+        <div class="card-body">
+          <div class="info-row"><span class="info-label">Nombre</span><span class="info-value">{{ user?.nombre }}</span></div>
+          <div class="info-row"><span class="info-label">Email</span><span class="info-value">{{ user?.email }}</span></div>
+          <div class="info-row"><span class="info-label">Rol</span><span class="info-value role-cliente">Cliente</span></div>
+          <div class="info-row">
+            <span class="info-label">Contraseña</span>
+            <span class="info-value">
+              @if (!showPasswordForm) {
+                <span class="password-mask">********</span>
+                <button class="btn-link" (click)="showPasswordForm = true">Cambiar</button>
+              }
+            </span>
+          </div>
+          @if (showPasswordForm) {
+            <div class="password-form">
+              <input type="password" [(ngModel)]="newPassword" name="newPass" placeholder="Nueva contraseña" class="input-sm">
+              <div class="password-actions">
+                <button class="btn-sm btn-save-sm" (click)="cambiarPassword()">Guardar</button>
+                <button class="btn-sm btn-cancel-sm" (click)="showPasswordForm = false; newPassword = ''">Cancelar</button>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Máquinas -->
+      <div class="card maquinas-card">
+        <div class="card-header maq">🏋️ Máquinas</div>
+        <div class="card-body">
+          <div class="stats">
+            <div class="stat">
+              <span class="stat-num ok">{{ maquinasOperativas }}</span>
+              <span class="stat-label">Operativas</span>
+            </div>
+          </div>
+          @if (maquinas.length === 0) {
+            <p class="no-data">No hay máquinas averiadas o en reparación</p>
+          } @else {
+            <div class="stock-list" style="margin-top: 12px;">
+              @for (m of maquinas; track m.id) {
+                <div class="stock-item">
+                  <span class="item-name">{{ m.nombre }} <span class="id-tag">{{ m.id_tag_material }}</span></span>
+                  <span class="item-qty" [class.alert]="m.estado === 'averiado'" [class.warning]="m.estado === 'en_reparacion'">
+                    {{ m.estado === 'averiado' ? 'Averiada' : 'En reparación' }}
+                  </span>
+                </div>
+              }
+            </div>
+          }
+          <a routerLink="/admin/materiales" class="card-link">Ver todas las máquinas →</a>
+        </div>
+      </div>
+
+      <!-- Mis Préstamos -->
+      <div class="card prestamos-card">
+        <div class="card-header prestamos">🤝 Mis Préstamos</div>
+        <div class="card-body">
+          @if (misPrestamos.length === 0) {
+            <p class="no-data">No tienes préstamos activos</p>
+          } @else {
+            <div class="stock-list">
+              @for (p of misPrestamos; track p.id) {
+                <div class="stock-item">
+                  <span class="item-name">{{ p.material }}</span>
+                  <span class="item-qty" [class.ok]="p.devolucion" [class.warning]="!p.devolucion">
+                    {{ p.devolucion ? 'Devuelto' : 'Pendiente' }}
+                  </span>
+                </div>
+              }
+            </div>
+          }
+          <a routerLink="/admin/prestamos" class="card-link">Ver todos mis préstamos →</a>
+        </div>
+      </div>
+
+      <!-- Productos Comprados -->
+      <div class="card stock-card">
+        <div class="card-header stock">📦 Productos Comprados</div>
+        <div class="card-body">
+          @if (compras.length === 0) {
+            <p class="no-data">No has comprado productos todavía</p>
+          } @else {
+            <div class="stock-list">
+              @for (c of compras; track c.id) {
+                <div class="stock-item">
+                  <span class="item-name">{{ c.nombre_producto }}</span>
+                  <span class="item-qty">{{ c.cantidad }} uds — {{ c.total | number:'1.2-2' }}€</span>
+                </div>
+              }
+            </div>
+          }
+          <a routerLink="/admin/inventario" class="card-link">Comprar productos →</a>
+        </div>
+      </div>
+    </div>
+  }
+</div>

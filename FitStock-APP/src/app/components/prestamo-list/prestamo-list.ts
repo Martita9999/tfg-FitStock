@@ -7,13 +7,14 @@ import { MaterialesService } from '../../services/materiales.service';
 import { UsuarioService } from '../../services/usuario';
 import { Prestamo, Usuario, Material } from '../../interfaces/app.interfaces';
 
+// Interfaz interna que agrupa materiales por nombre para facilitar la selección
 interface MaterialGroup {
-  nombre: string;
-  descripcion: string;
-  total: number;
-  disponibles: number;
-  seleccionados: number;
-  idsDisponibles: number[];
+  nombre: string;               // Nombre del material (ej: "Mancuerna 5kg")
+  descripcion: string;          // Descripción del grupo
+  total: number;                // Total de unidades operativas
+  disponibles: number;          // Unidades disponibles para préstamo
+  seleccionados: number;        // Cantidad seleccionada por el usuario
+  idsDisponibles: number[];     // IDs de las unidades disponibles
 }
 
 @Component({
@@ -23,29 +24,31 @@ interface MaterialGroup {
   templateUrl: './prestamo-list.html',
   styleUrl: './prestamo-list.css',
 })
+// Componente que gestiona los préstamos de material prestable a usuarios
 export class PrestamoList implements OnInit {
-  private prestamosService = inject(PrestamosService);
-  private materialesService = inject(MaterialesService);
-  private usuarioService = inject(UsuarioService);
-  materiales: Material[] = [];
-  prestamos: Prestamo[] = [];
-  usuarios: Usuario[] = [];
-  userRole = '';
-  currentUserId = 0;
+  private prestamosService = inject(PrestamosService);       // Servicio de préstamos
+  private materialesService = inject(MaterialesService);     // Servicio de materiales
+  private usuarioService = inject(UsuarioService);            // Servicio de autenticación
+  materiales: Material[] = [];     // Materiales de tipo 'prestable'
+  prestamos: Prestamo[] = [];      // Lista de préstamos
+  usuarios: Usuario[] = [];        // Usuarios (para selector admin)
+  userRole = '';                   // Rol del usuario actual
+  currentUserId = 0;               // ID del usuario actual
 
-  selecciones: { [nombre: string]: number } = {};
-  error = '';
+  selecciones: { [nombre: string]: number } = {};   // Cantidad seleccionada por grupo de material
+  error = '';   // Mensaje de error
 
-  showEditModal = false;
-  editPrestamo: Prestamo | null = null;
-  editFechaDevolucion = '';
+  showEditModal = false;                             // Control del modal de edición de préstamo
+  editPrestamo: Prestamo | null = null;              // Préstamo en edición
+  editFechaDevolucion = '';                          // Fecha de devolución editada
 
-  showCreateModal = false;
-  newMaterial = { nombre: '', descripcion: '', cantidad: 1 };
+  showCreateModal = false;                                                    // Control del modal de creación de material
+  newMaterial = { nombre: '', descripcion: '', cantidad: 1 };                // Datos del nuevo material prestable
 
-  showEditGroupModal = false;
-  editGroupData = { nombreOriginal: '', nombre: '', descripcion: '', ids: [] as number[] };
+  showEditGroupModal = false;                                                         // Control del modal de edición de grupo
+  editGroupData = { nombreOriginal: '', nombre: '', descripcion: '', ids: [] as number[] };  // Datos del grupo en edición
 
+  // Al iniciar, se suscribe al usuario, carga materiales y préstamos
   ngOnInit() {
     this.usuarioService.currentUser$.subscribe(u => {
       this.userRole = u?.rol ?? '';
@@ -54,28 +57,33 @@ export class PrestamoList implements OnInit {
         this.usuarioService.getUsuarios().subscribe(data => this.usuarios = data);
       }
     });
-    this.loadMateriales();
-    this.loadPrestamos();
+    this.loadMateriales();     // Carga materiales prestables
+    this.loadPrestamos();      // Carga todos los préstamos
   }
 
+  // Carga los materiales de tipo 'prestable' desde la API
   loadMateriales() {
     this.materialesService.getMateriales('prestable').subscribe(data => this.materiales = data);
   }
 
+  // Carga todos los préstamos desde la API
   loadPrestamos() {
     this.prestamosService.getPrestamos().subscribe(data => this.prestamos = data);
   }
 
+  // Obtiene los IDs de materiales que están actualmente prestados (sin devolución)
   get idsEnPrestamoActivo(): Set<number> {
     return new Set(
       this.prestamos.filter(p => !p.devolucion).map(p => p.id_material).filter((id): id is number => id != null)
     );
   }
 
+  // Propiedad pública que expone los grupos de materiales con su disponibilidad
   get grupos(): MaterialGroup[] {
     return this._grupos(this.selecciones);
   }
 
+  // Agrupa los materiales por nombre y calcula disponibilidad para cada grupo
   private _grupos(selecciones: { [nombre: string]: number }): MaterialGroup[] {
     const agrupados: { [key: string]: Material[] } = {};
     for (const m of this.materiales) {
@@ -99,6 +107,7 @@ export class PrestamoList implements OnInit {
     });
   }
 
+  // Incrementa la selección de un grupo de material (si hay disponibilidad)
   incrementar(g: MaterialGroup) {
     const actual = this.selecciones[g.nombre] ?? 0;
     if (actual < g.disponibles) {
@@ -106,6 +115,7 @@ export class PrestamoList implements OnInit {
     }
   }
 
+  // Decrementa la selección de un grupo de material
   decrementar(g: MaterialGroup) {
     const actual = this.selecciones[g.nombre] ?? 0;
     if (actual > 0) {
@@ -113,10 +123,12 @@ export class PrestamoList implements OnInit {
     }
   }
 
+  // Indica si hay al menos un material seleccionado
   get haySeleccion(): boolean {
     return Object.values(this.selecciones).some(v => v > 0);
   }
 
+  // Crea los préstamos para los materiales seleccionados (modo cliente: préstamo propio)
   prestarSeleccion() {
     this.error = '';
     const promesas: Promise<any>[] = [];
@@ -128,7 +140,7 @@ export class PrestamoList implements OnInit {
         if (idMaterial) {
           const data: any = { id_material: idMaterial };
           if (this.userRole !== 'cliente') {
-            data.id_usuario = this.newPrestamoUsuario;
+            data.id_usuario = this.newPrestamoUsuario;   // Asigna usuario seleccionado por admin
           }
           promesas.push(firstValueFrom(this.prestamosService.createPrestamo(data)));
         }
@@ -138,22 +150,24 @@ export class PrestamoList implements OnInit {
     if (promesas.length === 0) return;
 
     Promise.all(promesas).then(() => {
-      this.loadPrestamos();
-      this.limpiarSeleccion();
+      this.loadPrestamos();       // Recarga la lista
+      this.limpiarSeleccion();    // Limpia la selección
     }).catch(() => {
       this.error = 'Error al crear uno o más préstamos';
     });
   }
 
-  newPrestamoUsuario = 0;
-  showUserModal = false;
+  newPrestamoUsuario = 0;       // ID del usuario seleccionado por admin
+  showUserModal = false;         // Control del modal de selección de usuario
 
+  // Abre el modal para que el admin seleccione un usuario destinatario
   abrirModalUsuario() {
     this.newPrestamoUsuario = 0;
     this.error = '';
     this.showUserModal = true;
   }
 
+  // Confirma la selección de usuario y procede a crear los préstamos
   confirmarUsuario() {
     if (!this.newPrestamoUsuario) {
       this.error = 'Selecciona un usuario';
@@ -163,11 +177,13 @@ export class PrestamoList implements OnInit {
     this.prestarSeleccionAdmin();
   }
 
+  // Cierra el modal de selección de usuario
   cerrarModalUsuario() {
     this.showUserModal = false;
     this.error = '';
   }
 
+  // Crea los préstamos para admin con usuario destinatario específico
   prestarSeleccionAdmin() {
     this.error = '';
     const promesas: Promise<any>[] = [];
@@ -195,6 +211,7 @@ export class PrestamoList implements OnInit {
     });
   }
 
+  // Abre el modal de edición de un préstamo para cambiar su fecha de devolución
   abrirEditar(p: Prestamo) {
     this.editPrestamo = p;
     this.editFechaDevolucion = p.devolucion ? p.devolucion.split('T')[0] : new Date().toISOString().split('T')[0];
@@ -202,12 +219,14 @@ export class PrestamoList implements OnInit {
     this.showEditModal = true;
   }
 
+  // Cierra el modal de edición de préstamo
   cerrarEditar() {
     this.showEditModal = false;
     this.editPrestamo = null;
     this.error = '';
   }
 
+  // Guarda la nueva fecha de devolución del préstamo
   guardarEditar() {
     if (!this.editPrestamo) return;
     this.error = '';
@@ -219,6 +238,7 @@ export class PrestamoList implements OnInit {
     });
   }
 
+  // Abre el modal de edición de un grupo de material (nombre y descripción)
   abrirEditarGrupo(g: MaterialGroup) {
     this.editGroupData = {
       nombreOriginal: g.nombre,
@@ -230,11 +250,13 @@ export class PrestamoList implements OnInit {
     this.showEditGroupModal = true;
   }
 
+  // Cierra el modal de edición de grupo
   cerrarEditarGrupo() {
     this.showEditGroupModal = false;
     this.error = '';
   }
 
+  // Guarda los cambios del grupo (aplica a todas las unidades del mismo nombre)
   guardarEditarGrupo() {
     this.error = '';
     if (!this.editGroupData.nombre) {
@@ -255,13 +277,14 @@ export class PrestamoList implements OnInit {
     });
   }
 
+  // Elimina una unidad disponible de un grupo de material
   borrarUnidad(g: MaterialGroup) {
     const disponible = g.idsDisponibles[0];
     if (!disponible) {
       this.error = 'No hay unidades disponibles para borrar';
       return;
     }
-    if (!confirm(`¿Borrar una unidad de "${g.nombre}"?`)) return;
+    if (!confirm(`¿Borrar una unidad de "${g.nombre}"?`)) return;   // Confirmación del usuario
     this.error = '';
     this.materialesService.deleteMaterial(disponible).subscribe({
       next: () => this.loadMateriales(),
@@ -269,24 +292,27 @@ export class PrestamoList implements OnInit {
     });
   }
 
+  // Abre el modal para crear nuevo material prestable
   abrirCrearMaterial() {
     this.newMaterial = { nombre: '', descripcion: '', cantidad: 1 };
     this.error = '';
     this.showCreateModal = true;
   }
 
+  // Cierra el modal de creación de material
   cerrarCrearMaterial() {
     this.showCreateModal = false;
     this.error = '';
   }
 
+  // Crea una o varias unidades de material prestable (según la cantidad especificada)
   crearMaterial() {
     this.error = '';
-    if (!this.newMaterial.nombre) {
+    if (!this.newMaterial.nombre) {              // Validación: nombre obligatorio
       this.error = 'El nombre es obligatorio';
       return;
     }
-    if (this.newMaterial.cantidad < 1) {
+    if (this.newMaterial.cantidad < 1) {         // Validación: cantidad mínima 1
       this.error = 'La cantidad debe ser al menos 1';
       return;
     }
@@ -303,27 +329,30 @@ export class PrestamoList implements OnInit {
       this.loadMateriales();
       this.cerrarCrearMaterial();
     }).catch((err) => {
-      console.error('Error al crear material:', err);
       this.error = 'Error al crear el material. Revisa que el servidor PHP esté corriendo.';
     });
   }
 
+  // Confirma y elimina un préstamo por su ID
   borrarPrestamo(id: number) {
-    if (!confirm('¿Borrar este préstamo?')) return;
+    if (!confirm('¿Borrar este préstamo?')) return;    // Confirmación del usuario
     this.prestamosService.deletePrestamo(id).subscribe({
       next: () => this.loadPrestamos(),
       error: () => alert('Error al borrar el préstamo')
     });
   }
 
+  // Número total de materiales seleccionados
   get totalSeleccionados(): number {
     return Object.values(this.selecciones).reduce((sum, v) => sum + v, 0);
   }
 
+  // Limpia todas las selecciones de material
   limpiarSeleccion() {
     this.selecciones = {};
   }
 
+  // Filtra préstamos según el rol (cliente ve solo los suyos)
   get prestamosUser() {
     if (this.userRole === 'cliente') {
       return this.prestamos.filter(p => p.id_usuario === this.currentUserId);
