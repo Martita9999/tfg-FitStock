@@ -7,8 +7,7 @@
  */
 // Cabeceras CORS para permitir peticiones desde el frontend Angular con credenciales
 header("Content-Type: application/json");                                          // Tipo de contenido JSON
-$origenPermitido = $_SERVER['HTTP_ORIGIN'] ?? 'http://localhost:4200';
-header("Access-Control-Allow-Origin: $origenPermitido");                           // Origen dinámico (refleja el frontend que hace la petición)
+header("Access-Control-Allow-Origin: http://localhost:4200");                      // Origen permitido (frontend Angular)
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");           // Métodos HTTP permitidos
 header("Access-Control-Allow-Headers: Content-Type, Authorization");               // Cabeceras permitidas
 header("Access-Control-Allow-Credentials: true");                                  // Permite cookies de sesión
