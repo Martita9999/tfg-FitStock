@@ -40,14 +40,16 @@
 }
 
 .inc-abierta {
-  background: #fef2f2;
-  border: 1px solid #fecaca;
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
 }
 
 .inc-proceso {
-  background: #ffedd5;
+  background: var(--warning-bg);
   border: 1px solid #fed7aa;
 }
+/* Modo oscuro: borde de incidencia en proceso adaptado */
+[data-theme="dark"] .inc-proceso { border-color: #7c2d12; }
 
 .inc-label {
   font-weight: 600;
@@ -81,21 +83,21 @@
 }
 
 .status-badge.operativo {
-  background: #dcfce7;
-  color: #16a34a;
+  background: var(--success-bg);
+  color: var(--success-color);
 }
 
 .status-badge.en_proceso {
-  background: #ffedd5;
-  color: #ea580c;
+  background: var(--warning-bg);
+  color: var(--warning-color);
 }
 
 .status-badge.en_reparacion {
-  background: #ffedd5;
-  color: #ea580c;
+  background: var(--warning-bg);
+  color: var(--warning-color);
 }
 
 .status-badge.averiado {
-  background: #fef2f2;
-  color: #dc2626;
+  background: var(--error-bg);
+  color: var(--error-color);
 }

@@ -12,6 +12,7 @@
 
     @if (resumen) {
       <div class="grid-cards">
+        <!-- Tarjeta de resumen de incidencias (abiertas, en proceso, resueltas) -->
         <div class="card incidencias-card">
           <div class="card-header inc">⚠️ Incidencias</div>
           <div class="card-body">
@@ -33,11 +34,12 @@
           </div>
         </div>
 
+        <!-- Tarjeta de productos con stock por debajo del mínimo -->
         <div class="card stock-card">
           <div class="card-header stock">📦 Stock Bajo Mínimo</div>
           <div class="card-body">
             @if (resumen.stock_bajo.length === 0) {
-              <p class="no-data">Todo en orden, sin stock bajo</p>
+              <p class="no-data">Sin stock bajo</p>
             } @else {
               <div class="stock-list">
                 @for (item of resumen.stock_bajo; track item.id) {
@@ -52,6 +54,7 @@
           </div>
         </div>
 
+        <!-- Tarjeta de estado de las máquinas (operativas, averiadas, etc.) -->
         <div class="card maquinas-card">
           <div class="card-header maq">🏋️ Máquinas</div>
           <div class="card-body">
@@ -74,6 +77,44 @@
               </div>
             </div>
             <a routerLink="/admin/materiales" class="card-link">Ver máquinas →</a>
+          </div>
+        </div>
+
+        <!-- Tarjeta de préstamos pendientes de devolución -->
+        <div class="card prestamos-card">
+          <div class="card-header prestamos">🤝 Préstamos Pendientes</div>
+          <div class="card-body">
+            <div class="stats">
+              <div class="stat">
+                <span class="stat-num warning">{{ prestamosPendientes.length }}</span>
+                <span class="stat-label">Pendientes</span>
+              </div>
+            </div>
+            @if (prestamosPendientes.length > 0) {
+              <div class="stock-list" style="margin-top:12px;">
+                @for (p of prestamosPendientes.slice(0, 5); track p.id) {
+                  <div class="stock-item">
+                    <span class="item-name">{{ p.usuario }}</span>
+                    <span class="item-qty warning">{{ p.material }}</span>
+                  </div>
+                }
+              </div>
+            }
+            <a routerLink="/admin/prestamos" class="card-link">Gestionar préstamos →</a>
+          </div>
+        </div>
+
+        <!-- Tarjeta con el total de usuarios registrados -->
+        <div class="card perfil-card">
+          <div class="card-header perfil">👥 Usuarios</div>
+          <div class="card-body">
+            <div class="stats">
+              <div class="stat">
+                <span class="stat-num">{{ totalUsuarios }}</span>
+                <span class="stat-label">Registrados</span>
+              </div>
+            </div>
+            <a routerLink="/admin/usuarios" class="card-link">Gestionar usuarios →</a>
           </div>
         </div>
       </div>
@@ -113,10 +154,11 @@
           </div>
           @if (showPasswordForm) {
             <div class="password-form">
+              <input type="password" [(ngModel)]="currentPassword" name="currentPass" placeholder="Contraseña actual" class="input-sm">
               <input type="password" [(ngModel)]="newPassword" name="newPass" placeholder="Nueva contraseña" class="input-sm">
               <div class="password-actions">
                 <button class="btn-sm btn-save-sm" (click)="cambiarPassword()">Guardar</button>
-                <button class="btn-sm btn-cancel-sm" (click)="showPasswordForm = false; newPassword = ''">Cancelar</button>
+                <button class="btn-sm btn-cancel-sm" (click)="showPasswordForm = false; currentPassword = ''; newPassword = ''">Cancelar</button>
               </div>
             </div>
           }
@@ -138,7 +180,7 @@
           } @else {
             <div class="stock-list" style="margin-top: 12px;">
               @for (m of maquinas; track m.id) {
-                <div class="stock-item">
+                <div class="stock-item" [class.alert]="m.estado === 'averiado'" [class.warning]="m.estado === 'en_reparacion'">
                   <span class="item-name">{{ m.nombre }} <span class="id-tag">{{ m.id_tag_material }}</span></span>
                   <span class="item-qty" [class.alert]="m.estado === 'averiado'" [class.warning]="m.estado === 'en_reparacion'">
                     {{ m.estado === 'averiado' ? 'Averiada' : 'En reparación' }}

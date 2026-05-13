@@ -3,6 +3,7 @@ export interface Usuario {
   nombre: string;
   email: string;
   rol: string;
+  forzar_cambio_password?: number; // 1 = el usuario debe cambiar su contraseña al iniciar sesión
 }
 
 // Interfaz para un material/equipo deportivo

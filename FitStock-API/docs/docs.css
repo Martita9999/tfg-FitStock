@@ -1,0 +1,152 @@
+/* ============================================
+   FitStock API — Documentación
+   Hoja de estilos para la página de docs
+   ============================================ */
+
+/* --- Reset básico --- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* --- Estilos del body: fondo degradado, tipografía y espaciado --- */
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  color: #1e293b;
+  padding: 40px 24px;
+}
+
+/* --- Contenedor principal centrado --- */
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+h1 {
+  font-size: 32px;
+  font-weight: 800;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+h1 span {
+  background: linear-gradient(135deg, #3b82f6, #f97316);
+  color: white;
+  font-size: 14px;
+  padding: 4px 12px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.subtitle {
+  color: #64748b;
+  font-size: 16px;
+  margin-bottom: 32px;
+}
+
+/* --- Tarjetas de recurso: fondo blanco, bordes redondeados y sombra --- */
+.resource {
+  background: white;
+  border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  margin-bottom: 20px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+}
+
+.resource h2 {
+  font-size: 18px;
+  font-weight: 700;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.resource h2 small {
+  font-weight: 400;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.endpoint {
+  display: flex;
+  align-items: flex-start;
+  padding: 14px 20px;
+  border-bottom: 1px solid #f1f5f9;
+  gap: 12px;
+}
+
+.endpoint:last-child {
+  border-bottom: none;
+}
+
+/* --- Badges de método HTTP: colores según el verbo (GET, POST, PUT, DELETE) --- */
+.method {
+  font-weight: 700;
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  min-width: 70px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.get { background: #dbeafe; color: #1d4ed8; }
+.post { background: #bbf7d0; color: #15803d; }
+.put { background: #fef3c7; color: #92400e; }
+.delete { background: #fecaca; color: #b91c1c; }
+
+/* --- Ruta del endpoint: fuente monospace y peso seminegrita --- */
+.route {
+  font-weight: 600;
+  font-size: 14px;
+  font-family: 'Cascadia Code', 'Fira Code', monospace;
+  color: #0f172a;
+  min-width: 200px;
+  flex-shrink: 0;
+}
+
+.desc {
+  font-size: 14px;
+  color: #475569;
+}
+
+/* --- Badges de autenticación: colores según el rol requerido (admin, autenticado, público) --- */
+.auth {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.auth-admin { background: #fecaca; color: #b91c1c; }
+.auth-all { background: #dbeafe; color: #1d4ed8; }
+.auth-any { background: #f1f5f9; color: #475569; }
+
+.tags {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+footer {
+  text-align: center;
+  margin-top: 40px;
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+/* --- Media query para móviles: apila los elementos del endpoint verticalmente --- */
+@media (max-width: 768px) {
+  .endpoint { flex-wrap: wrap; }
+  .route { min-width: 0; }
+}

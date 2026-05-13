@@ -7,6 +7,8 @@ export interface ResumenData {
   maquinas: { por_estado: Record<string, number>; total: number };
 }
 
+// Servicio que obtiene los datos de resumen del panel de administración
+// desde el endpoint GET /api/resumen del backend Laravel
 @Injectable({ providedIn: 'root' })
 export class ResumenService {
   private http = inject(HttpClient);

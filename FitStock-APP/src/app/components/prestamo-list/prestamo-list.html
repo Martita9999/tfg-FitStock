@@ -8,9 +8,54 @@
     <div class="error-msg">{{ error }}</div>
   }
 
-  <!-- Sección de selección de material disponible -->
-  <div class="section-header">
-    <h3 class="section-title">Material Disponible para Prestar</h3>
+  <!-- Sección de préstamos del usuario (arriba) -->
+  <h3 class="section-title">
+    {{ userRole === 'cliente' ? 'Mis Préstamos' : 'Todos los Préstamos' }}
+  </h3>
+  <table class="data-table" *ngIf="prestamosUser.length > 0">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th *ngIf="userRole !== 'cliente'">Usuario</th>
+        <th>Material</th>
+        <th>Fecha</th>
+        <th>Devolución</th>
+        <th *ngIf="userRole !== 'cliente'">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let p of prestamosUser">
+        <td>{{ p.id }}</td>
+        <td *ngIf="userRole !== 'cliente'">{{ p.usuario }}</td>
+        <td><strong>{{ p.material }}</strong></td>
+        <td>{{ p.fecha | date:'dd/MM/yyyy' }}</td>
+        <td>
+          <span class="devolucion-cell">
+            @if (!p.devolucion) {
+              <!-- Botón Devuelto visible para todos los roles para marcar la devolución -->
+              <button class="btn-return-sm" (click)="devolverPrestamo(p.id)">Devuelto</button>
+            }
+            <span *ngIf="p.devolucion; else pendiente">{{ p.devolucion | date:'dd/MM/yyyy' }}</span>
+            <ng-template #pendiente><span class="status-open">Pendiente</span></ng-template>
+          </span>
+        </td>
+        <td *ngIf="userRole !== 'cliente'">
+          <div class="action-btns">
+            <button class="btn-edit" (click)="abrirEditar(p)" title="Editar préstamo">✏️</button>
+            <button class="btn-delete" (click)="borrarPrestamo(p.id)" title="Borrar préstamo">🗑️</button>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="empty-state" *ngIf="prestamosUser.length === 0">
+    <p>No hay préstamos registrados.</p>
+  </div>
+
+  <!-- Sección de selección de material disponible (abajo) -->
+  <div class="section-header" style="margin-top: 40px;">
+    <h3 class="section-title">Préstamos Disponibles</h3>
     <button class="btn-add-stock" (click)="abrirCrearMaterial()" *ngIf="userRole !== 'cliente'">➕ Añadir Material</button>
   </div>
 
@@ -51,45 +96,6 @@
     <button class="btn-prestamo" (click)="userRole === 'cliente' ? prestarSeleccion() : abrirModalUsuario()">
       🤝 Solicitar Préstamo
     </button>
-  </div>
-
-  <!-- Tabla de préstamos (cliente ve solo los suyos) -->
-  <h3 class="section-title" style="margin-top: 40px;">
-    {{ userRole === 'cliente' ? 'Mis Préstamos' : 'Todos los Préstamos' }}
-  </h3>
-  <table class="data-table" *ngIf="prestamosUser.length > 0">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th *ngIf="userRole !== 'cliente'">Usuario</th>
-        <th>Material</th>
-        <th>Fecha</th>
-        <th>Devolución</th>
-        <th *ngIf="userRole !== 'cliente'">Acciones</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let p of prestamosUser">
-        <td>{{ p.id }}</td>
-        <td *ngIf="userRole !== 'cliente'">{{ p.usuario }}</td>
-        <td><strong>{{ p.material }}</strong></td>
-        <td>{{ p.fecha | date:'dd/MM/yyyy' }}</td>
-        <td>
-          <span *ngIf="p.devolucion; else pendiente">{{ p.devolucion | date:'dd/MM/yyyy' }}</span>
-          <ng-template #pendiente><span class="status-open">Pendiente</span></ng-template>
-        </td>
-        <td *ngIf="userRole !== 'cliente'">
-          <div class="action-btns">
-            <button class="btn-edit" (click)="abrirEditar(p)" title="Editar préstamo">✏️</button>
-            <button class="btn-delete" (click)="borrarPrestamo(p.id)" title="Borrar préstamo">🗑️</button>
-          </div>
-        </td>
-      </tr>
-    </tbody>
-  </table>
-
-  <div class="empty-state" *ngIf="prestamosUser.length === 0">
-    <p>No hay préstamos registrados.</p>
   </div>
 </div>
 

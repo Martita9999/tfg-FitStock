@@ -8,6 +8,6 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),    // Optimización de detección de cambios (reduce número de detecciones)
     provideRouter(routes),                                    // Proveedor de enrutamiento con las rutas definidas
-    provideHttpClient(withFetch())                            // Cliente HTTP con API fetch para peticiones al backend
+    provideHttpClient(withFetch())                            // Proveedor del cliente HTTP con API fetch para realizar peticiones al backend
   ]
 };

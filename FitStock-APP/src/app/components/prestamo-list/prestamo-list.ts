@@ -342,6 +342,17 @@ export class PrestamoList implements OnInit {
     });
   }
 
+  // Marca un préstamo como devuelto (cliente)
+  devolverPrestamo(id: number) {
+    this.prestamosService.devolverPrestamo(id).subscribe({
+      next: () => {
+        this.loadPrestamos();
+        this.error = '';
+      },
+      error: () => { this.error = 'Error al devolver el préstamo'; }
+    });
+  }
+
   // Número total de materiales seleccionados
   get totalSeleccionados(): number {
     return Object.values(this.selecciones).reduce((sum, v) => sum + v, 0);

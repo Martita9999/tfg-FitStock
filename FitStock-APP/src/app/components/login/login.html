@@ -1,4 +1,6 @@
 <div class="login-wrapper">
+  <!-- Botón para alternar entre modo claro y modo oscuro -->
+  <button class="theme-toggle" (click)="toggleDarkMode()">{{ darkMode ? '☀️' : '🌙' }}</button>
   <div class="login-card">
     <div class="login-header">
       <div class="logo-icon">F</div>
@@ -9,6 +11,7 @@
       @if (error) {
         <div class="error-msg">{{ error }}</div>
       }
+      <!-- Formulario de inicio de sesión con email y contraseña -->
       <form (ngSubmit)="login()">
         <div class="field">
           <label>Email</label>
@@ -26,3 +29,34 @@
     </div>
   </div>
 </div>
+
+<!-- Modal de cambio de contraseña obligatorio para clientes -->
+@if (showPasswordModal) {
+  <!-- Modal para que el cliente cambie su contraseña por solicitud del administrador -->
+  <div class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>🔐 Cambio de Contraseña</h3>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:14px;color:var(--text-secondary);margin-bottom:16px;">
+          El administrador ha solicitado que cambies tu contraseña antes de continuar.
+        </p>
+        @if (passwordError) {
+          <div class="error-msg">{{ passwordError }}</div>
+        }
+        <div class="field">
+          <label>Contraseña actual</label>
+          <input type="password" [(ngModel)]="currentPassword" name="currentPass" placeholder="••••••">
+        </div>
+        <div class="field">
+          <label>Nueva contraseña</label>
+          <input type="password" [(ngModel)]="newPassword" name="newPass" placeholder="••••••">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-save" (click)="cambiarPassword()">Cambiar Contraseña</button>
+      </div>
+    </div>
+  </div>
+}

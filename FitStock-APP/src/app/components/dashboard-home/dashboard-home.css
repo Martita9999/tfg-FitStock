@@ -1,10 +1,15 @@
+/* Contenedor principal del dashboard */
 .dashboard-home { padding: 24px; max-width: 1200px; margin: 0 auto; }
+/* Tarjeta de bienvenida */
 .welcome-card { margin-bottom: 28px; }
 .welcome-card h2 { font-size: 26px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
 .welcome-card p { color: var(--text-secondary); font-size: 14px; }
-.error-msg { background: #fef2f2; color: #dc2626; padding: 12px; border-radius: 10px; margin-bottom: 20px; font-size: 14px; border: 1px solid #fecaca; }
-.success-msg { background: #f0fdf4; color: #16a34a; padding: 12px; border-radius: 10px; margin-bottom: 20px; font-size: 14px; border: 1px solid #bbf7d0; }
+/* Mensajes de error y éxito */
+.error-msg { background: var(--error-bg); color: var(--error-color); padding: 12px; border-radius: 10px; margin-bottom: 20px; font-size: 14px; border: 1px solid var(--error-border); }
+.success-msg { background: var(--success-bg); color: var(--success-color); padding: 12px; border-radius: 10px; margin-bottom: 20px; font-size: 14px; border: 1px solid var(--success-border); }
+/* Cuadrícula de tarjetas del dashboard */
 .grid-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; }
+/* Tarjetas de estadísticas con borde coloreado */
 .card { background: var(--card); border-radius: 16px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.06); border: 2px solid var(--border); transition: box-shadow 0.2s, transform 0.15s; }
 .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); transform: translateY(-1px); }
 .card.incidencias-card { border-color: #fca5a5; }
@@ -12,14 +17,17 @@
 .card.maquinas-card { border-color: #93c5fd; }
 .card.perfil-card { border-color: #a78bfa; }
 .card.prestamos-card { border-color: #86efac; }
+/* Cabeceras coloreadas de cada tarjeta */
 .card-header { padding: 16px 20px; font-size: 15px; font-weight: 700; color: white; display: flex; align-items: center; gap: 8px; }
 .card-header.inc { background: linear-gradient(135deg, #dc2626, #b91c1c); }
 .card-header.stock { background: linear-gradient(135deg, #d97706, #b45309); }
 .card-header.maq { background: linear-gradient(135deg, #2563eb, #1d4ed8); }
 .card-header.perfil { background: linear-gradient(135deg, #7c3aed, #6d28d9); }
 .card-header.prestamos { background: linear-gradient(135deg, #16a34a, #15803d); }
+/* Cuerpo de la tarjeta */
 .card-body { padding: 20px; }
 .card h3 { font-size: 15px; font-weight: 700; margin-bottom: 16px; color: var(--text); }
+/* Estadísticas numéricas con colores de alerta */
 .stats { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
 .stat { display: flex; flex-direction: column; align-items: center; min-width: 70px; }
 .stat-num { font-size: 30px; font-weight: 800; color: var(--text); line-height: 1.1; }
@@ -27,24 +35,33 @@
 .stat-num.alert { color: #dc2626; }
 .stat-num.warning { color: #d97706; }
 .stat-num.ok { color: #16a34a; }
+/* Lista de artículos con niveles de stock */
 .stock-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 4px; }
 .stock-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--bg); border-radius: 10px; font-size: 14px; }
+.stock-item.alert { background: var(--error-bg); }
+.stock-item.warning { background: var(--warning-bg); }
 .item-name { font-weight: 500; color: var(--text); }
 .item-qty { font-weight: 700; font-size: 13px; white-space: nowrap; }
+.item-qty.alert { color: #dc2626; }
+.item-qty.warning { color: #d97706; }
 .no-data { color: var(--text-secondary); font-size: 14px; font-style: italic; padding: 8px 0; }
+/* Enlace a detalle de tarjeta */
 .card-link { display: inline-block; margin-top: 16px; font-size: 13px; font-weight: 600; color: var(--orange); text-decoration: none; transition: color 0.2s; }
 .card-link:hover { color: var(--orange-dark); text-decoration: underline; }
 .id-tag { background: var(--border); padding: 1px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; color: var(--text-secondary); margin-left: 4px; }
+/* Filas de información de perfil */
 .info-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
 .info-row:last-child { border-bottom: none; }
 .info-label { font-size: 13px; font-weight: 600; color: var(--text-secondary); }
 .info-value { font-size: 14px; color: var(--text); font-weight: 500; display: flex; align-items: center; gap: 8px; }
 .role-cliente { background: var(--orange-light); color: var(--orange-dark); padding: 2px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+/* Contraseña enmascarada */
 .password-mask { font-family: monospace; letter-spacing: 2px; color: var(--text-secondary); }
 .btn-link { background: none; border: none; color: var(--orange); font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: underline; font-family: inherit; padding: 0; }
 .btn-link:hover { color: var(--orange-dark); }
+/* Formulario de cambio de contraseña */
 .password-form { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
-.input-sm { width: 100%; padding: 8px 12px; border: 2px solid var(--border); border-radius: 8px; font-size: 14px; outline: none; font-family: inherit; }
+.input-sm { width: 100%; padding: 8px 12px; border: 2px solid var(--border); border-radius: 8px; font-size: 14px; outline: none; font-family: inherit; background: var(--card); color: var(--text); }
 .input-sm:focus { border-color: var(--orange); }
 .password-actions { display: flex; gap: 8px; }
 .btn-sm { padding: 6px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; border: none; }

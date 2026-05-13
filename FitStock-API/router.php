@@ -1,25 +1,43 @@
 <?php
-// Cabeceras CORS para permitir peticiones desde el frontend Angular
-header("Access-Control-Allow-Origin: http://localhost:4200");          // Origen permitido (frontend)
-header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS"); // Métodos HTTP permitidos
-header("Access-Control-Allow-Headers: Content-Type, Authorization");    // Cabeceras permitidas
-header("Access-Control-Allow-Credentials: true");                       // Permite el envío de cookies de sesión
+/* 
+ * Router principal de FitStock.
+ * Se encarga de:
+ *   1. Configurar cabeceras CORS para el frontend Angular.
+ *   2. Servir archivos estáticos (CSS, JS, imágenes) si existen en el documento raíz.
+ *   3. Redirigir peticiones /api al endpoint interno de la API.
+ *   4. Como fallback, mostrar la documentación HTML del proyecto.
+ */
+header("Access-Control-Allow-Origin: http://localhost:4200");
+header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Access-Control-Allow-Credentials: true");
 
-// Si la petición es OPTIONS (preflight CORS), responder con 200 y salir
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit;
 }
 
-// Si la URI empieza por /api, delegar al router de la API
-$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);   // Obtiene la ruta de la URI
-if (preg_match('#^/api#', $uri)) {                          // Comprueba si la ruta comienza con /api
-    require __DIR__ . '/api/index.php';                    // Carga el manejador de la API
-    return true;                                            // Indica que la petición fue manejada
+$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+
+// Servir archivos estáticos (CSS, JS, imágenes) si existen fisicamente en el disco.
+// Si el archivo existe, PHP devuelve false para que el servidor web lo sirva directamente.
+$filePath = __DIR__ . $uri;
+if ($uri !== '/' && is_file($filePath)) {
+    return false;
 }
 
-// Si no es una ruta /api, responder con un mensaje informativo
-http_response_code(200);                                                     // Código 200 OK
-header("Content-Type: application/json");                                    // Tipo de contenido JSON
-echo json_encode(["message" => "FitStock API - usa http://localhost:4200 para el frontend"]);  // Mensaje de bienvenida
-return true;                                                                 // Finaliza la ejecución del router
+// Ruteo de la API:
+// Si la URI comienza con "/api", se delega el manejo a api/index.php.
+// Este archivo contiene el enrutador interno que resuelve cada endpoint.
+if (preg_match('#^/api#', $uri)) {
+    require __DIR__ . '/api/index.php';
+    return true;
+}
+
+// Ruta por defecto (fallback):
+// Si no es un archivo estático ni una ruta /api, se muestra la documentación HTML.
+// Esto permite acceder a la documentación simplemente abriendo la raíz del proyecto.
+http_response_code(200);
+header("Content-Type: text/html; charset=utf-8");
+require __DIR__ . '/docs/docs.php';
+return true;

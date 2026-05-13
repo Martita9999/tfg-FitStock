@@ -21,7 +21,7 @@ export const routes: Routes = [
       { path: 'incidencias', component: IncidenciaList },
       { path: 'materiales', component: MaterialList },
       { path: 'usuarios', component: UsuarioList },
-      { path: 'home', component: DashboardHomeComponent },
+      { path: 'home', component: DashboardHomeComponent }, // Ruta principal del panel: muestra el resumen general o datos del cliente
       { path: '', redirectTo: 'home', pathMatch: 'full' }
     ]
   },

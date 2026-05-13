@@ -32,9 +32,10 @@
           <div class="card-info">
             <span class="card-price">{{ (+p.precio).toFixed(2) }}€</span>
             <span class="card-stock" [class.low]="p.cantidad <= p.stock_minimo">
-              {{ p.cantidad <= p.stock_minimo ? 'Stock Bajo' : 'Stock OK' }}
+              {{ p.cantidad <= p.stock_minimo ? 'Stock Bajo' : 'Stock' }}
             </span>
           </div>
+          <!-- Sección que muestra la cantidad de stock disponible y alerta si está bajo el mínimo -->
           <div class="card-qty">
             <span class="qty-label">Stock:</span>
             <span class="qty-value" [class.low]="p.cantidad <= p.stock_minimo">{{ p.cantidad }}</span>
@@ -131,6 +132,11 @@
           <label>Precio (€)</label>
           <input type="number" [(ngModel)]="newProducto.precio" name="precio" min="0" step="0.01">
         </div>
+      </div>
+      <!-- Selector de imagen: al crear el producto, si se selecciona un archivo se sube automáticamente -->
+      <div class="field">
+        <label>Imagen</label>
+        <input type="file" accept="image/*" (change)="onFileSelected($event)">
       </div>
     </div>
     <div class="modal-footer">

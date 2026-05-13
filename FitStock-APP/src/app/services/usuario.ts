@@ -7,6 +7,7 @@ export interface Usuario {
   nombre: string;
   email: string;
   rol: string;
+  forzar_cambio_password?: number; // 1 = debe cambiar contraseña en el próximo inicio de sesión
 }
 
 export interface LoginResponse {
@@ -61,12 +62,18 @@ export class UsuarioService {
     return this.http.put<{ success: boolean }>(`${this.API_URL}/usuarios/${id}`, data, this.httpOptions);
   }
 
+  // Marca al usuario para que deba cambiar su contraseña en el próximo inicio de sesión
+  forzarCambioPassword(id_usuario: number) {
+    return this.http.post<{ success: boolean }>(`${this.API_URL}/usuarios/forzar-cambio`, { id_usuario }, this.httpOptions);
+  }
+
   deleteUsuario(id: number) {
     return this.http.delete<{ success: boolean }>(`${this.API_URL}/usuarios/${id}`, this.httpOptions);
   }
 
-  cambiarPassword(password: string) {
-    return this.http.put<{ success: boolean }>(`${this.API_URL}/usuarios/cambiar-password`, { password }, this.httpOptions);
+  // Cambia la contraseña del usuario autenticado (requiere contraseña actual y nueva)
+  cambiarPassword(old_password: string, new_password: string) {
+    return this.http.put<{ success: boolean; error?: string }>(`${this.API_URL}/usuarios/cambiar-password`, { old_password, new_password }, this.httpOptions);
   }
 
   checkSession() {

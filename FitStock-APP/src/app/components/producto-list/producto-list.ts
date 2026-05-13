@@ -33,6 +33,7 @@ export class ProductoList implements OnInit {
 
   showModal = false;                                          // Control del modal de creación
   newProducto = { nombre: '', descripcion: '', cantidad: 0, stock_minimo: 0, precio: 0 };  // Datos del nuevo producto
+  selectedFile: File | null = null;                            // Archivo de imagen seleccionado
   error = '';              // Mensaje de error
   successMsg = '';         // Mensaje de éxito
 
@@ -134,6 +135,7 @@ export class ProductoList implements OnInit {
   // Abre el modal de creación de producto
   abrirModal() {
     this.newProducto = { nombre: '', descripcion: '', cantidad: 0, stock_minimo: 0, precio: 0 };
+    this.selectedFile = null;
     this.error = '';
     this.showModal = true;
   }
@@ -158,9 +160,24 @@ export class ProductoList implements OnInit {
       stock_minimo: this.newProducto.stock_minimo,
       precio: this.newProducto.precio,
     }).subscribe({
-      next: () => { this.cerrarModal(); this.loadProductos(); },
+      next: () => {
+        // Si hay imagen seleccionada, la sube con el nombre del producto
+        if (this.selectedFile) {
+          this.productosService.subirImagen(this.newProducto.nombre, this.selectedFile).subscribe();
+        }
+        this.cerrarModal();
+        this.loadProductos();
+      },
       error: () => { this.error = 'Error al crear el producto'; }
     });
+  }
+
+  // Guarda el archivo seleccionado en el input de imagen
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.selectedFile = input.files[0];
+    }
   }
 
   // Abre el modal de edición con los datos del producto seleccionado
@@ -204,9 +221,9 @@ export class ProductoList implements OnInit {
     });
   }
 
-  // Construye la URL de la imagen del producto a partir de su nombre
+  // Construye la URL absoluta de la imagen del producto a partir de su nombre
   getImagenUrl(nombre: string): string {
-    return 'images/productos/' + encodeURIComponent(nombre) + '.jpg';
+    return '/images/productos/' + encodeURIComponent(nombre) + '.jpg';
   }
 
   // Oculta la imagen si ocurre un error al cargarla (imagen no encontrada)

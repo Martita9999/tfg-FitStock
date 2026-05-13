@@ -1,3 +1,4 @@
+/* Contenedor principal centrado con fondo degradado oscuro */
 .registro-wrapper { 
     min-height: 100vh; 
     display: flex; 
@@ -6,6 +7,7 @@
     background: linear-gradient(135deg, var(--blue-dark) 0%, #0f172a 100%); 
     padding: 20px; 
 }
+/* Tarjeta de registro */
 .registro-card { 
     background: var(--card); 
     border-radius: 20px; 
@@ -14,12 +16,14 @@
     overflow: hidden; 
     box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); 
 }
+/* Cabecera con degradado naranja */
 .registro-header { 
     background: linear-gradient(135deg, var(--orange), var(--orange-dark)); 
     padding: 40px 30px 30px; 
     text-align: center; 
     color: white; 
 }
+/* Icono del logo en la cabecera */
 .logo-icon { width: 60px; height: 60px; 
     background: var(--blue-dark); 
     border-radius: 16px; 
@@ -29,37 +33,44 @@
     font-size: 28px; 
     font-weight: 800; 
     margin: 0 auto 15px; }
+/* Título de la cabecera */
 .registro-header h2 { 
     font-size: 24px; 
     font-weight: 700; 
     margin-bottom: 5px; }
+/* Subtítulo de la cabecera */
 .registro-header p { 
     font-size: 14px; 
     opacity: 0.8; }
+/* Cuerpo del formulario de registro */
 .registro-body { 
     padding: 30px; 
 }
+/* Mensaje de error */
 .error-msg { 
-    background: #fef2f2; 
-    color: #dc2626; 
-    padding: 12px; 
-    border-radius: 10px; 
-    font-size: 14px; 
-    margin-bottom: 20px; 
-    border: 1px solid #fecaca; 
+  background: var(--error-bg); 
+  color: var(--error-color); 
+  padding: 12px; 
+  border-radius: 10px; 
+  font-size: 14px; 
+  margin-bottom: 20px; 
+  border: 1px solid var(--error-border); 
 }
+/* Mensaje de éxito */
 .success-msg { 
-    background: #f0fdf4; 
-    color: #16a34a; 
-    padding: 12px; 
-    border-radius: 10px; 
-    font-size: 14px; 
-    margin-bottom: 20px; 
-    border: 1px solid #bbf7d0; 
+  background: var(--success-bg); 
+  color: var(--success-color); 
+  padding: 12px; 
+  border-radius: 10px; 
+  font-size: 14px; 
+  margin-bottom: 20px; 
+  border: 1px solid var(--success-border); 
 }
+/* Campos del formulario */
 .field { 
     margin-bottom: 20px; 
 }
+/* Etiqueta del campo */
 .field label { 
     display: block; 
     font-size: 14px; 
@@ -67,6 +78,7 @@
     color: var(--text-secondary); 
     margin-bottom: 6px; 
 }
+/* Inputs adaptables al modo oscuro mediante variables CSS */
 .field input { 
     width: 100%; 
     padding: 12px 16px; 
@@ -76,10 +88,13 @@
     transition: border-color 0.2s; 
     outline: none; 
     font-family: inherit; 
+    background: var(--card);
+    color: var(--text);
 }
 .field input:focus { 
     border-color: var(--blue); 
 }
+/* Botón principal de registro con degradado azul */
 .btn-primary { 
     width: 100%; 
     padding: 14px; 
@@ -100,12 +115,14 @@
 .btn-primary:active { 
     transform: translateY(0); 
 }
+/* Enlace a la página de inicio de sesión */
 .login-link { 
     text-align: center; 
     margin-top: 20px; 
     font-size: 14px; 
     color: var(--text-secondary); 
 }
+/* Enlace */
 a { 
     color: var(--blue); 
     cursor: pointer; 

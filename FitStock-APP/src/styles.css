@@ -1,19 +1,60 @@
 /* Importa la fuente Inter desde Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-/* Variables CSS globales con la paleta de colores de la aplicación */
+/* Variables CSS globales - Modo Claro (default) */
 :root {
-  --blue-dark: #1e3a5f;       /* Azul oscuro (fondos, headers) */
-  --blue: #3b82f6;            /* Azul primario (botones, enlaces) */
-  --blue-light: #60a5fa;      /* Azul claro (detalles) */
-  --orange: #f97316;          /* Naranja principal (acciones, acentos) */
-  --orange-dark: #ea580c;     /* Naranja oscuro (hover) */
-  --orange-light: #fed7aa;    /* Naranja claro (fondos de badges) */
-  --bg: linear-gradient(135deg, #fff7ed 0%, #eff6ff 100%);              /* Color de fondo general */
-  --card: #ffffff;            /* Fondo de tarjetas y paneles */
-  --text: #1e293b;            /* Color de texto principal */
-  --text-secondary: #64748b;  /* Color de texto secundario */
-  --border: #e2e8f0;          /* Color de bordes */
+  --blue-dark: #1e3a5f;
+  --blue: #3b82f6;
+  --blue-light: #60a5fa;
+  --orange: #f97316;
+  --orange-dark: #ea580c;
+  --orange-light: #fed7aa;
+  /* --- Fondos, bordes y colores base --- */
+  --bg: #f1f5f9;
+  --bg-gradient: linear-gradient(135deg, #fff7ed 0%, #eff6ff 100%);
+  --card: #ffffff;
+  --text: #1e293b;
+  --text-secondary: #64748b;
+  --border: #cbd5e1;
+  /* --- Colores de estado: error --- */
+  --error-bg: #fef2f2;
+  --error-color: #dc2626;
+  --error-border: #fecaca;
+  /* --- Colores de estado: éxito --- */
+  --success-bg: #f0fdf4;
+  --success-color: #16a34a;
+  --success-border: #bbf7d0;
+  /* --- Colores de estado: advertencia --- */
+  --warning-bg: #fffbeb;
+  --warning-color: #d97706;
+}
+
+/* Variables CSS - Modo Oscuro */
+[data-theme="dark"] {
+  --blue-dark: #0f172a;
+  --blue: #60a5fa;
+  --blue-light: #93c5fd;
+  --orange: #fb923c;
+  --orange-dark: #f97316;
+  --orange-light: #7c2d12;
+  /* --- Fondos, bordes y colores base (oscuro) --- */
+  --bg: #0f172a;
+  --bg-gradient: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  --card: #1e293b;
+  --text: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --border: #334155;
+  /* --- Colores de estado: error (oscuro) --- */
+  --error-bg: #451a1a;
+  --error-color: #fca5a5;
+  --error-border: #7f1d1d;
+  /* --- Colores de estado: éxito (oscuro) --- */
+  --success-bg: #14532d;
+  --success-color: #86efac;
+  --success-border: #166534;
+  /* --- Colores de estado: advertencia (oscuro) --- */
+  --warning-bg: #451a03;
+  --warning-color: #fdba74;
 }
 
 /* Animación sutil para botones principales */
@@ -21,6 +62,12 @@
   0% { box-shadow: 0 4px 12px rgba(249, 115, 22, 0.25); }
   50% { box-shadow: 0 4px 20px rgba(249, 115, 22, 0.45); }
   100% { box-shadow: 0 4px 12px rgba(249, 115, 22, 0.25); }
+}
+
+/* Fade in para páginas */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* Reset básico: elimina márgenes y paddings por defecto */
@@ -32,10 +79,16 @@
 
 /* Estilos base del body */
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;  /* Fuente principal */
-  background: linear-gradient(135deg, #fff7ed 0%, #eff6ff 100%);      /* Fondo general */
-  color: var(--text);         /* Color de texto */
-  line-height: 1.6;           /* Altura de línea */
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg-gradient);
+  color: var(--text);
+  line-height: 1.6;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* Aplica fadeIn al contenido principal */
+router-outlet + * {
+  animation: fadeIn 0.3s ease;
 }
 
 /* Shared: cabecera con título y botón de acción (crear) */
@@ -60,6 +113,7 @@ body {
   transition: all 0.2s;
 }
 .btn-edit:hover { background: #dbeafe; border-color: var(--blue); }
+[data-theme="dark"] .btn-edit:hover { background: #1e3a5f; }
 
 /* Botón genérico de crear (gradiente naranja → azul) */
 .btn-create {
@@ -101,6 +155,7 @@ body {
   border-color: #fca5a5;
   box-shadow: 0 2px 8px rgba(239, 68, 68, 0.15);
 }
+[data-theme="dark"] .btn-delete:hover { background: #451a1a; }
 
 /* Shared: estilos del modal overlay */
 .modal-overlay {
@@ -114,7 +169,7 @@ body {
   padding: 20px;                       /* Espaciado en móvil */
 }
 .modal-card {
-  background: white;                   /* Fondo blanco */
+  background: var(--card);
   border-radius: 16px;                 /* Esquinas redondeadas */
   width: 100%;                         /* Ancho completo */
   max-width: 440px;                    /* Ancho máximo */
@@ -178,7 +233,8 @@ body {
   outline: none;                       /* Sin outline al focus */
   transition: border-color 0.2s;       /* Transición suave */
   font-family: inherit;                /* Hereda la fuente */
-  background: white;                   /* Fondo blanco */
+  background: var(--card);
+  color: var(--text);
 }
 .field input:focus,
 .field select:focus,
@@ -198,13 +254,13 @@ body {
 
 /* Mensaje de error genérico */
 .error-msg {
-  background: #fef2f2;                 /* Fondo rojo claro */
-  color: #dc2626;                      /* Texto rojo */
-  padding: 10px;                       /* Relleno */
-  border-radius: 8px;                  /* Esquinas redondeadas */
-  font-size: 13px;                     /* Tamaño pequeño */
-  margin-bottom: 16px;                 /* Espaciado inferior */
-  border: 1px solid #fecaca;           /* Borde rojo claro */
+  background: var(--error-bg);
+  color: var(--error-color);
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 16px;
+  border: 1px solid var(--error-border);
 }
 
 /* Shared: tabla de datos */
@@ -228,8 +284,8 @@ body {
   font-weight: 600;                    /* Negrita */
   color: var(--text-secondary);        /* Color secundario */
   text-transform: uppercase;           /* Mayúsculas */
-  background: var(--bg);               /* Fondo del header */
-  border-bottom: 1px solid var(--border);  /* Línea separadora */
+  background: var(--bg);
+  border-bottom: 2px solid var(--border);
 }
 .data-table td {
   padding: 14px 16px;                  /* Relleno */
@@ -239,6 +295,12 @@ body {
 .data-table tr:last-child td {
   border-bottom: none;                 /* Última fila sin borde */
 }
+.data-table tbody tr:hover {
+  background: #f1f5f9;
+}
+[data-theme="dark"] .data-table tbody tr:hover {
+  background: #1e293b;
+}
 .data-table code {
   background: var(--bg);               /* Fondo del código */
   padding: 2px 8px;                    /* Relleno */
@@ -247,6 +309,9 @@ body {
 }
 
 /* Estado vacío: cuando no hay datos que mostrar */
+.card { background: var(--card); }
+.card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); transform: translateY(-1px); }
+
 .empty-state {
   text-align: center;                  /* Centrado */
   padding: 60px 20px;                  /* Relleno grande */
@@ -258,16 +323,17 @@ body {
 .btn-cancel {
   padding: 10px 20px;
   border: 1px solid var(--border);
-  background: white;
+  background: var(--card);
   border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   font-family: inherit;
   transition: all 0.2s;
+  color: var(--text);
 }
 .btn-cancel:hover {
-  background: #f8fafc;
+  background: var(--bg);
   border-color: #cbd5e1;
 }
 

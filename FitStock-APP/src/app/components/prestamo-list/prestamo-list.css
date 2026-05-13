@@ -78,6 +78,10 @@
   background: #fef2f2;
   color: #dc2626;
 }
+/* Modo oscuro: badges de stock con colores adaptados */
+[data-theme="dark"] .stock-badge { background: var(--success-bg); color: var(--success-color); }
+[data-theme="dark"] .stock-badge.medio { background: var(--warning-bg); color: var(--warning-color); }
+[data-theme="dark"] .stock-badge.bajo { background: var(--error-bg); color: var(--error-color); }
 
 .group-desc {
   font-size: 13px;
@@ -99,7 +103,7 @@
   height: 36px;
   border-radius: 8px;
   border: 2px solid var(--blue);
-  background: white;
+  background: var(--card);
   color: var(--blue);
   font-size: 20px;
   font-weight: 700;
@@ -161,7 +165,7 @@
 .btn-action {
   padding: 5px 12px;
   border: 1px solid var(--blue);
-  background: white;
+  background: var(--card);
   color: var(--blue);
   border-radius: 6px;
   font-size: 12px;
@@ -207,9 +211,31 @@
   transform: translateY(0);
 }
 
+.devolucion-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-return-sm {
+  background: #16a34a;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  border: none;
+  white-space: nowrap;
+}
+.btn-return-sm:hover {
+  background: #15803d;
+}
+
 .error-msg {
-  background: #fef2f2;
-  color: #dc2626;
+  background: var(--error-bg);
+  color: var(--error-color);
   padding: 10px 16px;
   border-radius: 8px;
   font-size: 14px;

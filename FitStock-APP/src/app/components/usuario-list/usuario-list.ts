@@ -22,7 +22,7 @@ export class UsuarioList implements OnInit {
 
   showEditModal = false;
   editUser: Usuario | null = null;
-  editUserData = { nombre: '', email: '', password: '', rol: 'cliente' };
+  editUserData = { nombre: '', email: '', rol: 'cliente' };
 
   ngOnInit() {
     this.usuarioService.currentUser$.subscribe(u => this.userRole = u?.rol ?? '');
@@ -71,7 +71,6 @@ export class UsuarioList implements OnInit {
     this.editUserData = {
       nombre: u.nombre,
       email: u.email,
-      password: '',
       rol: u.rol
     };
     this.error = '';
@@ -96,12 +95,22 @@ export class UsuarioList implements OnInit {
       email: this.editUserData.email,
       rol: this.editUserData.rol
     };
-    if (this.editUserData.password) {
-      data.password = this.editUserData.password;
-    }
     this.usuarioService.updateUsuario(this.editUser.id, data).subscribe({
       next: () => { this.cerrarEditar(); this.loadUsuarios(); },
       error: () => { this.error = 'Error al actualizar el usuario'; }
+    });
+  }
+
+  // Solicita al backend que fuerce al usuario a cambiar su contraseña
+  // en el próximo inicio de sesión. Actualiza localmente el indicador.
+  forzarCambioPassword(u: Usuario) {
+    if (!confirm(`¿Enviar solicitud de cambio de contraseña a "${u.nombre}"?`)) return;
+    this.usuarioService.forzarCambioPassword(u.id).subscribe({
+      next: () => {
+        u.forzar_cambio_password = 1;
+        this.error = '';
+      },
+      error: () => { this.error = 'Error al enviar la solicitud'; }
     });
   }
 

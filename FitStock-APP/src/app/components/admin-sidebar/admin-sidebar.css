@@ -1,73 +1,83 @@
-/* Barra lateral de navegación - fija a la izquierda */
+/* Barra lateral de navegación */
 .sidebar {
-  width: 260px;                    /* Ancho fijo */
-  height: 100vh;                   /* Altura completa */
+  width: 260px;
+  min-height: 100vh;
   background: linear-gradient(180deg, var(--orange) 0%, var(--blue) 100%);
-  color: white;                    /* Texto blanco */
-  padding: 0;                      /* Sin relleno */
-  position: fixed;                 /* Posición fija al hacer scroll */
-  display: flex;                   /* Flexbox para organizar contenido */
-  flex-direction: column;          /* Columna: logo, nav, footer */
+  color: white;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 999;
+  transition: transform 0.3s ease;
 }
 
-/* Logo y título del panel */
-.logo {
-  padding: 30px 24px 20px;                         /* Relleno */
-  border-bottom: 1px solid rgba(255,255,255,0.1); /* Línea separadora sutil */
+.sidebar-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 30px 24px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
 }
-.logo h2 {
-  font-size: 22px;                                 /* Tamaño del título */
-  font-weight: 800;                                /* Extra negrita */
-  margin: 0;                                       /* Sin margen */
-  display: flex;                                   /* Para alinear icono + texto */
-  align-items: center;                             /* Centra verticalmente */
-  gap: 10px;                                       /* Espacio entre icono y texto */
+
+.sidebar-close {
+  display: none;
+  background: rgba(255,255,255,0.15);
+  border: none;
+  color: white;
+  font-size: 16px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
 }
+
 .logo h2 {
-  font-size: 22px;                                 /* Tamaño del título */
-  font-weight: 800;                                /* Extra negrita */
-  margin: 0;                                       /* Sin margen */
-  display: flex;                                   /* Para alinear icono + texto */
-  align-items: center;                             /* Centra verticalmente */
-  gap: 10px;                                       /* Espacio entre icono y texto */
+  font-size: 22px;
+  font-weight: 800;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 .logo-icon {
-  width: 36px;                                     /* Ancho del icono */
-  height: 36px;                                    /* Alto del icono */
-  border-radius: 10px;                             /* Esquinas redondeadas */
-  object-fit: cover;                               /* Ajusta la imagen */
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  object-fit: cover;
 }
 .logo span {
-  display: block;                                  /* Ocupa toda la línea */
-  font-size: 12px;                                 /* Tamaño pequeño */
-  color: rgba(255,255,255,0.5);                   /* Texto semitransparente */
-  margin-top: 4px;                                 /* Espacio superior */
-  margin-left: 46px;                               /* Alineado con el texto del h2 */
+  display: block;
+  font-size: 12px;
+  color: rgba(255,255,255,0.5);
+  margin-top: 4px;
+  margin-left: 46px;
 }
 
-/* Lista de navegación */
 .sidebar ul {
-  list-style: none;                                /* Sin viñetas */
-  padding: 16px;                                   /* Relleno */
-  margin: 0;                                       /* Sin margen */
-  flex: 1;                                         /* Ocupa el espacio disponible */
+  list-style: none;
+  padding: 16px;
+  margin: 0;
+  flex: 1;
 }
 
-/* Cada elemento del menú */
 .sidebar li {
-  padding: 14px 16px;                              /* Relleno */
-  cursor: pointer;                                 /* Cursor de mano */
-  border-radius: 10px;                             /* Esquinas redondeadas */
-  margin-bottom: 4px;                              /* Espacio entre items */
-  font-size: 14px;                                 /* Tamaño de fuente */
-  font-weight: 500;                                /* Peso medio */
-  display: flex;                                   /* Para alinear icono + texto */
-  align-items: center;                             /* Centra verticalmente */
-  gap: 12px;                                       /* Espacio entre icono y texto */
-  transition: background 0.2s;                     /* Transición suave */
+  padding: 14px 16px;
+  cursor: pointer;
+  border-radius: 10px;
+  margin-bottom: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: background 0.2s;
 }
 .sidebar li:hover {
-  background: rgba(255,255,255,0.1);              /* Fondo semitransparente al hover */
+  background: rgba(255,255,255,0.1);
 }
 .sidebar li.active {
   background: rgba(255,255,255,0.2);
@@ -75,41 +85,57 @@
   font-weight: 600;
 }
 
-/* Pie del sidebar: información del usuario y botón de cerrar sesión */
 .user-footer {
-  padding: 16px 24px 20px;                         /* Relleno */
-  border-top: 1px solid rgba(255,255,255,0.1);    /* Línea separadora */
+  padding: 16px 24px 20px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 .user-info {
-  margin-bottom: 12px;                             /* Espacio inferior */
+  margin-bottom: 4px;
 }
 .user-name {
-  display: block;                                  /* Ocupa toda la línea */
-  font-size: 14px;                                 /* Tamaño de fuente */
-  font-weight: 600;                                /* Negrita */
-  color: white;                                    /* Texto blanco */
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
 }
 .user-role {
-  font-size: 12px;                                 /* Tamaño pequeño */
-  color: rgba(255,255,255,0.5);                   /* Texto semitransparente */
-  text-transform: capitalize;                      /* Primera letra mayúscula */
+  font-size: 12px;
+  color: rgba(255,255,255,0.5);
+  text-transform: capitalize;
 }
 
-/* Botón de cerrar sesión */
+/* Botón de modo oscuro y botón de cerrar sesión */
+.btn-dark-mode,
 .btn-logout {
-  width: 100%;                                     /* Ancho completo */
-  padding: 10px;                                   /* Relleno */
-  background: rgba(255,255,255,0.1);              /* Fondo semitransparente */
-  color: white;                                    /* Texto blanco */
-  border: 1px solid rgba(255,255,255,0.15);       /* Borde sutil */
-  border-radius: 8px;                              /* Esquinas redondeadas */
-  font-size: 13px;                                 /* Tamaño de fuente */
-  font-weight: 500;                                /* Peso medio */
-  cursor: pointer;                                 /* Cursor de mano */
-  font-family: inherit;                            /* Hereda la fuente */
-  transition: background 0.2s;                     /* Transición suave */
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.2s;
+  border: 1px solid rgba(255,255,255,0.15);
+  color: white;
+  background: rgba(255,255,255,0.1);
+}
+.btn-dark-mode:hover {
+  background: rgba(255,255,255,0.2);
 }
 .btn-logout:hover {
-  background: rgba(239, 68, 68, 0.3);             /* Fondo rojo semitransparente al hover */
-  border-color: rgba(239, 68, 68, 0.4);           /* Borde rojo al hover */
+  background: rgba(239, 68, 68, 0.3);
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%);
+  }
+  .sidebar-close {
+    display: flex;
+  }
 }

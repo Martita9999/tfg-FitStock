@@ -1,65 +1,87 @@
 /* Layout principal del dashboard: sidebar + contenido */
 .dashboard-wrapper {
-  display: flex;               /* Sidebar y contenido en fila */
-  min-height: 100vh;           /* Altura mínima = toda la ventana */
-  width: 100%;                 /* Ancho completo */
-  background: linear-gradient(135deg, #fff7ed 0%, #eff6ff 100%);
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  background: var(--bg-gradient);
 }
 
-/* Cuando el sidebar está oculto (cliente), elimina el margen izquierdo */
-.dashboard-wrapper.solo-content .main-content {
-  margin-left: 0;
+/* Overlay para móvil */
+.sidebar-overlay {
+  display: none;
 }
 
 /* Área de contenido principal */
 .main-content {
-  flex: 1;                     /* Ocupa el espacio restante */
-  padding: 32px 40px;          /* Relleno interior */
-  margin-left: 260px;          /* Deja espacio para el sidebar fijo */
-  min-height: 100vh;           /* Altura mínima */
+  flex: 1;
+  padding: 32px 40px;
+  margin-left: 260px;
+  min-height: 100vh;
+  transition: margin-left 0.3s ease;
 }
 
-/* Barra superior (no usada actualmente) */
+/* Botón de menú hamburguesa */
+.menu-toggle {
+  display: none;
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 900;
+  background: var(--orange);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  width: 42px;
+  height: 42px;
+  font-size: 20px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+  transition: transform 0.2s;
+  align-items: center;
+  justify-content: center;
+}
+.menu-toggle:hover {
+  transform: scale(1.05);
+}
+
+/* Top-bar */
 .top-bar {
-  display: flex;               /* Elementos en fila */
-  justify-content: space-between;  /* Separados */
-  align-items: center;         /* Centrados verticalmente */
-  margin-bottom: 28px;         /* Espaciado inferior */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 28px;
 }
 
-/* Títulos de sección */
 .header-info h1 {
-  font-size: 26px;             /* Tamaño grande */
-  font-weight: 700;            /* Negrita */
-  color: var(--text);          /* Color del texto */
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text);
 }
 
 .page-title {
-  font-size: 22px;             /* Tamaño del título */
-  font-weight: 700;            /* Negrita */
-  color: var(--text);          /* Color del texto */
-  margin-bottom: 24px;         /* Espaciado inferior */
-  padding-bottom: 12px;        /* Relleno inferior */
-  border-bottom: 3px solid var(--orange);  /* Línea naranja decorativa */
-  display: inline-block;       /* Solo el ancho del texto */
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 3px solid var(--orange);
+  display: inline-block;
 }
 
-/* Grid de tarjetas (para productos) */
 .card-grid {
-  display: grid;               /* Diseño grid */
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));  /* Columnas responsivas */
-  gap: 20px;                   /* Espacio entre tarjetas */
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
 }
 
-/* Tabla de datos */
 .data-table {
-  width: 100%;                 /* Ancho completo */
-  border-collapse: separate;   /* Bordes separados */
-  border-spacing: 0;           /* Sin espacio entre celdas */
-  background: var(--card);     /* Fondo blanco */
-  border-radius: 12px;         /* Esquinas redondeadas */
-  overflow: hidden;            /* Oculta bordes que sobresalen */
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06);  /* Sombra sutil */
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: var(--card);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
 }
 
 .data-table thead {
@@ -68,49 +90,115 @@
 }
 
 .data-table th {
-  padding: 14px 18px;             /* Relleno */
-  text-align: left;               /* Alineación izquierda */
-  font-size: 13px;                /* Tamaño de fuente */
-  font-weight: 600;               /* Negrita */
-  text-transform: uppercase;      /* Mayúsculas */
-  letter-spacing: 0.5px;          /* Espaciado entre letras */
+  padding: 14px 18px;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .data-table td {
-  padding: 14px 18px;             /* Relleno */
-  font-size: 14px;                /* Tamaño de fuente */
-  border-bottom: 1px solid var(--border);  /* Línea entre filas */
-  color: var(--text);             /* Color del texto */
+  padding: 14px 18px;
+  font-size: 14px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
 }
 
 .data-table tbody tr:hover {
-  background: #fff7ed;            /* Fondo naranja claro al hover */
+  background: var(--bg);
 }
 
 .data-table tbody tr:last-child td {
-  border-bottom: none;            /* Última fila sin borde */
+  border-bottom: none;
 }
 
-/* Colores de prioridad (incidencias) */
 .priority-high { color: #dc2626; font-weight: 600; }
 .priority-medium { color: var(--orange); font-weight: 600; }
 .priority-low { color: var(--blue); font-weight: 600; }
 
-/* Colores de estado (incidencias) */
-.status-open { color: var(--orange); font-weight: 500; }         /* Naranja para abierta */
-.status-progress { color: var(--blue); font-weight: 500; }       /* Azul para en proceso */
-.status-resolved { color: #16a34a; font-weight: 500; }           /* Verde para resuelta */
+.status-open { color: var(--orange); font-weight: 500; }
+.status-progress { color: var(--blue); font-weight: 500; }
+.status-resolved { color: #16a34a; font-weight: 500; }
 
-/* Estado vacío */
 .empty-state {
-  text-align: center;              /* Centrado */
-  padding: 60px 20px;              /* Relleno grande */
-  color: var(--text-secondary);    /* Color secundario */
-  background: var(--card);         /* Fondo blanco */
-  border-radius: 12px;             /* Esquinas redondeadas */
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06);  /* Sombra sutil */
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-secondary);
+  background: var(--card);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
 }
 
 .empty-state p {
-  font-size: 16px;                 /* Tamaño de fuente */
+  font-size: 16px;
+}
+
+/* === Toast container === */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  padding: 14px 20px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  animation: toastIn 0.3s ease, toastOut 0.3s ease 3.7s forwards;
+  max-width: 400px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+/* Colores de cada tipo de toast */
+.toast-success { background: #16a34a; color: white; }
+.toast-error { background: #dc2626; color: white; }
+.toast-info { background: var(--blue); color: white; }
+
+/* Animación de entrada del toast (desliza desde la derecha) */
+@keyframes toastIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+/* Animación de salida del toast (desliza hacia la derecha) */
+@keyframes toastOut {
+  from { transform: translateX(0); opacity: 1; }
+  to { transform: translateX(100%); opacity: 0; }
+}
+
+/* === Responsive === */
+@media (max-width: 768px) {
+  .sidebar-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 998;
+  }
+
+  .menu-toggle {
+    display: flex;
+  }
+
+  .main-content {
+    margin-left: 0;
+    padding: 80px 16px 24px;
+  }
+
+  .dashboard-wrapper:not(.sidebar-open) app-admin-sidebar {
+    transform: translateX(-100%);
+  }
+
+  .dashboard-wrapper.sidebar-open app-admin-sidebar {
+    transform: translateX(0);
+  }
 }

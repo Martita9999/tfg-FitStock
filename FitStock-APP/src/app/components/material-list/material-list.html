@@ -143,12 +143,7 @@
         <label>Ubicación</label>
         <input type="text" [(ngModel)]="newMaterial.ubicacion" name="ubicacion" placeholder="Ej: Zona de cardio, junto ventana">
       </div>
-      <div class="field">
-        <label>Estado</label>
-        <select [(ngModel)]="newMaterial.estado" name="estado">
-          <option *ngFor="let e of estadosDisponibles" [value]="e.value">{{ e.label }}</option>
-        </select>
-      </div>
+      <!-- El estado no se edita aquí: se gestiona automáticamente desde el módulo de incidencias -->
     </div>
     <div class="modal-footer">
       <button class="btn-cancel" (click)="cerrarModal()">Cancelar</button>
@@ -184,12 +179,7 @@
         <label>Descripción / Notas</label>
         <textarea [(ngModel)]="editData.descripcion" name="edit_descripcion" rows="2" placeholder="Descripción adicional"></textarea>
       </div>
-      <div class="field">
-        <label>Estado</label>
-        <select [(ngModel)]="editData.estado" name="edit_estado">
-          <option *ngFor="let e of estadosDisponibles" [value]="e.value">{{ e.label }}</option>
-        </select>
-      </div>
+      <!-- El estado no se edita aquí: se gestiona automáticamente desde el módulo de incidencias -->
       <p style="font-size:12px;color:var(--text-secondary);margin-top:4px;">
         * La fecha de revisión se actualizará automáticamente al guardar
       </p>

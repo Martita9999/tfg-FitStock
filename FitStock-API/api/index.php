@@ -1,4 +1,10 @@
 <?php
+/*
+ * Enrutador interno de la API REST de FitStock.
+ * Recibe todas las peticiones cuyo path comienza con /api (derivadas desde router.php)
+ * y las distribuye según el recurso solicitado: login, usuarios, materiales, etc.
+ * Cada recurso implementa las operaciones CRUD correspondientes con control de roles.
+ */
 // Cabeceras CORS para permitir peticiones desde el frontend Angular con credenciales
 header("Content-Type: application/json");                                          // Tipo de contenido JSON
 header("Access-Control-Allow-Origin: http://localhost:4200");                      // Origen permitido (frontend Angular)
@@ -78,7 +84,10 @@ function handleApi($method, $resource, $path) {
                                 "id" => $usuario->getId(),
                                 "nombre" => $usuario->getNombre(),
                                 "email" => $usuario->getEmail(),
-                                "rol" => $usuario->getRol()
+                                "rol" => $usuario->getRol(),
+                                // Indica si el usuario debe cambiar su contraseña (1 = sí, 0 = no).
+                                // El frontend usa este campo para redirigir al formulario de cambio de contraseña tras el login.
+                                "forzar_cambio_password" => intval($usuario->getForzarCambioPassword())
                             ]
                         ]);
                     }
@@ -124,6 +133,31 @@ function handleApi($method, $resource, $path) {
 
         case 'usuarios':
             requireSession();                                // Requiere autenticación
+
+            // Permitir a cualquier usuario autenticado cambiar su propia contraseña.
+            // Al completar el cambio exitosamente, se resetea forzar_cambio_password a 0
+            // para que el usuario no tenga que cambiar la contraseña de nuevo en el próximo login.
+            if ($method === 'PUT' && isset($path[2]) && $path[2] === 'cambiar-password') {
+                $old_password = $data['old_password'] ?? '';
+                $new_password = $data['new_password'] ?? '';
+                if ($old_password && $new_password) {
+                    $usuario = Usuario::obtenerPorId($_SESSION['usuario_id']);
+                    if ($usuario && password_verify($old_password, $usuario->getPasswordHash())) {
+                        $password_hash = password_hash($new_password, PASSWORD_DEFAULT);
+                        $conexion = Conexion::conectar();
+                        // Actualiza la contraseña y limpia la marca de cambio forzado simultáneamente
+                        $stmt = $conexion->prepare("UPDATE usuarios SET password_hash = ?, forzar_cambio_password = 0 WHERE id_usuario = ?");
+                        $stmt->execute([$password_hash, $_SESSION['usuario_id']]);
+                        jsonResponse(["success" => true]);
+                    } else {
+                        jsonResponse(["error" => "La contraseña actual no es correcta"], 400);
+                    }
+                } else {
+                    jsonResponse(["error" => "Contraseña inválida"], 400);
+                }
+                break;
+            }
+
             if ($_SESSION['usuario_rol'] === 'cliente') {    // Los clientes no pueden acceder
                 jsonResponse(["error" => "Acceso denegado"], 403);
             }
@@ -134,10 +168,26 @@ function handleApi($method, $resource, $path) {
                         "id" => $u->getId(),
                         "nombre" => $u->getNombre(),
                         "email" => $u->getEmail(),
-                        "rol" => $u->getRol()
+                        "rol" => $u->getRol(),
+                        // Incluye el estado de cambio forzado de contraseña para que el administrador
+                        // pueda ver qué usuarios tienen pendiente el cambio de contraseña.
+                        "forzar_cambio_password" => intval($u->getForzarCambioPassword())
                     ];
                 }, $usuarios);
                 jsonResponse($list);
+            // POST /api/usuarios/forzar-cambio - Marca a un usuario para que deba cambiar su contraseña
+            // en el próximo inicio de sesión. Acción restringida a administradores y entrenadores.
+            } elseif ($method === 'POST' && isset($path[2]) && $path[2] === 'forzar-cambio') {
+                if ($_SESSION['usuario_rol'] !== 'admin' && $_SESSION['usuario_rol'] !== 'entrenador') {
+                    jsonResponse(["error" => "Acceso denegado"], 403);
+                }
+                $id_usuario = $data['id_usuario'] ?? null;
+                if ($id_usuario) {
+                    Usuario::forzarCambioPassword($id_usuario);
+                    jsonResponse(["success" => true]);
+                } else {
+                    jsonResponse(["error" => "ID de usuario requerido"], 400);
+                }
             } elseif ($method === 'POST') {                  // POST /api/usuarios - Crear usuario (solo admin)
                 if ($_SESSION['usuario_rol'] !== 'admin') {
                     jsonResponse(["error" => "Acceso denegado"], 403);
@@ -150,7 +200,7 @@ function handleApi($method, $resource, $path) {
                 Usuario::crear($nombre, $email, $password, $rol);
                 jsonResponse(["success" => true]);
             } elseif ($method === 'PUT' && isset($path[2])) {
-                if ($_SESSION['usuario_rol'] !== 'admin') {
+                if ($_SESSION['usuario_rol'] !== 'admin' && $_SESSION['usuario_rol'] !== 'entrenador') {
                     jsonResponse(["error" => "Acceso denegado"], 403);
                 }
                 $nombre = trim($data['nombre'] ?? '');
@@ -158,23 +208,21 @@ function handleApi($method, $resource, $path) {
                 $password = $data['password'] ?? null;
                 $rol = $data['rol'] ?? null;
                 if ($nombre && $email) {
+                    // Entrenador no puede editar admins ni asignar rol admin
+                    if ($_SESSION['usuario_rol'] === 'entrenador') {
+                        $target = Usuario::obtenerPorId($path[2]);
+                        if ($target && $target->getRol() === 'admin') {
+                            jsonResponse(["error" => "No puedes editar un administrador"], 403);
+                        }
+                        if ($rol === 'admin') {
+                            jsonResponse(["error" => "No puedes asignar el rol admin"], 403);
+                        }
+                    }
                     Usuario::actualizarAdmin($path[2], $nombre, $email, $password, $rol);
                     jsonResponse(["success" => true]);
                 } else {
                     jsonResponse(["error" => "Datos inválidos"], 400);
                 }
-            } elseif ($method === 'PUT' && isset($path[2]) && $path[2] === 'cambiar-password') {
-                $password = $data['password'] ?? '';
-                if ($password) {
-                    $password_hash = password_hash($password, PASSWORD_DEFAULT);
-                    $conexion = Conexion::conectar();
-                    $stmt = $conexion->prepare("UPDATE usuarios SET password_hash = ? WHERE id_usuario = ?");
-                    $stmt->execute([$password_hash, $_SESSION['usuario_id']]);
-                    jsonResponse(["success" => true]);
-                } else {
-                    jsonResponse(["error" => "Contraseña inválida"], 400);
-                }
-                break;
             } elseif ($method === 'DELETE' && isset($path[2])) {   // DELETE /api/usuarios/{id} (solo admin)
                 if ($_SESSION['usuario_rol'] !== 'admin') {
                     jsonResponse(["error" => "Acceso denegado"], 403);
@@ -312,6 +360,33 @@ function handleApi($method, $resource, $path) {
                     ];
                 }, $productos);
                 jsonResponse($list);
+            } elseif ($method === 'POST' && isset($path[2]) && $path[2] === 'subir-imagen') {
+                // POST /api/productos/subir-imagen - Subir imagen de un producto
+                $nombre = trim($data['nombre'] ?? '');             // Nombre del producto para nombrar el archivo
+                if (!$nombre) {
+                    jsonResponse(["error" => "Nombre del producto requerido"], 400);
+                }
+                // Verifica que se haya recibido un archivo sin errores
+                if (!isset($_FILES['imagen']) || $_FILES['imagen']['error'] !== UPLOAD_ERR_OK) {
+                    jsonResponse(["error" => "No se recibió ninguna imagen"], 400);
+                }
+                $imagen = $_FILES['imagen'];
+                // Solo permite formatos de imagen comunes
+                $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+                if (!in_array($imagen['type'], $allowedTypes)) {
+                    jsonResponse(["error" => "Formato no válido. Usa JPG, PNG, GIF o WebP"], 400);
+                }
+                // Ruta absoluta hasta la carpeta pública del frontend donde se almacenan las imágenes
+                $uploadDir = __DIR__ . '/../../FitStock-APP/public/images/productos/';
+                if (!is_dir($uploadDir)) {
+                    mkdir($uploadDir, 0777, true);                 // Crea la carpeta si no existe
+                }
+                $filename = $nombre . '.jpg';                      // Siempre .jpg para que coincida con getImagenUrl() en el frontend
+                if (move_uploaded_file($imagen['tmp_name'], $uploadDir . $filename)) {
+                    jsonResponse(["success" => true, "imagen" => $filename]);
+                } else {
+                    jsonResponse(["error" => "Error al guardar la imagen"], 500);
+                }
             } elseif ($method === 'POST') {                  // POST /api/productos - Crear producto
                 $nombre = trim($data['nombre'] ?? '');
                 $descripcion = trim($data['descripcion'] ?? '');
@@ -342,6 +417,8 @@ function handleApi($method, $resource, $path) {
                 jsonResponse(["success" => true]);
             }
             break;
+
+
 
         
         // COMPRAS - Registro de compras de productos por usuarios

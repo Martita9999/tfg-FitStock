@@ -1,20 +1,30 @@
 <?php
 require_once __DIR__ . "/../conexion.php";   // Importa la conexión a la base de datos
 
-// Clase modelo para la tabla 'usuarios' - gestiona usuarios del sistema
+/*
+ * Modelo Usuario.
+ * Representa un registro de la tabla 'usuarios' y proporciona métodos estáticos
+ * para operaciones CRUD. Incluye funcionalidad para forzar el cambio de contraseña
+ * en el primer inicio de sesión o por decisión administrativa.
+ */
 class Usuario {
     private $id;
     private $nombre;
     private $email;
     private $password_hash;
     private $rol;
+    // Indica si el usuario debe cambiar su contraseña en el próximo inicio de sesión.
+    //  0 = no forzar, 1 = forzar cambio. Se usa tras crear un usuario admin o para restablecer credenciales.
+    private $forzar_cambio_password;
 
-    public function __construct($id, $nombre, $email, $password_hash, $rol) {
+    // Constructor: recibe todos los datos del usuario, con valor opcional para forzar_cambio_password (por defecto 0).
+    public function __construct($id, $nombre, $email, $password_hash, $rol, $forzar_cambio_password = 0) {
         $this->id = $id;
         $this->nombre = $nombre;
         $this->email = $email;
         $this->password_hash = $password_hash;
         $this->rol = $rol;
+        $this->forzar_cambio_password = $forzar_cambio_password;
     }
 
     // Busca un usuario por su ID en la base de datos
@@ -24,7 +34,7 @@ class Usuario {
         $stmt->execute([$id]);                                                    // Ejecuta con el ID como parámetro
         $fila = $stmt->fetch(PDO::FETCH_ASSOC);                                   // Obtiene la fila como array asociativo
         if ($fila) {
-            return new Usuario($fila['id_usuario'], $fila['nombre'], $fila['email'], $fila['password_hash'], $fila['rol']);
+            return new Usuario($fila['id_usuario'], $fila['nombre'], $fila['email'], $fila['password_hash'], $fila['rol'], $fila['forzar_cambio_password'] ?? 0);
         }
         return null;
     }
@@ -35,16 +45,43 @@ class Usuario {
         $stmt->execute([$email]);
         $fila = $stmt->fetch(PDO::FETCH_ASSOC);
         if ($fila) {
-            return new Usuario($fila['id_usuario'], $fila['nombre'], $fila['email'], $fila['password_hash'], $fila['rol']);
+            return new Usuario($fila['id_usuario'], $fila['nombre'], $fila['email'], $fila['password_hash'], $fila['rol'], $fila['forzar_cambio_password'] ?? 0);
         }
         return null;
     }
 
+    /*
+     * Encuentra el primer ID libre (sin usar) en la tabla 'usuarios'.
+     * Algoritmo de "gap finding": recorre los IDs existentes en orden ascendente
+     * y devuelve el primer número que no está presente. Esto permite reutilizar
+     * IDs de usuarios eliminados sin depender de AUTO_INCREMENT.
+     */
+    private static function obtenerSiguienteIdLibre() {
+        $conexion = Conexion::conectar();
+        $stmt = $conexion->query("SELECT id_usuario FROM usuarios ORDER BY id_usuario");
+        $ids = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        $expected = 1;
+        foreach ($ids as $id) {
+            if ($id > $expected) {
+                return $expected;
+            }
+            $expected = $id + 1;
+        }
+        return $expected;
+    }
+
+    /*
+     * Crea un nuevo usuario en la base de datos.
+     * En lugar de usar AUTO_INCREMENT, se calcula el ID mediante obtenerSiguienteIdLibre()
+     * para reutilizar IDs de usuarios previamente eliminados, evitando huecos en la numeración.
+     * La contraseña se almacena hasheada con PASSWORD_DEFAULT (bcrypt).
+     */
     public static function crear($nombre, $email, $password, $rol) {
         $conexion = Conexion::conectar();
         $password_hash = password_hash($password, PASSWORD_DEFAULT);
-        $stmt = $conexion->prepare("INSERT INTO usuarios (nombre, email, password_hash, rol) VALUES (?, ?, ?, ?)");
-        return $stmt->execute([$nombre, $email, $password_hash, $rol]);
+        $nuevoId = self::obtenerSiguienteIdLibre();
+        $stmt = $conexion->prepare("INSERT INTO usuarios (id_usuario, nombre, email, password_hash, rol) VALUES (?, ?, ?, ?, ?)");
+        return $stmt->execute([$nuevoId, $nombre, $email, $password_hash, $rol]);
     }
 
     public static function actualizarAdmin($id, $nombre, $email, $password = null, $rol = null) {
@@ -82,9 +119,25 @@ class Usuario {
         $stmt = $conexion->query("SELECT * FROM usuarios ORDER BY nombre");  // Consulta sin parámetros
         $usuarios = [];
         while ($fila = $stmt->fetch(PDO::FETCH_ASSOC)) {                      // Itera sobre cada fila
-            $usuarios[] = new Usuario($fila['id_usuario'], $fila['nombre'], $fila['email'], $fila['password_hash'], $fila['rol']);
+            $usuarios[] = new Usuario($fila['id_usuario'], $fila['nombre'], $fila['email'], $fila['password_hash'], $fila['rol'], $fila['forzar_cambio_password'] ?? 0);
         }
         return $usuarios;
+    }
+
+    // Marca al usuario para que deba cambiar su contraseña en el próximo inicio de sesión.
+    // Útil cuando un administrador restablece credenciales o crea un usuario nuevo.
+    public static function forzarCambioPassword($id) {
+        $conexion = Conexion::conectar();
+        $stmt = $conexion->prepare("UPDATE usuarios SET forzar_cambio_password = 1 WHERE id_usuario = ?");
+        return $stmt->execute([$id]);
+    }
+
+    // Elimina la marca de cambio forzado de contraseña.
+    // Se invoca automáticamente cuando el usuario completa el cambio de contraseña.
+    public static function limpiarForzarCambioPassword($id) {
+        $conexion = Conexion::conectar();
+        $stmt = $conexion->prepare("UPDATE usuarios SET forzar_cambio_password = 0 WHERE id_usuario = ?");
+        return $stmt->execute([$id]);
     }
 
     public function getId() { return $this->id; }
@@ -92,4 +145,5 @@ class Usuario {
     public function getEmail() { return $this->email; }
     public function getPasswordHash() { return $this->password_hash; }
     public function getRol() { return $this->rol; }
+    public function getForzarCambioPassword() { return $this->forzar_cambio_password; }
 }

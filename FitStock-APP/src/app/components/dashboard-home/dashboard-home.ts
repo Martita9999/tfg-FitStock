@@ -17,10 +17,15 @@ import { UsuarioService, Usuario } from '../../services/usuario';
   styleUrl: './dashboard-home.css'
 })
 export class DashboardHomeComponent implements OnInit {
+  // Servicio para obtener el resumen general del panel (incidencias, stock bajo, máquinas)
   private resumenService = inject(ResumenService);
+  // Servicio para consultar materiales (máquinas, equipos deportivos)
   private materialesService = inject(MaterialesService);
+  // Servicio para gestionar préstamos de material
   private prestamosService = inject(PrestamosService);
+  // Servicio para gestionar compras de productos
   private comprasService = inject(ComprasService);
+  // Servicio para obtener datos del usuario actual y gestionar sesión
   private usuarioService = inject(UsuarioService);
 
   user: Usuario | null = null;
@@ -29,9 +34,12 @@ export class DashboardHomeComponent implements OnInit {
   maquinasOperativas = 0;
   misPrestamos: Prestamo[] = [];
   compras: Compra[] = [];
+  totalUsuarios = 0;
+  prestamosPendientes: Prestamo[] = [];
   error = '';
   successMsg = '';
 
+  currentPassword = '';
   newPassword = '';
   showPasswordForm = false;
 
@@ -47,13 +55,27 @@ export class DashboardHomeComponent implements OnInit {
     }
   }
 
+  // Carga los datos del resumen general (incidencias, stock bajo, máquinas),
+  // los préstamos pendientes y el total de usuarios del sistema
   cargarResumen() {
     this.resumenService.obtenerResumen().subscribe({
       next: (data) => this.resumen = data,
       error: () => this.error = 'Error al cargar el resumen'
     });
+    this.prestamosService.getPrestamos().subscribe({
+      next: (data: Prestamo[]) => {
+        this.prestamosPendientes = data.filter(p => !p.devolucion);
+      },
+      error: () => {}
+    });
+    this.usuarioService.getUsuarios().subscribe({
+      next: (data: Usuario[]) => this.totalUsuarios = data.length,
+      error: () => {}
+    });
   }
 
+  // Carga los datos específicos del cliente: máquinas operativas/averiadas,
+  // sus préstamos activos y las compras realizadas
   cargarDatosCliente() {
     this.materialesService.getMateriales('maquina').subscribe({
       next: (data: Material[]) => {
@@ -74,21 +96,29 @@ export class DashboardHomeComponent implements OnInit {
     });
   }
 
+  // Cambia la contraseña del usuario autenticado: valida que ambos campos
+  // estén rellenos y llama al servicio correspondiente
   cambiarPassword() {
     this.error = '';
     this.successMsg = '';
-    if (!this.newPassword.trim()) {
-      this.error = 'Introduce una nueva contraseña';
+    if (!this.currentPassword.trim()) {
+      this.error = 'Introduce tu contraseña actual';
       return;
     }
-    this.usuarioService.cambiarPassword(this.newPassword.trim()).subscribe({
+    if (!this.newPassword.trim()) {
+      this.error = 'Introduce la nueva contraseña';
+      return;
+    }
+    this.usuarioService.cambiarPassword(this.currentPassword.trim(), this.newPassword.trim()).subscribe({
       next: () => {
         this.successMsg = 'Contraseña actualizada correctamente';
+        this.currentPassword = '';
         this.newPassword = '';
         this.showPasswordForm = false;
       },
-      error: () => {
-        this.error = 'Error al cambiar la contraseña';
+      error: (err) => {
+        const backendError = err.error?.error;
+        this.error = backendError || 'Error al cambiar la contraseña';
       }
     });
   }

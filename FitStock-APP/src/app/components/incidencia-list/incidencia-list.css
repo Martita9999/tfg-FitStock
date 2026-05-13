@@ -40,8 +40,8 @@
 }
 
 .status-badge.averiado {
-  background: #fef2f2;
-  color: #dc2626;
+  background: var(--error-bg);
+  color: var(--error-color);
 }
 
 .id-tag {
@@ -57,8 +57,8 @@
 }
 
 .status-badge.en_reparacion {
-  background: #ffedd5;
-  color: #ea580c;
+  background: var(--warning-bg);
+  color: var(--warning-color);
 }
 
 .priority-badge {
@@ -68,6 +68,8 @@
   font-size: 12px;
   font-weight: 600;
 }
-.priority-badge.priority-high { background: #fef2f2; }
-.priority-badge.priority-medium { background: #fff7ed; }
+.priority-badge.priority-high { background: var(--error-bg); }
+.priority-badge.priority-medium { background: var(--warning-bg); }
 .priority-badge.priority-low { background: #eff6ff; }
+/* Modo oscuro: badge de prioridad baja adaptado */
+[data-theme="dark"] .priority-badge.priority-low { background: #1e3a5f; }

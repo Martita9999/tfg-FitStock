@@ -3,8 +3,8 @@ import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { AdminSidebarComponent } from '../admin-sidebar/admin-sidebar';
 import { UsuarioService } from '../../services/usuario';
+import { ToastService } from '../../services/toast.service';
 
-// Componente layout del panel de administración (sidebar + contenido)
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
@@ -13,11 +13,22 @@ import { UsuarioService } from '../../services/usuario';
   styleUrl: './admin-dashboard.css'
 })
 export class AdminDashboardComponent implements OnInit {
-  private usuarioService = inject(UsuarioService);   // Servicio para obtener el rol del usuario
-  userRole = '';                                       // Rol del usuario actual
+  private usuarioService = inject(UsuarioService);
+  private toastService = inject(ToastService);
+  userRole = '';
+  sidebarCollapsed = false; // Controla si la barra lateral está colapsada o visible
 
-  // Al iniciar, se suscribe al usuario actual para conocer su rol
   ngOnInit() {
     this.usuarioService.currentUser$.subscribe(u => this.userRole = u?.rol ?? '');
+  }
+
+  // Alterna el estado colapsado de la sidebar
+  toggleSidebar() {
+    this.sidebarCollapsed = !this.sidebarCollapsed;
+  }
+
+  // Fuerza el cierre de la sidebar (colapsada = false)
+  closeSidebar() {
+    this.sidebarCollapsed = false;
   }
 }

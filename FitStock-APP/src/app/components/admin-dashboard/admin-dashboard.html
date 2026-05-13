@@ -1,9 +1,18 @@
 <!-- Layout principal del dashboard: sidebar a la izquierda, contenido a la derecha -->
-<div class="dashboard-wrapper">
-  <!-- Sidebar visible para todos los roles -->
-  <app-admin-sidebar></app-admin-sidebar>
-  <!-- Área de contenido: carga el componente hijo según la ruta activa -->
+<div class="dashboard-wrapper" [class.sidebar-open]="!sidebarCollapsed">
+  <!-- Overlay para cerrar sidebar en móvil -->
+  @if (!sidebarCollapsed) {
+    <div class="sidebar-overlay" (click)="closeSidebar()"></div>
+  }
+  <!-- Sidebar -->
+  <app-admin-sidebar [collapsed]="sidebarCollapsed" (toggleSidebar)="toggleSidebar()"></app-admin-sidebar>
+  <!-- Área de contenido -->
   <main class="main-content">
+    <!-- Botón hamburguesa para abrir/cerrar la sidebar en móvil -->
+    <button class="menu-toggle" (click)="toggleSidebar()">☰</button>
+    <!-- Zona donde se renderizan las rutas hijas del dashboard -->
     <router-outlet></router-outlet>
   </main>
 </div>
+<!-- Toast container -->
+<div class="toast-container" id="toast-container"></div>

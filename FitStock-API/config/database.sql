@@ -16,6 +16,7 @@ CREATE TABLE usuarios (
     email VARCHAR(100) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     rol ENUM('admin','entrenador','cliente') NOT NULL DEFAULT 'cliente',
+    forzar_cambio_password TINYINT(1) NOT NULL DEFAULT 0, -- 1 = obliga al usuario a cambiar su contraseña en el próximo login; se usa al crear usuarios administrados o restablecer credenciales
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 

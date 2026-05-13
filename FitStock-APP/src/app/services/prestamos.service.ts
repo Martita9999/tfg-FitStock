@@ -24,6 +24,11 @@ export class PrestamosService {
     return this.http.put<{ success: boolean }>(`${this.API_URL}/prestamos/${id}`, data, this.opts);
   }
 
+  // Marca un préstamo como devuelto (fecha_devolucion = fecha actual)
+  devolverPrestamo(id: number) {
+    return this.http.put<{ success: boolean }>(`${this.API_URL}/prestamos/${id}`, {}, this.opts);
+  }
+
   // Elimina un préstamo por su ID
   deletePrestamo(id: number) {
     return this.http.delete<{ success: boolean }>(`${this.API_URL}/prestamos/${id}`, this.opts);
