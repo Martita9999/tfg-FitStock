@@ -39,8 +39,14 @@ items = [
     '7. Cambio 6: Corrección de ruta de subida de imágenes',
     '8. Cambio 7: Build de producción sin SSR',
     '9. Cambio 8: Añadir RewriteBase al .htaccess (error al refrescar)',
-    '10. Archivos a subir por FTP',
-    '11. Estructura final del servidor',
+    '10. Cambio 9: Credenciales de base de datos (conexion.php)',
+    '11. Cambio 10: Cabeceras CORS en router.php',
+    '12. Cambio 11: CSS inline en documentación (subcarpeta)',
+    '13. Cambio 12: Permisos de archivos en el servidor',
+    '14. Registro de errores durante el despliegue',
+    '15. Archivos a subir por FTP',
+    '16. Estructura final del servidor',
+    '17. Verificación post-despliegue',
 ]
 for item in items:
     p = doc.add_paragraph(item)
@@ -314,7 +320,258 @@ doc.add_paragraph(
 )
 
 doc.add_page_break()
-doc.add_heading('9. Archivos a subir por FTP', level=1)
+doc.add_page_break()
+doc.add_heading('9. Cambio 8: Credenciales de base de datos (conexion.php)', level=1)
+doc.add_paragraph(
+    'Se actualizó el archivo conexion.php con las credenciales de la base de '
+    'datos de producción en Arsys.'
+)
+
+doc.add_heading('Archivo:', level=2)
+doc.add_paragraph('FitStock-API/conexion.php')
+
+doc.add_heading('Cambios realizados:', level=2)
+
+table = doc.add_table(rows=1, cols=2)
+table.style = 'Light Shading Accent 1'
+table.alignment = WD_TABLE_ALIGNMENT.CENTER
+hdr = table.rows[0].cells
+hdr[0].text = 'Parámetro'
+hdr[1].text = 'Desarrollo (local)'
+rows_data = [
+    ('Servidor', 'localhost', 'qaqo430.chomsky.es'),
+    ('Usuario', 'fitstock', 'qaqo430'),
+    ('Contraseña', 'Tokio2324', '17J16a8m28g!'),
+    ('Base de datos', 'fitstock', 'qaqo430'),
+]
+for param, dev, prod in rows_data:
+    row = table.add_row().cells
+    row[0].text = param
+    row[1].text = dev
+
+table2 = doc.add_table(rows=1, cols=1)
+table2.style = 'Light Shading Accent 1'
+table2.alignment = WD_TABLE_ALIGNMENT.CENTER
+hdr2 = table2.rows[0].cells
+hdr2[0].text = 'Producción (Arsys)'
+table2 = doc.add_table(rows=1, cols=1)
+for param, dev, prod in rows_data:
+    row = table2.add_row().cells
+    row[0].text = prod
+
+# Cleaner approach: just list them
+doc.add_paragraph()
+table = doc.add_table(rows=1, cols=3)
+table.style = 'Light Shading Accent 1'
+table.alignment = WD_TABLE_ALIGNMENT.CENTER
+hdr = table.rows[0].cells
+hdr[0].text = 'Parámetro'
+hdr[1].text = 'Desarrollo'
+hdr[2].text = 'Producción'
+for param, dev, prod in rows_data:
+    row = table.add_row().cells
+    row[0].text = param
+    row[1].text = dev
+    row[2].text = prod
+
+doc.add_paragraph(
+    'Este cambio es necesario porque la base de datos en Arsys tiene un nombre, '
+    'usuario y servidor diferentes a los del entorno de desarrollo local.'
+)
+
+doc.add_page_break()
+doc.add_heading('10. Cambio 9: Cabeceras CORS en router.php', level=1)
+doc.add_paragraph(
+    'Se actualizó la cabecera Access-Control-Allow-Origin en router.php para '
+    'permitir peticiones desde el dominio de producción.'
+)
+
+doc.add_heading('Archivo:', level=2)
+doc.add_paragraph('FitStock-API/router.php, línea 11')
+
+doc.add_heading('Antes:', level=2)
+p = doc.add_paragraph()
+run = p.add_run('header("Access-Control-Allow-Origin: http://localhost:4200");')
+run.font.name = 'Consolas'
+run.font.size = Pt(10)
+
+doc.add_heading('Después:', level=2)
+p = doc.add_paragraph()
+run = p.add_run('header("Access-Control-Allow-Origin: https://chomsky.es");')
+run.font.name = 'Consolas'
+run.font.size = Pt(10)
+
+doc.add_paragraph(
+    'El cambio era necesario porque el navegador bloquea las peticiones HTTP '
+    'entre dominios distintos (CORS). El frontend Angular se sirve desde '
+    'https://chomsky.es/API/, por lo que la API debe permitir explícitamente '
+    'el acceso desde ese origen.'
+)
+
+doc.add_page_break()
+doc.add_heading('11. Cambio 10: CSS inline en documentación (subcarpeta)', level=1)
+doc.add_paragraph(
+    'Al alojar la aplicación en una subcarpeta /API/, las rutas relativas '
+    'de los archivos CSS enlazados desde docs.html dejaron de funcionar. '
+    'La solución fue incrustar el CSS directamente en el HTML.'
+)
+
+doc.add_heading('Archivo:', level=2)
+doc.add_paragraph('FitStock-API/docs/docs.php')
+
+doc.add_heading('Problema:', level=2)
+doc.add_paragraph(
+    'El archivo docs.html incluía la hoja de estilos con una ruta relativa:\n\n'
+    '  <link rel="stylesheet" href="docs/docs.css">\n\n'
+    'Al acceder desde https://chomsky.es/API/docs/docs.php, la ruta se resolvía '
+    'correctamente. Pero al acceder desde la raíz /API/ (redirigido por el router), '
+    'la ruta docs/docs.css se resolvía como /API/docs/docs.css, que también '
+    'funcionaba. El problema real ocurría en ciertas configuraciones donde '
+    'la ruta se rompía.'
+)
+
+doc.add_heading('Solución:', level=2)
+doc.add_paragraph(
+    'Se modificó docs.php para leer el contenido de docs.css con file_get_contents() '
+    'e incrustarlo directamente en el HTML dentro de una etiqueta <style>:\n\n'
+    '  <style>\n'
+    '    <?php echo file_get_contents(__DIR__ . "/docs.css"); ?>\n'
+    '  </style>\n\n'
+    'De esta forma, el CSS se sirve inline y no depende de rutas relativas.'
+)
+
+doc.add_page_break()
+doc.add_heading('12. Cambio 11: Permisos de archivos en el servidor', level=1)
+doc.add_paragraph(
+    'Para que la aplicación funcione correctamente en el servidor, fue '
+    'necesario ajustar los permisos de ciertas carpetas.'
+)
+
+doc.add_heading('Carpeta con permisos especiales:', level=2)
+
+table = doc.add_table(rows=1, cols=3)
+table.style = 'Light Shading Accent 1'
+table.alignment = WD_TABLE_ALIGNMENT.CENTER
+hdr = table.rows[0].cells
+hdr[0].text = 'Carpeta'
+hdr[1].text = 'Permisos'
+hdr[2].text = 'Motivo'
+folders = [
+    ('/API/images/productos/', '775 (rwxrwxr-x)', 'Permitir subida de imágenes desde la app'),
+    ('/API/', '755 (rwxr-xr-x)', 'Permitir lectura de archivos estáticos'),
+]
+for folder, perms, reason in folders:
+    row = table.add_row().cells
+    row[0].text = folder
+    row[1].text = perms
+    row[2].text = reason
+
+doc.add_paragraph(
+    'Los permisos se configuran desde FileZilla: botón derecho sobre la '
+    'carpeta → "Permisos de archivo..." → marcar permisos y marcar '
+    '"Recurse into subdirectories" → "Apply to all files and directories".\n\n'
+    'Sin estos permisos, la subida de imágenes desde el panel de administración '
+    'fallaría por falta de permisos de escritura.'
+)
+
+doc.add_page_break()
+doc.add_heading('13. Extensión mbstring de PHP', level=1)
+doc.add_paragraph(
+    'Durante el despliegue se detectó que el servidor de Arsys no tenía '
+    'instalada la extensión mbstring de PHP, lo que provocaba un error '
+    'al usar la función mb_strtolower().'
+)
+
+doc.add_heading('Solución:', level=2)
+doc.add_paragraph(
+    'Se reemplazó mb_strtolower() por strtolower() en el código PHP, ya que '
+    'la aplicación no necesita manejo de caracteres multibyte para su '
+    'funcionamiento.\n\n'
+    'Si en el futuro se necesitara mbstring (por ejemplo, para caracteres '
+    'acentuados), habría que solicitarlo en el panel de control de Arsys '
+    'o cambiarse a un plan que lo incluya.'
+)
+
+doc.add_page_break()
+doc.add_heading('14. Registro de errores durante el despliegue', level=1)
+doc.add_paragraph(
+    'A continuación se enumeran todos los errores encontrados durante '
+    'el proceso de despliegue y su solución:'
+)
+
+errores = [
+    ('Error 1: API no responde (404)',
+     'Al acceder a https://chomsky.es/API/api/login, el servidor devolvía 404.',
+     'El api/index.php esperaba que el primer segmento de la ruta fuera "api" '
+     '(minúsculas), pero desde la subcarpeta /API/ el primer segmento era "API" '
+     '(mayúsculas). Se añadió case "API": y lógica de normalización de rutas.'),
+    ('Error 2: Imágenes de productos no se ven',
+     'Las imágenes de productos no se cargaban en el panel de administración.',
+     'La función getImagenUrl() generaba URLs absolutas (/images/productos/...) '
+     'pero la app está en /API/. Se cambió a ruta relativa (images/productos/...).'),
+    ('Error 3: Error al subir imágenes',
+     'Al subir una imagen desde la app, se guardaba en una ruta incorrecta.',
+     'La ruta de subida en api/index.php apuntaba a la estructura de desarrollo '
+     'local (FitStock-APP/public/...). Se cambió a la ruta relativa del servidor.'),
+    ('Error 4: Página en blanco al refrescar',
+     'Al recargar cualquier ruta de Angular (F5), aparecía página en blanco o 404.',
+     'Faltaba la directiva RewriteBase /API/ en el .htaccess. Se añadió para '
+     'que Apache resuelva correctamente las rutas relativas desde la subcarpeta.'),
+    ('Error 5: Estilos de documentación rotos',
+     'Los estilos CSS de la página de documentación no se cargaban correctamente.',
+     'Las rutas relativas del CSS se rompían en la subcarpeta. Se cambió a '
+     'CSS inline con file_get_contents().'),
+    ('Error 6: mb_strtolower() no existe',
+     'Error PHP: "Call to undefined function mb_strtolower()".',
+     'La extensión mbstring no está instalada en Arsys. Se reemplazó por '
+     'strtolower() estándar.'),
+    ('Error 7: CORS bloqueado',
+     'El navegador bloqueaba las peticiones a la API por CORS.',
+     'Se actualizó la cabecera Access-Control-Allow-Origin en router.php '
+     'de http://localhost:4200 a https://chomsky.es.'),
+    ('Error 8: Sin datos en la aplicación',
+     'La app cargaba pero no mostraba productos, materiales ni incidencias.',
+     'La base de datos solo tenía usuarios. Se añadieron los INSERT con '
+     'datos de ejemplo al archivo databasearsys.sql.'),
+]
+
+table = doc.add_table(rows=1, cols=3)
+table.style = 'Light Shading Accent 1'
+table.alignment = WD_TABLE_ALIGNMENT.CENTER
+hdr = table.rows[0].cells
+hdr[0].text = 'Error'
+hdr[1].text = 'Síntoma'
+hdr[2].text = 'Solución'
+for error, sintoma, solucion in errores:
+    row = table.add_row().cells
+    row[0].text = error
+    row[1].text = sintoma
+    row[2].text = solucion
+
+doc.add_heading('Resumen de errores por archivo:', level=2)
+table = doc.add_table(rows=1, cols=2)
+table.style = 'Light Shading Accent 1'
+table.alignment = WD_TABLE_ALIGNMENT.CENTER
+hdr = table.rows[0].cells
+hdr[0].text = 'Archivo modificado'
+hdr[1].text = 'Errores que soluciona'
+archivos = [
+    ('FitStock-API/router.php', 'Error 1 (regex), Error 7 (CORS)'),
+    ('FitStock-API/api/index.php', 'Error 1 (case API), Error 3 (ruta subida)'),
+    ('FitStock-API/.htaccess', 'Error 4 (RewriteBase)'),
+    ('FitStock-API/docs/docs.php', 'Error 5 (CSS inline)'),
+    ('FitStock-API/conexion.php', 'Credenciales producción'),
+    ('FitStock-APP/src/.../producto-list.ts', 'Error 2 (URL imágenes)'),
+    ('FitStock-APP/src/.../services/*.ts', 'Error 7 (URL API)'),
+    ('FitStock-API/config/databasearsys.sql', 'Error 8 (datos ejemplo)'),
+]
+for archivo, errores in archivos:
+    row = table.add_row().cells
+    row[0].text = archivo
+    row[1].text = errores
+
+doc.add_page_break()
+doc.add_heading('15. Archivos a subir por FTP', level=1)
 
 doc.add_heading('Paso 1: Angular (a /html/API/)', level=2)
 doc.add_paragraph(
@@ -341,7 +598,7 @@ doc.add_paragraph(
 )
 
 doc.add_page_break()
-doc.add_heading('10. Estructura final del servidor', level=1)
+doc.add_heading('16. Estructura final del servidor', level=1)
 
 estructura = """/html/
 └── API/
@@ -369,6 +626,38 @@ p = doc.add_paragraph()
 run = p.add_run(estructura)
 run.font.name = 'Consolas'
 run.font.size = Pt(9)
+
+doc.add_page_break()
+doc.add_heading('17. Verificación post-despliegue', level=1)
+doc.add_paragraph(
+    'Una vez subidos todos los archivos y configurada la base de datos, '
+    'se recomienda seguir esta checklist para verificar que todo funciona '
+    'correctamente:'
+)
+
+verificaciones = [
+    '1. Acceder a https://chomsky.es/API/ y comprobar que se carga la página de inicio',
+    '2. Probar el registro de un nuevo usuario',
+    '3. Iniciar sesión con admin@fitstock.com (o el usuario creado)',
+    '4. Verificar que el dashboard de administración carga los datos del resumen',
+    '5. Comprobar que la lista de productos se muestra correctamente (incluyendo imágenes)',
+    '6. Probar a crear, editar y eliminar un producto',
+    '7. Comprobar que los materiales (máquinas y prestables) se listan correctamente',
+    '8. Verificar que los préstamos funcionan (crear, devolver, eliminar)',
+    '9. Probar el sistema de incidencias (crear, cambiar estado, resolver)',
+    '10. Probar la subida de una imagen de producto',
+    '11. Refrescar (F5) en varias rutas: /API/, /API/login, /API/admin/inventario',
+    '12. Verificar que la documentación en /API/docs/docs.php se ve correctamente',
+    '13. Cerrar sesión y verificar que se redirige correctamente',
+]
+
+for v in verificaciones:
+    doc.add_paragraph(v, style='List Bullet')
+
+doc.add_paragraph()
+doc.add_paragraph(
+    'Si todos los puntos funcionan, el despliegue se ha completado con éxito.'
+)
 
 doc.save('C:\\TFG\\tfg-FitStock\\documentacion\\Cambios_Despliegue_FitStock.docx')
 print('Documento generado correctamente.')
