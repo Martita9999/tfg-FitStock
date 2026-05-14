@@ -1,0 +1,39 @@
+Prompt para OpenCode
+Actúa como Desarrollador Senior Full Stack experto en Angular, PHP 8.0 y despliegues en Arsys.
+
+Tengo un proyecto de TFG llamado FitStock y necesito que gestiones el código del Backend y la integración con el Frontend basándote en estos datos reales de mi servidor:
+
+1. Credenciales de Conexión (PDO):
+
+Host: qaqo430.chomsky.es
+
+Database: qaqo430
+
+User: qaqo430
+
+Password: 17J16a8m28g!
+
+Puerto: 3306
+
+2. Estructura de la Base de Datos:
+Ya he importado las tablas con este esquema:
+
+usuarios (id_usuario, nombre, email, password_hash, rol [admin, entrenador, cliente]).
+
+material (id_material, nombre_equipo, estado, tipo, id_tag_material).
+
+prestamos, productos_stock, compras, incidencias.
+
+3. Tareas requeridas:
+
+Conexión Segura: Crea un archivo db.php usando PDO con los datos arriba indicados.
+
+API REST: Crea los endpoints necesarios en PHP. El login debe usar password_verify contra el campo password_hash.
+
+CORS: Configura los headers en PHP para permitir peticiones desde mi aplicación Angular.
+
+Angular Integration: Ayúdame a configurar el environment.prod.ts para que apunte a la carpeta /api del servidor.
+
+Configuración del Servidor: Genera un archivo .htaccess para la raíz del hosting que gestione las rutas de Angular (Single Page Application) y permita el acceso a la carpeta /api.
+
+Regla de oro: Usa siempre sentencias preparadas para evitar inyección SQL y devuelve todas las respuestas en formato JSON.

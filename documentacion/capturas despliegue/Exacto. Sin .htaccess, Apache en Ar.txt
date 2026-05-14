@@ -1,0 +1,9 @@
+Exacto. Sin .htaccess, Apache en Arsys busca directamente un archivo index.php o index.html en la raíz. Como no existe, no ejecuta nada y muestra error.
+El .htaccess le dice a Apache:
+1. RewriteEngine On — Activa la reescritura de URLs
+2. RewriteCond %{REQUEST_FILENAME} !-f — Si el archivo solicitado NO existe físicamente...
+3. RewriteCond %{REQUEST_FILENAME} !-d — Y el directorio solicitado NO existe físicamente...
+4. RewriteRule ^(.*)$ router.php [QSA,L] — Redirige todo (^(.*)$) a router.php, que es quien decide qué mostrar (docs, API, etc.)
+Así consigues que cualquier URL como /, /api/login, /docs/docs.css, etc. pase por tu router.php en lugar de depender de lo que Apache busque por defecto.
+
+para explicación paso 10 y 15
