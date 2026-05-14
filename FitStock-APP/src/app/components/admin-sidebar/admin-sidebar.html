@@ -28,6 +28,7 @@
       }
       @if (user?.rol === 'entrenador') {
         <li routerLink="/admin/home" routerLinkActive="active" (click)="closeSidebar.emit()">📊 Dashboard</li>
+        <li routerLink="/admin/inventario" routerLinkActive="active" (click)="closeSidebar.emit()">📦 Productos</li>
         <li routerLink="/admin/prestamos" routerLinkActive="active" (click)="closeSidebar.emit()">🤝 Préstamos</li>
         <li routerLink="/admin/incidencias" routerLinkActive="active" (click)="closeSidebar.emit()">⚠️ Incidencias</li>
         <li routerLink="/admin/materiales" routerLinkActive="active" (click)="closeSidebar.emit()">🏋️ Máquinas</li>
