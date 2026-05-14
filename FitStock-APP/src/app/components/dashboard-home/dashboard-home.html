@@ -80,6 +80,32 @@
           </div>
         </div>
 
+        <!-- Tarjeta de gasto total de los usuarios -->
+        <div class="card ventas-card">
+          <div class="card-header ventas">💰 Gasto Total</div>
+          <div class="card-body">
+            <div class="stats">
+              <div class="stat">
+                <span class="stat-num success">{{ resumen.gastos.total | number:'1.2-2' }}€</span>
+                <span class="stat-label">Total gastado</span>
+              </div>
+            </div>
+            @if (resumen.gastos.por_usuario.length > 0) {
+              <div class="stock-list" style="margin-top:12px;">
+                @for (g of resumen.gastos.por_usuario; track g.id) {
+                  @if (g.total > 0) {
+                    <div class="stock-item">
+                      <span class="item-name">{{ g.nombre }}</span>
+                      <span class="item-qty" style="color:var(--success-color, #16a34a)">{{ g.total | number:'1.2-2' }}€</span>
+                    </div>
+                  }
+                }
+              </div>
+            }
+            <a routerLink="/admin/compras" class="card-link">Ver compras →</a>
+          </div>
+        </div>
+
         <!-- Tarjeta de préstamos pendientes de devolución -->
         <div class="card prestamos-card">
           <div class="card-header prestamos">🤝 Préstamos Pendientes</div>

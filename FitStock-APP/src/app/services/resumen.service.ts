@@ -5,6 +5,10 @@ export interface ResumenData {
   incidencias: { abierta: number; en_proceso: number; resuelta: number };
   stock_bajo: { id: number; nombre: string; cantidad: number; stock_minimo: number }[];
   maquinas: { por_estado: Record<string, number>; total: number };
+  gastos: {
+    total: number;
+    por_usuario: { id: number; nombre: string; email: string; total: number }[];
+  };
 }
 
 // Servicio que obtiene los datos de resumen del panel de administración

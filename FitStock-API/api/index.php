@@ -555,12 +555,38 @@ function handleApi($method, $resource, $path) {
                 }
                 $total_maquinas = array_sum($maquinas);
 
+                // Gasto total de todos los usuarios
+                $stmt = $conexion->query("SELECT COALESCE(SUM(total), 0) as total FROM compras");
+                $total_gastado = floatval($stmt->fetch(PDO::FETCH_ASSOC)['total']);
+
+                // Desglose por usuario
+                $stmt = $conexion->query(
+                    "SELECT u.id_usuario, u.nombre, u.email, COALESCE(SUM(c.total), 0) as total
+                     FROM usuarios u
+                     LEFT JOIN compras c ON u.id_usuario = c.id_usuario
+                     GROUP BY u.id_usuario
+                     ORDER BY total DESC"
+                );
+                $gastos_por_usuario = [];
+                while ($fila = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                    $gastos_por_usuario[] = [
+                        "id" => intval($fila['id_usuario']),
+                        "nombre" => $fila['nombre'],
+                        "email" => $fila['email'],
+                        "total" => floatval($fila['total'])
+                    ];
+                }
+
                 jsonResponse([
                     "incidencias" => $incidencias,
                     "stock_bajo" => $stock_bajo,
                     "maquinas" => [
                         "por_estado" => $maquinas,
                         "total" => $total_maquinas
+                    ],
+                    "gastos" => [
+                        "total" => $total_gastado,
+                        "por_usuario" => $gastos_por_usuario
                     ]
                 ]);
             }

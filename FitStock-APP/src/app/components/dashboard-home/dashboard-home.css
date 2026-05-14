@@ -24,6 +24,7 @@
 .card-header.maq { background: linear-gradient(135deg, #2563eb, #1d4ed8); }
 .card-header.perfil { background: linear-gradient(135deg, #7c3aed, #6d28d9); }
 .card-header.prestamos { background: linear-gradient(135deg, #16a34a, #15803d); }
+.card-header.ventas { background: linear-gradient(135deg, #f59e0b, #d97706); }
 /* Cuerpo de la tarjeta */
 .card-body { padding: 20px; }
 .card h3 { font-size: 15px; font-weight: 700; margin-bottom: 16px; color: var(--text); }
