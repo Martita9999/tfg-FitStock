@@ -318,3 +318,16 @@
 
 .field-row { display: flex; gap: 12px; }
 .field-row .field { flex: 1; }
+
+.img-preview {
+  margin-top: 8px;
+  border-radius: 8px;
+  overflow: hidden;
+  max-width: 200px;
+  border: 1px solid var(--border, #e2e8f0);
+}
+.img-preview img {
+  width: 100%;
+  height: auto;
+  display: block;
+}

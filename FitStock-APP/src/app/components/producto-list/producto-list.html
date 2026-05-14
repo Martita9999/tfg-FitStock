@@ -137,6 +137,9 @@
       <div class="field">
         <label>Imagen</label>
         <input type="file" accept="image/*" (change)="onFileSelected($event)">
+        <div class="img-preview" *ngIf="previewUrl">
+          <img [src]="previewUrl" alt="Vista previa">
+        </div>
       </div>
     </div>
     <div class="modal-footer">

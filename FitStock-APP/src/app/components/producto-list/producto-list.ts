@@ -34,6 +34,7 @@ export class ProductoList implements OnInit {
   showModal = false;                                          // Control del modal de creación
   newProducto = { nombre: '', descripcion: '', cantidad: 0, stock_minimo: 0, precio: 0 };  // Datos del nuevo producto
   selectedFile: File | null = null;                            // Archivo de imagen seleccionado
+  previewUrl: string | null = null;                            // URL de previsualización de la imagen seleccionada
   error = '';              // Mensaje de error
   successMsg = '';         // Mensaje de éxito
 
@@ -136,6 +137,7 @@ export class ProductoList implements OnInit {
   abrirModal() {
     this.newProducto = { nombre: '', descripcion: '', cantidad: 0, stock_minimo: 0, precio: 0 };
     this.selectedFile = null;
+    if (this.previewUrl) { URL.revokeObjectURL(this.previewUrl); this.previewUrl = null; }
     this.error = '';
     this.showModal = true;
   }
@@ -144,39 +146,45 @@ export class ProductoList implements OnInit {
   cerrarModal() {
     this.showModal = false;
     this.error = '';
+    this.previewUrl = null;
   }
 
   // Envía los datos para crear un nuevo producto
-  crearProducto() {
+  async crearProducto() {
     this.error = '';
     if (!this.newProducto.nombre) {              // Validación: nombre obligatorio
       this.error = 'El nombre es obligatorio';
       return;
     }
-    this.productosService.createProducto({
-      nombre: this.newProducto.nombre,
-      descripcion: this.newProducto.descripcion,
-      cantidad: this.newProducto.cantidad,
-      stock_minimo: this.newProducto.stock_minimo,
-      precio: this.newProducto.precio,
-    }).subscribe({
-      next: () => {
-        // Si hay imagen seleccionada, la sube con el nombre del producto
-        if (this.selectedFile) {
-          this.productosService.subirImagen(this.newProducto.nombre, this.selectedFile).subscribe();
-        }
-        this.cerrarModal();
-        this.loadProductos();
-      },
-      error: () => { this.error = 'Error al crear el producto'; }
-    });
+    try {
+      await firstValueFrom(this.productosService.createProducto({
+        nombre: this.newProducto.nombre,
+        descripcion: this.newProducto.descripcion,
+        cantidad: this.newProducto.cantidad,
+        stock_minimo: this.newProducto.stock_minimo,
+        precio: this.newProducto.precio,
+      }));
+      // Si hay imagen seleccionada, espera a que termine la subida antes de recargar
+      if (this.selectedFile) {
+        await firstValueFrom(this.productosService.subirImagen(this.newProducto.nombre, this.selectedFile));
+      }
+      this.cerrarModal();
+      this.loadProductos();
+    } catch {
+      this.error = 'Error al crear el producto';
+    }
   }
 
-  // Guarda el archivo seleccionado en el input de imagen
+  // Guarda el archivo seleccionado y genera una previsualización
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       this.selectedFile = input.files[0];
+      // Limpia la URL anterior si existe
+      if (this.previewUrl) {
+        URL.revokeObjectURL(this.previewUrl);
+      }
+      this.previewUrl = URL.createObjectURL(this.selectedFile);
     }
   }
 
@@ -226,10 +234,15 @@ export class ProductoList implements OnInit {
     return '/images/productos/' + encodeURIComponent(nombre) + '.jpg';
   }
 
-  // Oculta la imagen si ocurre un error al cargarla (imagen no encontrada)
+  // Reintenta cargar la imagen tras 2s (por si aún se está subiendo), luego la oculta
   onImgError(event: Event) {
     const img = event.target as HTMLImageElement;
-    img.style.display = 'none';
+    if (!img.getAttribute('data-retried')) {
+      img.setAttribute('data-retried', '1');
+      setTimeout(() => { img.src = img.src; }, 2000);
+    } else {
+      img.style.display = 'none';
+    }
   }
 
   // Confirma y elimina un producto por su ID
