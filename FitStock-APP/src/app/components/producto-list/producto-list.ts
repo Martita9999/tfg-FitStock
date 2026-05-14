@@ -221,9 +221,9 @@ export class ProductoList implements OnInit {
     });
   }
 
-  // Construye la URL absoluta de la imagen del producto a partir de su nombre
+  // Construye la URL de la imagen del producto a partir de su nombre
   getImagenUrl(nombre: string): string {
-    return '/images/productos/' + encodeURIComponent(nombre) + '.jpg';
+    return 'images/productos/' + encodeURIComponent(nombre) + '.jpg';
   }
 
   // Oculta la imagen si ocurre un error al cargarla (imagen no encontrada)

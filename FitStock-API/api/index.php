@@ -7,7 +7,7 @@
  */
 // Cabeceras CORS para permitir peticiones desde el frontend Angular con credenciales
 header("Content-Type: application/json");                                          // Tipo de contenido JSON
-header("Access-Control-Allow-Origin: http://localhost:4200");                      // Origen permitido (frontend Angular)
+header("Access-Control-Allow-Origin: https://chomsky.es");                       // Origen permitido 
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");           // Métodos HTTP permitidos
 header("Access-Control-Allow-Headers: Content-Type, Authorization");               // Cabeceras permitidas
 header("Access-Control-Allow-Credentials: true");                                  // Permite cookies de sesión
@@ -35,6 +35,11 @@ $method = $_SERVER['REQUEST_METHOD'];
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $path = explode('/', trim($uri, '/'));
 
+// Normalizar ruta cuando está dentro de subcarpeta (ej: /API/api/login)
+if (strtoupper($path[0] ?? '') === 'API' && strtolower($path[1] ?? '') === 'api') {
+    array_shift($path); // Elimina 'API' → path = ['api', 'login', ...]
+}
+
 $action = $path[0] ?? '';       // Primer segmento (debería ser 'api')
 $resource = $path[1] ?? '';     // Segundo segmento (ej: 'login', 'usuarios', 'materiales')
 
@@ -53,6 +58,7 @@ function getJsonInput() {
 // Enrutador principal: redirige según el primer segmento de la URL
 switch ($action) {
     case 'api':                                      // Si la ruta empieza por /api
+    case 'API':                                      // También desde subcarpeta /API/api
         handleApi($method, $resource, $path);        // Llama al manejador de la API
         break;
     default:                                         // Si no es una ruta válida
@@ -376,8 +382,8 @@ function handleApi($method, $resource, $path) {
                 if (!in_array($imagen['type'], $allowedTypes)) {
                     jsonResponse(["error" => "Formato no válido. Usa JPG, PNG, GIF o WebP"], 400);
                 }
-                // Ruta absoluta hasta la carpeta pública del frontend donde se almacenan las imágenes
-                $uploadDir = __DIR__ . '/../../FitStock-APP/public/images/productos/';
+                // Ruta donde se almacenan las imágenes (relativa a la raíz de la API)
+                $uploadDir = __DIR__ . '/../images/productos/';
                 if (!is_dir($uploadDir)) {
                     mkdir($uploadDir, 0777, true);                 // Crea la carpeta si no existe
                 }

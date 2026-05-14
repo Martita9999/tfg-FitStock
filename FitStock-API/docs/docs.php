@@ -128,6 +128,7 @@ ROW;
 RES;
 }
 
-// Carga la plantilla HTML y reemplaza el marcador {{RESOURCES}} con el contenido generado
+// Carga la plantilla HTML y reemplaza los marcadores
 $html = file_get_contents(__DIR__ . '/docs.html');
-echo str_replace('{{RESOURCES}}', $rows, $html);
+$css = file_get_contents(__DIR__ . '/docs.css');
+echo str_replace(['{{RESOURCES}}', '{{STYLE}}'], [$rows, '<style>' . $css . '</style>'], $html);

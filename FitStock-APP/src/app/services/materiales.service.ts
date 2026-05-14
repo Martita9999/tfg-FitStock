@@ -6,7 +6,7 @@ import { Material } from '../interfaces/app.interfaces';
 @Injectable({ providedIn: 'root' })
 export class MaterialesService {
   private http = inject(HttpClient);                    // Cliente HTTP de Angular
-  private API_URL = 'http://localhost:8000/api';        // URL base de la API
+  private API_URL = 'https://chomsky.es/API/api';        // URL base de la API
   private opts = { withCredentials: true };             // Opciones con credenciales
 
   // Obtiene todos los materiales (opcionalmente filtrados por tipo)

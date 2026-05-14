@@ -1,13 +1,15 @@
 <?php
 /* 
- * Router principal de FitStock.
+ * Router principal de FitStock - Versión PRODUCCIÓN (Arsys)
  * Se encarga de:
- *   1. Configurar cabeceras CORS para el frontend Angular.
- *   2. Servir archivos estáticos (CSS, JS, imágenes) si existen en el documento raíz.
- *   3. Redirigir peticiones /api al endpoint interno de la API.
- *   4. Como fallback, mostrar la documentación HTML del proyecto.
+ *   1. Configurar cabeceras CORS para el dominio real chomsky.es.
+ *   2. Servir archivos estáticos si existen (Angular + API).
+ *   3. Redirigir peticiones /api al endpoint interno.
+ *   4. Fallback al index.html de Angular para que funcione el routing SPA.
  */
-header("Access-Control-Allow-Origin: http://localhost:4200");
+
+// 1. CAMBIO IMPORTANTE: Permitir acceso desde tu dominio real
+header("Access-Control-Allow-Origin: https://chomsky.es");
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Access-Control-Allow-Credentials: true");
@@ -19,25 +21,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
-// Servir archivos estáticos (CSS, JS, imágenes) si existen fisicamente en el disco.
-// Si el archivo existe, PHP devuelve false para que el servidor web lo sirva directamente.
+// Servir archivos estáticos (CSS, JS, imágenes, etc.)
 $filePath = __DIR__ . $uri;
 if ($uri !== '/' && is_file($filePath)) {
     return false;
 }
 
-// Ruteo de la API:
-// Si la URI comienza con "/api", se delega el manejo a api/index.php.
-// Este archivo contiene el enrutador interno que resuelve cada endpoint.
-if (preg_match('#^/api#', $uri)) {
+// Redirigir peticiones /api al backend (case-insensitive, funciona desde subcarpeta)
+if (preg_match('#/api(/|$)#i', $uri)) {
     require __DIR__ . '/api/index.php';
     return true;
 }
 
-// Ruta por defecto (fallback):
-// Si no es un archivo estático ni una ruta /api, se muestra la documentación HTML.
-// Esto permite acceder a la documentación simplemente abriendo la raíz del proyecto.
+// Fallback: servir index.html de Angular para que funcione el routing SPA
+$angularIndex = __DIR__ . '/index.html';
+if (is_file($angularIndex)) {
+    http_response_code(200);
+    header("Content-Type: text/html; charset=utf-8");
+    require $angularIndex;
+    return true;
+}
+
+// Último recurso: documentación
 http_response_code(200);
 header("Content-Type: text/html; charset=utf-8");
-require __DIR__ . '/docs/docs.php';
+if (is_file(__DIR__ . '/docs/docs.php')) {
+    require __DIR__ . '/docs/docs.php';
+} else {
+    echo "API FitStock activa. Carpeta de documentación no encontrada.";
+}
+
 return true;
