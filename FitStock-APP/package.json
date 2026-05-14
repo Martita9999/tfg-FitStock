@@ -10,7 +10,6 @@
     "serve:ssr:fitStock-front": "node dist/fitStock-front/server/server.mjs"
   },
   "private": true,
-  "packageManager": "npm@11.11.0",
   "dependencies": {
     "@angular/common": "^21.2.8",
     "@angular/compiler": "^21.2.0",
