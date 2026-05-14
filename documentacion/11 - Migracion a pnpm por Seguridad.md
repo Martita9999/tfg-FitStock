@@ -77,10 +77,46 @@ trustPolicy: no-downgrade
 
 ## 3. Impacto en el proyecto FitStock
 
-### Cambios realizados
-- Se reemplazó npm por pnpm como gestor de paquetes
-- Se eliminó el campo `"packageManager": "npm@11.11.0"` del `package.json`
-- Se creó `pnpm-lock.yaml` (compatible con `package.json` existente)
+### Pasos de instalación realizados
+
+```bash
+# 1. Instalar pnpm globalmente
+npm install -g pnpm
+
+# 2. Ir al directorio del frontend
+cd FitStock-APP
+
+# 3. Eliminar packageManager del package.json
+#    (pnpm rechaza la instalación si detecta "packageManager": "npm@...")
+#    Se borró la línea: "packageManager": "npm@11.11.0"
+
+# 4. Instalar dependencias con pnpm
+pnpm install
+
+# 5. Aprobar build scripts necesarios (esbuild, lmdb, parcel, msgpackr)
+#    Se editó pnpm-workspace.yaml generado automáticamente:
+#      allowBuilds:
+#        '@parcel/watcher': true
+#        esbuild: true
+#        lmdb: true
+#        msgpackr-extract: true
+
+# 6. Eliminar node_modules viejos y package-lock.json
+rm -rf node_modules
+rm package-lock.json
+
+# 7. Verificar que el build funciona
+pnpm run build
+```
+
+### Cambios en el repositorio
+| Archivo | Acción |
+|---|---|
+| `FitStock-APP/package.json` | Eliminado `"packageManager": "npm@11.11.0"` |
+| `FitStock-APP/package-lock.json` | Eliminado (formato npm, incompatible) |
+| `FitStock-APP/pnpm-lock.yaml` | Añadido (lockfile de pnpm, 4000+ líneas) |
+| `FitStock-APP/pnpm-workspace.yaml` | Añadido (configuración de builds permitidos) |
+| `FitStock-APP/node_modules/` | Eliminado y regenerado con pnpm |
 
 ### Comandos de uso diario
 | Acción | npm | pnpm |
