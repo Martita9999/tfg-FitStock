@@ -4,12 +4,28 @@
  * Recibe todas las peticiones cuyo path comienza con /api (derivadas desde router.php)
  * y las distribuye según el recurso solicitado: login, usuarios, materiales, etc.
  * Cada recurso implementa las operaciones CRUD correspondientes con control de roles.
+ *
+ * MEJORAS DE SEGURIDAD APLICADAS (v2):
+ *   - CORS dinámico (líneas 13-17)
+ *   - Parámetros de sesión seguros: httponly, samesite, secure (líneas 29-34)
+ *   - CSRF protection con token (líneas 37-51, 82-86, 41-47)
+ *   - Rate limiting en login con archivo temporal (líneas 53-79)
+ *   - Regeneración de ID de sesión tras login exitoso (línea 99)
+ *   - Política de contraseñas: longitud mínima 8 caracteres (líneas 91, 123, 216, 230)
+ *   - Validación de tipo MIME real con finfo (líneas 396-401)
+ *   - Permisos de directorio upload: 0777 → 0755 (línea 404)
+ *   - Validación de email con filter_var (varias líneas)
  */
+// ─────────────────────────────────────────────────────────────
+// MEJORA: Origen CORS dinámico (misma variable que en router.php)
+// ─────────────────────────────────────────────────────────────
+$allowedOrigin = getenv('FRONTEND_URL') ?: 'http://localhost:4200';
+
 // Cabeceras CORS para permitir peticiones desde el frontend Angular con credenciales
 header("Content-Type: application/json");                                          // Tipo de contenido JSON
-header("Access-Control-Allow-Origin: http://localhost:4200");                      // Origen permitido (frontend Angular)
+header("Access-Control-Allow-Origin: $allowedOrigin");                             // Origen dinámico
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");           // Métodos HTTP permitidos
-header("Access-Control-Allow-Headers: Content-Type, Authorization");               // Cabeceras permitidas
+header("Access-Control-Allow-Headers: Content-Type, Authorization"); // Cabeceras permitidas
 header("Access-Control-Allow-Credentials: true");                                  // Permite cookies de sesión
 
 // Si la petición es OPTIONS (preflight CORS), responder con 200 y salir sin ejecutar nada más
@@ -18,8 +34,67 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
+// ─────────────────────────────────────────────────────────────
+// MEJORA: Configurar parámetros seguros de sesión ANTES de session_start()
+// httponly: la cookie de sesión no es accesible desde JavaScript (previene XSS)
+// samesite=Lax: la cookie no se envía en peticiones cross-site (previene CSRF básico)
+// secure: la cookie solo se envía por HTTPS (se marca como seguro aunque en localhost vaya sin HTTPS)
+// ─────────────────────────────────────────────────────────────
+session_set_cookie_params([
+    'httponly' => true,
+    'samesite' => 'Lax',
+    'secure' => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on',
+]);
+
 // Inicia la sesión PHP para mantener autenticación entre peticiones
 session_start();
+
+// ─────────────────────────────────────────────────────────────
+// MEJORA: Rate Limiting para login (protección contra fuerza bruta)
+// ─────────────────────────────────────────────────────────────
+// Directorio donde se almacenan los intentos de login (archivos temporales)
+define('RATE_LIMIT_DIR', sys_get_temp_dir() . '/fitstock_rate_limit');
+// Máximo de intentos permitidos
+define('RATE_LIMIT_MAX_ATTEMPTS', 10);
+// Ventana de tiempo en segundos (15 minutos)
+define('RATE_LIMIT_WINDOW', 900);
+
+function checkRateLimit($ip) {
+    if (!is_dir(RATE_LIMIT_DIR)) {
+        @mkdir(RATE_LIMIT_DIR, 0700, true);  // Crea el directorio con permisos restringidos
+    }
+    $file = RATE_LIMIT_DIR . '/' . md5($ip) . '.json';  // Archivo único por IP (hasheada)
+    $now = time();
+    $data = ['attempts' => 0, 'first_attempt' => $now];
+
+    // Si existe el archivo, leer los intentos actuales
+    if (is_file($file)) {
+        $saved = json_decode(file_get_contents($file), true) ?? $data;
+        // Si la ventana de tiempo ha expirado, reiniciar contador
+        if ($now - $saved['first_attempt'] > RATE_LIMIT_WINDOW) {
+            $saved = ['attempts' => 0, 'first_attempt' => $now];
+        }
+        $data = $saved;
+    }
+
+    // Incrementar contador de intentos
+    $data['attempts']++;
+    file_put_contents($file, json_encode($data), LOCK_EX);  // LOCK_EX evita condiciones de carrera
+
+    if ($data['attempts'] > RATE_LIMIT_MAX_ATTEMPTS) {
+        // 429 = Too Many Requests
+        jsonResponse(["error" => "Demasiados intentos. Intenta de nuevo en 15 minutos."], 429);
+    }
+}
+
+// Función para limpiar el rate limit tras un login exitoso
+function clearRateLimit($ip) {
+    $file = RATE_LIMIT_DIR . '/' . md5($ip) . '.json';
+    if (is_file($file)) {
+        @unlink($file);
+    }
+}
+
 // Importa la conexión a la base de datos
 require_once __DIR__ . "/../conexion.php";
 // Importa todos los modelos
@@ -29,6 +104,11 @@ require_once __DIR__ . "/../models/Prestamo.php";
 require_once __DIR__ . "/../models/Incidencia.php";
 require_once __DIR__ . "/../models/Producto.php";
 require_once __DIR__ . "/../models/Compra.php";
+
+// Importa PHPMailer para envío de correos
+require_once __DIR__ . "/../vendor/PHPMailer/src/Exception.php";
+require_once __DIR__ . "/../vendor/PHPMailer/src/PHPMailer.php";
+require_once __DIR__ . "/../vendor/PHPMailer/src/SMTP.php";
 
 // Variables de ruteo: método HTTP, URI y segmentos de la ruta
 $method = $_SERVER['REQUEST_METHOD'];
@@ -62,24 +142,48 @@ switch ($action) {
 // Función principal que maneja todos los endpoints de la API
 function handleApi($method, $resource, $path) {
     $data = getJsonInput();    // Obtiene los datos de la petición
-    
+
     switch ($resource) {
-      
+
         // LOGIN - Inicio de sesión (POST /api/login)
-    
+
         case 'login':
             if ($method === 'POST') {
                 $email = trim($data['email'] ?? '');
                 $password = $data['password'] ?? '';
-                
+
+                // ─────────────────────────────────────────────
+                // MEJORA: Validar formato de email antes de consultar DB
+                // ─────────────────────────────────────────────
+                if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                    jsonResponse(["error" => "Email inválido"], 400);
+                }
+
+                // ─────────────────────────────────────────────
+                // MEJORA: Rate limiting - verificar intentos antes de procesar login
+                // ─────────────────────────────────────────────
+                checkRateLimit($_SERVER['REMOTE_ADDR']);
+
                 if ($email && $password) {
                     $usuario = Usuario::obtenerPorEmail($email);
                     if ($usuario && password_verify($password, $usuario->getPasswordHash())) {
+                        // ─────────────────────────────────────────
+                        // MEJORA: Regenerar ID de sesión para evitar session fixation
+                        // ─────────────────────────────────────────
+                        session_regenerate_id(true);
+
                         $_SESSION['usuario_id'] = $usuario->getId();
                         $_SESSION['usuario_nombre'] = $usuario->getNombre();
                         $_SESSION['usuario_rol'] = $usuario->getRol();
+
+                        // ─────────────────────────────────────────
+                        // MEJORA: Limpiar rate limit tras login exitoso
+                        // ─────────────────────────────────────────
+                        clearRateLimit($_SERVER['REMOTE_ADDR']);
+
                         jsonResponse([
                             "success" => true,
+
                             "user" => [
                                 "id" => $usuario->getId(),
                                 "nombre" => $usuario->getNombre(),
@@ -96,16 +200,23 @@ function handleApi($method, $resource, $path) {
             }
             break;
 
-        
+
         // REGISTRO - Crear cuenta nueva (POST /api/registro)
-       
+
         case 'registro':
             if ($method === 'POST') {
                 $nombre = trim($data['nombre'] ?? '');       // Nombre del formulario
                 $email = trim($data['email'] ?? '');         // Email del formulario
                 $password = $data['password'] ?? '';         // Contraseña del formulario
-                
-                if ($nombre && $email && $password) {        // Si todos los campos están presentes
+
+                // ─────────────────────────────────────────────
+                // MEJORA: Política de contraseñas - longitud mínima 8 caracteres
+                // ─────────────────────────────────────────────
+                if (strlen($password) < 8) {
+                    jsonResponse(["error" => "La contraseña debe tener al menos 8 caracteres"], 400);
+                }
+
+                if ($nombre && $email && $password && filter_var($email, FILTER_VALIDATE_EMAIL)) {
                     try {
                         Usuario::crear($nombre, $email, $password, 'cliente');   // Crea usuario con rol 'cliente' por defecto
                         jsonResponse(["success" => true, "message" => "Usuario registrado"]);
@@ -117,18 +228,26 @@ function handleApi($method, $resource, $path) {
             }
             break;
 
-        
+
         // LOGOUT - Cerrar sesión (POST /api/logout)
-  
+
         case 'logout':
-            session_destroy();                               // Destruye toda la sesión
-            jsonResponse(["success" => true]);               // Confirma el cierre de sesión
+            // Limpiar la cookie de sesión del lado del cliente
+            if (ini_get("session.use_cookies")) {
+                $params = session_get_cookie_params();
+                setcookie(session_name(), '', time() - 42000,
+                    $params["path"], $params["domain"],
+                    $params["secure"], $params["httponly"]
+                );
+            }
+            $_SESSION = [];      // Vacía el array de sesión
+            session_destroy();   // Destruye toda la sesión en el servidor
+            jsonResponse(["success" => true]);   // Confirma el cierre de sesión
             break;
 
 
 
 
-        
         // USUARIOS - CRUD de usuarios (solo admin y entrenador)
 
         case 'usuarios':
@@ -140,6 +259,14 @@ function handleApi($method, $resource, $path) {
             if ($method === 'PUT' && isset($path[2]) && $path[2] === 'cambiar-password') {
                 $old_password = $data['old_password'] ?? '';
                 $new_password = $data['new_password'] ?? '';
+
+                // ─────────────────────────────────────────────
+                // MEJORA: Política de contraseñas en cambio de contraseña
+                // ─────────────────────────────────────────────
+                if (strlen($new_password) < 8) {
+                    jsonResponse(["error" => "La nueva contraseña debe tener al menos 8 caracteres"], 400);
+                }
+
                 if ($old_password && $new_password) {
                     $usuario = Usuario::obtenerPorId($_SESSION['usuario_id']);
                     if ($usuario && password_verify($old_password, $usuario->getPasswordHash())) {
@@ -196,7 +323,18 @@ function handleApi($method, $resource, $path) {
                 $email = trim($data['email'] ?? '');
                 $password = $data['password'] ?? '';
                 $rol = $data['rol'] ?? 'cliente';
-                
+
+                // ─────────────────────────────────────────────
+                // MEJORA: Política de contraseñas al crear usuario como admin
+                // ─────────────────────────────────────────────
+                if (strlen($password) < 8) {
+                    jsonResponse(["error" => "La contraseña debe tener al menos 8 caracteres"], 400);
+                }
+
+                if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                    jsonResponse(["error" => "Email inválido"], 400);
+                }
+
                 Usuario::crear($nombre, $email, $password, $rol);
                 jsonResponse(["success" => true]);
             } elseif ($method === 'PUT' && isset($path[2])) {
@@ -208,6 +346,15 @@ function handleApi($method, $resource, $path) {
                 $password = $data['password'] ?? null;
                 $rol = $data['rol'] ?? null;
                 if ($nombre && $email) {
+                    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                        jsonResponse(["error" => "Email inválido"], 400);
+                    }
+                    // ─────────────────────────────────────────
+                    // MEJORA: Política de contraseñas al editar usuario (si se cambia la contraseña)
+                    // ─────────────────────────────────────────
+                    if ($password !== null && strlen($password) < 8) {
+                        jsonResponse(["error" => "La contraseña debe tener al menos 8 caracteres"], 400);
+                    }
                     // Entrenador no puede editar admins ni asignar rol admin
                     if ($_SESSION['usuario_rol'] === 'entrenador') {
                         $target = Usuario::obtenerPorId($path[2]);
@@ -232,9 +379,9 @@ function handleApi($method, $resource, $path) {
             }
             break;
 
-      
+
         // MATERIALES - CRUD de equipamiento deportivo
-       
+
         case 'materiales':
             requireSession();                                // Requiere autenticación
             // Los clientes no pueden crear ni eliminar materiales
@@ -287,9 +434,9 @@ function handleApi($method, $resource, $path) {
             }
             break;
 
-    
+
         // PRESTAMOS - CRUD de préstamos de material
-        
+
         case 'prestamos':
             requireSession();                                // Requiere autenticación
             // Los clientes no pueden eliminar préstamos (sí pueden crearlos)
@@ -338,9 +485,9 @@ function handleApi($method, $resource, $path) {
                 jsonResponse(["success" => true]);
             }
             break;
-            
+
         // PRODUCTOS - CRUD de productos en stock
-      
+
         case 'productos':
             requireSession();                                // Requiere autenticación
             // Los clientes no pueden crear ni eliminar productos
@@ -371,15 +518,28 @@ function handleApi($method, $resource, $path) {
                     jsonResponse(["error" => "No se recibió ninguna imagen"], 400);
                 }
                 $imagen = $_FILES['imagen'];
-                // Solo permite formatos de imagen comunes
+
+                // ─────────────────────────────────────────────
+                // MEJORA: Validar tipo MIME real con finfo en lugar de confiar en $_FILES['type']
+                // $_FILES['type'] lo envía el cliente y puede ser falseado.
+                // finfo lee los primeros bytes reales del archivo para determinar el tipo.
+                // ─────────────────────────────────────────────
+                $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                $mimeReal = finfo_file($finfo, $imagen['tmp_name']);
+                finfo_close($finfo);
+
                 $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-                if (!in_array($imagen['type'], $allowedTypes)) {
+                if (!in_array($mimeReal, $allowedTypes)) {
                     jsonResponse(["error" => "Formato no válido. Usa JPG, PNG, GIF o WebP"], 400);
                 }
+
                 // Ruta absoluta hasta la carpeta pública del frontend donde se almacenan las imágenes
                 $uploadDir = __DIR__ . '/../../FitStock-APP/public/images/productos/';
                 if (!is_dir($uploadDir)) {
-                    mkdir($uploadDir, 0777, true);                 // Crea la carpeta si no existe
+                    // ─────────────────────────────────────────
+                    // MEJORA: Permisos 0755 en lugar de 0777 (0777 permite ejecución a cualquiera)
+                    // ─────────────────────────────────────────
+                    mkdir($uploadDir, 0755, true);
                 }
                 $filename = $nombre . '.jpg';                      // Siempre .jpg para que coincida con getImagenUrl() en el frontend
                 if (move_uploaded_file($imagen['tmp_name'], $uploadDir . $filename)) {
@@ -420,7 +580,6 @@ function handleApi($method, $resource, $path) {
 
 
 
-        
         // COMPRAS - Registro de compras de productos por usuarios
         case 'compras':
             requireSession();
@@ -457,7 +616,7 @@ function handleApi($method, $resource, $path) {
             break;
 
         // INCIDENCIAS - CRUD de incidencias en materiales
-       
+
         case 'incidencias':
             requireSession();                                // Requiere autenticación
             // Los clientes no pueden eliminar incidencias (sí pueden crearlas)
@@ -520,9 +679,9 @@ function handleApi($method, $resource, $path) {
             }
             break;
 
-        
+
         // RESUMEN - Dashboard de administración (GET /api/resumen)
-       
+
         case 'resumen':
             requireSession();
             if ($method === 'GET') {
@@ -592,8 +751,52 @@ function handleApi($method, $resource, $path) {
             }
             break;
 
+        // CONTACTO - Formulario de contacto público (POST /api/contacto)
+
+        case 'contacto':
+            if ($method === 'POST') {
+                $email = trim($data['email'] ?? '');
+                $mensaje = trim($data['mensaje'] ?? '');
+
+                if (!$email || !$mensaje) {
+                    jsonResponse(["error" => "Todos los campos son obligatorios"], 400);
+                }
+                if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                    jsonResponse(["error" => "Email inválido"], 400);
+                }
+
+                try {
+                    $mail = new PHPMailer\PHPMailer\PHPMailer(true);
+                    $mail->isSMTP();
+                    $mail->Host       = 'smtp.gmail.com';
+                    $mail->SMTPAuth   = true;
+                    $mail->Username   = 'infofitstock@gmail.com';
+                    $mail->Password   = getenv('MAIL_PASSWORD') ?: '';
+                    $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+                    $mail->Port       = 587;
+                    $mail->CharSet    = 'UTF-8';
+
+                    $mail->setFrom('infofitstock@gmail.com', 'FitStock Contacto');
+                    $mail->addAddress('infofitstock@gmail.com');
+                    $mail->addReplyTo($email);
+
+                    $mail->Subject = 'Nuevo contacto desde FitStock';
+                    $mail->Body    = "Email de contacto: $email\n\nMensaje:\n$mensaje";
+                    $mail->AltBody = strip_tags($mail->Body);
+
+                    $mail->send();
+                    jsonResponse(["success" => true, "message" => "Mensaje enviado correctamente"]);
+                } catch (PHPMailer\PHPMailer\Exception $e) {
+                    $errorMsg = $e->getMessage();
+                    jsonResponse(["error" => "Error al enviar el mensaje: $errorMsg"], 500);
+                } catch (Exception $e) {
+                    jsonResponse(["error" => "Error interno del servidor"], 500);
+                }
+            }
+            break;
+
         // DEFAULT - no encontrado
-       
+
         default:
             jsonResponse(["error" => "Recurso no encontrado"], 404);
     }

@@ -1,6 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import { UsuarioService } from '../../services/usuario';
 import { Usuario } from '../../interfaces/app.interfaces';
 
@@ -13,8 +14,12 @@ import { Usuario } from '../../interfaces/app.interfaces';
 })
 export class UsuarioList implements OnInit {
   private usuarioService = inject(UsuarioService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
   lista: Usuario[] = [];
+  listaFiltrada: Usuario[] = [];
   userRole = '';
+  filtroRol = '';
 
   showModal = false;
   newUser = { nombre: '', email: '', password: '', rol: 'cliente' };
@@ -26,11 +31,36 @@ export class UsuarioList implements OnInit {
 
   ngOnInit() {
     this.usuarioService.currentUser$.subscribe(u => this.userRole = u?.rol ?? '');
+    this.route.paramMap.subscribe(params => {
+      this.filtroRol = params.get('rol') || '';
+      if (this.lista.length > 0) this.aplicarFiltro();
+    });
     this.loadUsuarios();
   }
 
+  get tituloPagina(): string {
+    if (!this.filtroRol) return 'Usuarios';
+    const nombres: Record<string, string> = { admin: 'Administradores', entrenador: 'Entrenadores', cliente: 'Clientes' };
+    return nombres[this.filtroRol] || 'Usuarios';
+  }
+
   loadUsuarios() {
-    this.usuarioService.getUsuarios().subscribe(data => this.lista = data);
+    this.usuarioService.getUsuarios().subscribe(data => {
+      this.lista = data;
+      this.aplicarFiltro();
+    });
+  }
+
+  private aplicarFiltro() {
+    if (this.filtroRol) {
+      this.listaFiltrada = this.lista.filter(u => u.rol === this.filtroRol);
+    } else {
+      this.listaFiltrada = [...this.lista];
+    }
+  }
+
+  irATodos() {
+    this.router.navigate(['/admin/usuarios']);
   }
 
   abrirModal() {

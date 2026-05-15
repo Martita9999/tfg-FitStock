@@ -1,9 +1,10 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet } from '@angular/router';
+import { RouterOutlet, Router } from '@angular/router';
 import { AdminSidebarComponent } from '../admin-sidebar/admin-sidebar';
-import { UsuarioService } from '../../services/usuario';
+import { UsuarioService, Usuario } from '../../services/usuario';
 import { ToastService } from '../../services/toast.service';
+import { CartService } from '../../services/cart.service';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -15,20 +16,72 @@ import { ToastService } from '../../services/toast.service';
 export class AdminDashboardComponent implements OnInit {
   private usuarioService = inject(UsuarioService);
   private toastService = inject(ToastService);
-  userRole = '';
-  sidebarCollapsed = false; // Controla si la barra lateral está colapsada o visible
+  private router = inject(Router);
+  cartService = inject(CartService);
+
+  user: Usuario | null = null;
+  sidebarCollapsed = false;
+  darkMode = false;
+  showCart = false;
 
   ngOnInit() {
-    this.usuarioService.currentUser$.subscribe(u => this.userRole = u?.rol ?? '');
+    this.usuarioService.checkSession();
+    this.usuarioService.currentUser$.subscribe(u => this.user = u);
+    this.darkMode = localStorage.getItem('darkMode') === 'true';
+    this.applyTheme();
   }
 
-  // Alterna el estado colapsado de la sidebar
   toggleSidebar() {
     this.sidebarCollapsed = !this.sidebarCollapsed;
   }
 
-  // Fuerza el cierre de la sidebar (colapsada = false)
   closeSidebar() {
     this.sidebarCollapsed = false;
+  }
+
+  toggleDarkMode() {
+    this.darkMode = !this.darkMode;
+    localStorage.setItem('darkMode', String(this.darkMode));
+    this.applyTheme();
+  }
+
+  private applyTheme() {
+    if (this.darkMode) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+    }
+  }
+
+  getRoleLabel(): string {
+    switch (this.user?.rol) {
+      case 'admin': return 'Administrador';
+      case 'entrenador': return 'Entrenador';
+      default: return 'Cliente';
+    }
+  }
+
+  logout() {
+    this.usuarioService.logout().subscribe(() => {
+      this.router.navigate(['/login']);
+    });
+  }
+
+  toggleCart() {
+    this.showCart = !this.showCart;
+  }
+
+  cerrarCart() {
+    this.showCart = false;
+  }
+
+  async comprar() {
+    const error = await this.cartService.comprar();
+    if (error) {
+      this.toastService.show(error, 'error');
+    } else {
+      this.toastService.show('Compra realizada con éxito', 'success');
+      this.showCart = false;
+    }
   }
 }

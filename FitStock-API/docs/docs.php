@@ -80,6 +80,13 @@ $resources = [
       ['POST', '/api/compras', 'Realizar una compra (vacía el carrito)', 'all'],
     ]
   ],
+    // Grupo: Contacto — formulario público de contacto
+    '📧 Contacto' => [
+    'base' => '/api/contacto',
+    'endpoints' => [
+      ['POST', '/api/contacto', 'Enviar mensaje de contacto (email + mensaje)', 'any'],
+    ]
+  ],
     // Grupo: Resumen — datos agregados para el dashboard principal
     '📊 Resumen' => [
     'base' => '/api/resumen',

@@ -132,19 +132,19 @@ INSERT INTO material (nombre_equipo, descripcion, estado, tipo, id_tag_material,
 
 -- Maquinas
 INSERT INTO material (nombre_equipo, descripcion, ubicacion, estado, tipo, id_tag_material, ultima_rev) VALUES
-('Cinta de correr', 'Cinta de correr electrica profesional', 'Piso 1', 'operativo', 'maquina', 'CIN-001', '2026-05-11'),
-('Cinta de correr', 'Cinta de correr electrica profesional', NULL,      'operativo', 'maquina', 'CIN-002', '2026-03-10'),
-('Cinta de correr', 'Cinta de correr electrica profesional', NULL,      'operativo', 'maquina', 'CIN-003', '2026-03-10'),
-('Cinta de correr', 'Cinta de correr electrica profesional', NULL,      'operativo', 'maquina', 'CIN-004', '2026-03-10'),
-('Cinta de correr', 'Cinta de correr electrica profesional', NULL,      'operativo', 'maquina', 'CIN-005', '2026-03-10'),
-('Cinta de correr', 'Cinta de correr electrica profesional', NULL,      'operativo', 'maquina', 'CIN-006', '2026-03-10'),
-('Cinta de correr', 'Cinta de correr electrica profesional', NULL,      'operativo', 'maquina', 'CIN-007', '2026-03-10'),
-('Cinta de correr', 'Cinta de correr electrica profesional', NULL,      'operativo', 'maquina', 'CIN-008', '2026-03-10'),
-('Cinta de correr', 'Cinta de correr electrica profesional', NULL,      'operativo', 'maquina', 'CIN-009', '2026-03-10'),
-('Cinta de correr', 'Cinta de correr electrica profesional', NULL,      'operativo', 'maquina', 'CIN-010', '2026-03-10'),
-('Pulsador pecho',  'Maquina de pulsador para pectorales',    NULL,      'operativo', 'maquina', 'PUL-001', '2026-05-01'),
-('Pulsador hombro', 'Maquina de pulsador para hombros',       NULL,      'operativo', 'maquina', 'PUL-002', '2026-05-01'),
-('Pulsador pierna', 'Maquina de pulsador para piernas',       NULL,      'operativo', 'maquina', 'PUL-003', '2026-05-01');
+('Cinta de correr', 'Cinta de correr electrica profesional', 'Piso 1 - Zona Cardio', 'operativo', 'maquina', 'CIN-001', '2026-05-11'),
+('Cinta de correr', 'Cinta de correr electrica profesional', 'Piso 1 - Zona Cardio', 'operativo', 'maquina', 'CIN-002', '2026-03-10'),
+('Cinta de correr', 'Cinta de correr electrica profesional', 'Piso 1 - Zona Cardio', 'operativo', 'maquina', 'CIN-003', '2026-03-10'),
+('Cinta de correr', 'Cinta de correr electrica profesional', 'Piso 1 - Zona Cardio', 'operativo', 'maquina', 'CIN-004', '2026-03-10'),
+('Cinta de correr', 'Cinta de correr electrica profesional', 'Piso 1 - Zona Cardio', 'operativo', 'maquina', 'CIN-005', '2026-03-10'),
+('Cinta de correr', 'Cinta de correr electrica profesional', 'Piso 2 - Zona Cardio', 'operativo', 'maquina', 'CIN-006', '2026-03-10'),
+('Cinta de correr', 'Cinta de correr electrica profesional', 'Piso 2 - Zona Cardio', 'operativo', 'maquina', 'CIN-007', '2026-03-10'),
+('Cinta de correr', 'Cinta de correr electrica profesional', 'Piso 2 - Zona Cardio', 'operativo', 'maquina', 'CIN-008', '2026-03-10'),
+('Cinta de correr', 'Cinta de correr electrica profesional', 'Piso 2 - Zona Cardio', 'operativo', 'maquina', 'CIN-009', '2026-03-10'),
+('Cinta de correr', 'Cinta de correr electrica profesional', 'Piso 2 - Zona Cardio', 'operativo', 'maquina', 'CIN-010', '2026-03-10'),
+('Pulsador pecho',  'Maquina de pulsador para pectorales',    'Piso 1 - Zona Fuerza', 'operativo', 'maquina', 'PUL-001', '2026-05-01'),
+('Pulsador hombro', 'Maquina de pulsador para hombros',       'Piso 1 - Zona Fuerza', 'operativo', 'maquina', 'PUL-002', '2026-05-01'),
+('Pulsador pierna', 'Maquina de pulsador para piernas',       'Piso 1 - Zona Fuerza', 'operativo', 'maquina', 'PUL-003', '2026-05-01');
 
 -- Items adicionales creados durante pruebas
 INSERT INTO material (nombre_equipo, descripcion, ubicacion, estado, tipo, id_tag_material, ultima_rev) VALUES

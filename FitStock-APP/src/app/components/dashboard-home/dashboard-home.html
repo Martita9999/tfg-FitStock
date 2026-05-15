@@ -14,7 +14,7 @@
       <div class="grid-cards">
         <!-- Tarjeta de resumen de incidencias (abiertas, en proceso, resueltas) -->
         <div class="card incidencias-card">
-          <div class="card-header inc">⚠️ Incidencias</div>
+          <div class="card-header inc"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Incidencias</div>
           <div class="card-body">
             <div class="stats">
               <div class="stat">
@@ -36,7 +36,7 @@
 
         <!-- Tarjeta de productos con stock por debajo del mínimo -->
         <div class="card stock-card">
-          <div class="card-header stock">📦 Stock Bajo Mínimo</div>
+          <div class="card-header stock"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg> Stock Bajo Mínimo</div>
           <div class="card-body">
             @if (resumen.stock_bajo.length === 0) {
               <p class="no-data">Sin stock bajo</p>
@@ -56,7 +56,7 @@
 
         <!-- Tarjeta de estado de las máquinas (operativas, averiadas, etc.) -->
         <div class="card maquinas-card">
-          <div class="card-header maq">🏋️ Máquinas</div>
+          <div class="card-header maq"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="4" height="10" rx="1"/><rect x="18" y="7" width="4" height="10" rx="1"/><rect x="7" y="9" width="10" height="6" rx="1"/></svg> Máquinas</div>
           <div class="card-body">
             <div class="stats">
               <div class="stat">
@@ -71,10 +71,6 @@
                 <span class="stat-num warning">{{ resumen.maquinas.por_estado['mantenimiento'] || 0 }}</span>
                 <span class="stat-label">Mantenimiento</span>
               </div>
-              <div class="stat">
-                <span class="stat-num">{{ resumen.maquinas.por_estado['en_reparacion'] || 0 }}</span>
-                <span class="stat-label">Reparación</span>
-              </div>
             </div>
             <a routerLink="/admin/materiales" class="card-link">Ver máquinas →</a>
           </div>
@@ -82,7 +78,7 @@
 
         <!-- Tarjeta de gasto total de los usuarios -->
         <div class="card ventas-card">
-          <div class="card-header ventas">💰 Gasto Total</div>
+          <div class="card-header ventas"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Gasto Total</div>
           <div class="card-body">
             <div class="stats">
               <div class="stat">
@@ -108,7 +104,7 @@
 
         <!-- Tarjeta de préstamos pendientes de devolución -->
         <div class="card prestamos-card">
-          <div class="card-header prestamos">🤝 Préstamos Pendientes</div>
+          <div class="card-header prestamos"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8.5a2.5 2.5 0 0 0-4 0 2.5 2.5 0 0 0-4 0c0 1.38 1.1 3 4 4.5 2.9-1.5 4-3.12 4-4.5z"/><path d="M2 12a10 10 0 1 0 20 0 10 10 0 0 0-20 0z"/><path d="M8 14v2"/><path d="M16 14v2"/></svg> Préstamos Pendientes</div>
           <div class="card-body">
             <div class="stats">
               <div class="stat">
@@ -132,7 +128,7 @@
 
         <!-- Tarjeta con el total de usuarios registrados -->
         <div class="card perfil-card">
-          <div class="card-header perfil">👥 Usuarios</div>
+          <div class="card-header perfil"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Usuarios</div>
           <div class="card-body">
             <div class="stats">
               <div class="stat">
@@ -164,7 +160,7 @@
     <div class="grid-cards">
       <!-- Mis Datos -->
       <div class="card perfil-card">
-        <div class="card-header perfil">👤 Mis Datos</div>
+        <div class="card-header perfil"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Mis Datos</div>
         <div class="card-body">
           <div class="info-row"><span class="info-label">Nombre</span><span class="info-value">{{ user?.nombre }}</span></div>
           <div class="info-row"><span class="info-label">Email</span><span class="info-value">{{ user?.email }}</span></div>
@@ -193,7 +189,7 @@
 
       <!-- Máquinas -->
       <div class="card maquinas-card">
-        <div class="card-header maq">🏋️ Máquinas</div>
+        <div class="card-header maq"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="4" height="10" rx="1"/><rect x="18" y="7" width="4" height="10" rx="1"/><rect x="7" y="9" width="10" height="6" rx="1"/></svg> Máquinas</div>
         <div class="card-body">
           <div class="stats">
             <div class="stat">
@@ -209,7 +205,7 @@
                 <div class="stock-item" [class.alert]="m.estado === 'averiado'" [class.warning]="m.estado === 'en_reparacion'">
                   <span class="item-name">{{ m.nombre }} <span class="id-tag">{{ m.id_tag_material }}</span></span>
                   <span class="item-qty" [class.alert]="m.estado === 'averiado'" [class.warning]="m.estado === 'en_reparacion'">
-                    {{ m.estado === 'averiado' ? 'Averiada' : 'En reparación' }}
+                    {{ m.estado === 'averiado' ? 'Averiada' : 'Mantenimiento' }}
                   </span>
                 </div>
               }
@@ -221,7 +217,7 @@
 
       <!-- Mis Préstamos -->
       <div class="card prestamos-card">
-        <div class="card-header prestamos">🤝 Mis Préstamos</div>
+        <div class="card-header prestamos"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8.5a2.5 2.5 0 0 0-4 0 2.5 2.5 0 0 0-4 0c0 1.38 1.1 3 4 4.5 2.9-1.5 4-3.12 4-4.5z"/><path d="M2 12a10 10 0 1 0 20 0 10 10 0 0 0-20 0z"/><path d="M8 14v2"/><path d="M16 14v2"/></svg> Mis Préstamos</div>
         <div class="card-body">
           @if (misPrestamos.length === 0) {
             <p class="no-data">No tienes préstamos activos</p>
@@ -243,7 +239,7 @@
 
       <!-- Productos Comprados -->
       <div class="card stock-card">
-        <div class="card-header stock">📦 Productos Comprados</div>
+        <div class="card-header stock"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg> Productos Comprados</div>
         <div class="card-body">
           @if (compras.length === 0) {
             <p class="no-data">No has comprado productos todavía</p>

@@ -47,6 +47,12 @@ export class AdminSidebarComponent implements OnInit {
     }
   }
 
+  usuariosSubmenuOpen = false;
+
+  toggleUsuariosSubmenu() {
+    this.usuariosSubmenuOpen = !this.usuariosSubmenuOpen;
+  }
+
   logout() {
     this.usuarioService.logout().subscribe(() => {
       this.router.navigate(['/login']);

@@ -3,15 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { ProductosService } from '../../services/productos.service';
-import { ComprasService } from '../../services/compras.service';
 import { UsuarioService } from '../../services/usuario';
+import { CartService } from '../../services/cart.service';
 import { ProductoStock } from '../../interfaces/app.interfaces';
-
-// Interfaz interna para los items del carrito de compras
-interface CartItem {
-  producto: ProductoStock;   // Producto seleccionado
-  cantidad: number;          // Cantidad a comprar
-}
 
 @Component({
   selector: 'app-producto-list',
@@ -20,117 +14,41 @@ interface CartItem {
   templateUrl: './producto-list.html',
   styleUrl: './producto-list.css',
 })
-// Componente que lista los productos en stock con carrito de compras y CRUD
 export class ProductoList implements OnInit {
   private productosService = inject(ProductosService);
-  private comprasService = inject(ComprasService);
   private usuarioService = inject(UsuarioService);
-  lista: ProductoStock[] = [];                             // Lista de productos cargados
-  userRole = '';                                           // Rol del usuario actual (para permisos)
+  cartService = inject(CartService);
+  lista: ProductoStock[] = [];
+  userRole = '';
 
-  carrito: CartItem[] = [];   // Items en el carrito de compras
-  showCart = false;            // Control de visibilidad del panel carrito
+  showModal = false;
+  newProducto = { nombre: '', descripcion: '', cantidad: 0, stock_minimo: 0, precio: 0 };
+  selectedFile: File | null = null;
+  previewUrl: string | null = null;
+  error = '';
+  successMsg = '';
 
-  showModal = false;                                          // Control del modal de creación
-  newProducto = { nombre: '', descripcion: '', cantidad: 0, stock_minimo: 0, precio: 0 };  // Datos del nuevo producto
-  selectedFile: File | null = null;                            // Archivo de imagen seleccionado
-  previewUrl: string | null = null;                            // URL de previsualización de la imagen seleccionada
-  error = '';              // Mensaje de error
-  successMsg = '';         // Mensaje de éxito
+  showEditModal = false;
+  editProducto: ProductoStock | null = null;
+  editProductoData = { nombre: '', descripcion: '', cantidad: 0, stock_minimo: 0, precio: 0 };
 
-  showEditModal = false;                                           // Control del modal de edición
-  editProducto: ProductoStock | null = null;                        // Producto en edición
-  editProductoData = { nombre: '', descripcion: '', cantidad: 0, stock_minimo: 0, precio: 0 };  // Datos editados
-
-  // Al iniciar, se suscribe al usuario y carga los productos
   ngOnInit() {
     this.usuarioService.currentUser$.subscribe(u => this.userRole = u?.rol ?? '');
     this.loadProductos();
   }
 
-  // Carga la lista de productos desde la API
   loadProductos() {
     this.productosService.getProductos().subscribe(data => {
       this.lista = data;
     });
   }
 
-  // Función trackBy para optimizar el renderizado de la lista
   trackById(index: number, p: ProductoStock) {
     return p.id;
   }
 
-  // Calcula el precio total del carrito
-  get totalCarrito(): number {
-    return this.carrito.reduce((sum, item) => sum + item.cantidad * item.producto.precio, 0);
-  }
-
-  // Calcula el número total de items en el carrito
-  get totalItems(): number {
-    return this.carrito.reduce((sum, item) => sum + item.cantidad, 0);
-  }
-
-  // Añade un producto al carrito (incrementa cantidad si ya existe)
   agregarAlCarrito(p: ProductoStock) {
-    if (p.cantidad <= 0) return;
-    const existente = this.carrito.find(item => item.producto.id === p.id);
-    if (existente) {
-      if (existente.cantidad < p.cantidad) existente.cantidad++;
-    } else {
-      this.carrito.push({ producto: p, cantidad: 1 });
-    }
-  }
-
-  // Reduce la cantidad de un item en el carrito (lo elimina si llega a 0)
-  quitarDelCarrito(item: CartItem) {
-    if (item.cantidad > 1) {
-      item.cantidad--;
-    } else {
-      this.carrito = this.carrito.filter(i => i.producto.id !== item.producto.id);
-    }
-  }
-
-  // Elimina un item completamente del carrito
-  eliminarDelCarrito(item: CartItem) {
-    this.carrito = this.carrito.filter(i => i.producto.id !== item.producto.id);
-  }
-
-  // Alterna la visibilidad del panel del carrito
-  toggleCart() {
-    this.showCart = !this.showCart;
-  }
-
-  // Cierra el panel del carrito
-  cerrarCart() {
-    this.showCart = false;
-  }
-
-  async comprar() {
-    this.error = '';
-    this.successMsg = '';
-    for (const item of this.carrito) {
-      const nuevaCant = item.producto.cantidad - item.cantidad;
-      if (nuevaCant < 0) {
-        this.error = `Stock insuficiente para ${item.producto.nombre}`;
-        return;
-      }
-      try {
-        await firstValueFrom(this.productosService.updateProducto(item.producto.id, { cantidad: nuevaCant }));
-        await firstValueFrom(this.comprasService.createCompra({
-          id_producto: item.producto.id,
-          cantidad: item.cantidad,
-          precio_unitario: item.producto.precio
-        }));
-      } catch {
-        this.error = `Error al comprar ${item.producto.nombre}`;
-        return;
-      }
-    }
-    this.successMsg = 'Compra realizada con éxito';
-    this.carrito = [];
-    this.showCart = false;
-    this.loadProductos();
-    setTimeout(() => this.successMsg = '', 60000);
+    this.cartService.agregar(p);
   }
 
   // Abre el modal de creación de producto

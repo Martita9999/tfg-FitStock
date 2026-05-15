@@ -96,4 +96,8 @@ export class LoginComponent {
   goToRegistro() {
     this.router.navigate(['/registro']);
   }
+
+  goToPortal() {
+    this.router.navigate(['/']);
+  }
 }

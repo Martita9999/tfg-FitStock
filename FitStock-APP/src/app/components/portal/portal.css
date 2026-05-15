@@ -1,161 +1,225 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
+/* ─── CONTENEDOR PRINCIPAL ─── */
+/* Envuelve toda la landing page. Usa la fuente principal y texto blanco por defecto sobre fondos oscuros */
 .portal {
-  font-family: 'Segoe UI', system-ui, sans-serif;
-  color: #1e293b;
-  background: #f8fafc;
-  min-height: 100vh;
-}
-
-/* ── Navbar ── */
-.navbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 40px;
-  background: rgba(255,255,255,0.9);
-  backdrop-filter: blur(8px);            /* Efecto de desenfoque detrás de la barra */
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
-  border-bottom: 1px solid #e2e8f0;
-}
-.nav-logo {
-  font-size: 22px;
-  font-weight: 800;
-  background: linear-gradient(135deg, #f97316, #3b82f6);  /* Degradado naranja-azul */
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;                      /* Texto con fondo degradado */
-  background-clip: text;
-}
-
-/* ── Hero ── */
-.hero {
-  min-height: 100vh;                       /* Ocupa toda la altura de la ventana */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);  /* Fondo oscuro degradado */
+  font-family: 'Impact', 'Segoe UI', system-ui, sans-serif;
   color: white;
-  padding: 120px 20px 80px;
 }
-.hero-content { max-width: 700px; }
-.hero h1 {
-  font-size: 64px;
-  font-weight: 900;
-  background: linear-gradient(135deg, #f97316, #3b82f6);  /* Texto con degradado naranja-azul */
+
+/* ─── SECCIÓN HERO ─── */
+/* Ocupa el 100% del viewport (altura completa de pantalla) para impacto visual */
+.hero-section {
+  min-height: 100vh;                                /* Altura mínima = toda la ventana */
+  display: flex;                                    /* Activa flexbox para centrar contenido */
+  flex-direction: column;                           /* Apila elementos verticalmente */
+  align-items: center;                              /* Centrado horizontal */
+  justify-content: center;                          /* Centrado vertical */
+  gap: 20px;                                        /* Espaciado entre elementos hijos */
+  text-align: center;                               /* Texto centrado */
+  padding: 40px 24px;                               /* Relleno interior para evitar bordes pegados */
+  background:                                       /* Degradado oscuro + imagen de fondo superpuestos */
+    linear-gradient(135deg, rgba(15, 23, 42, 0.6) 0%, rgba(30, 41, 59, 0.5) 100%),
+    url('/images/portal-web/portal.jpg');
+  background-size: cover;                           /* La imagen cubre todo el contenedor */
+  background-position: center;                      /* Centra la imagen */
+  background-attachment: fixed;                     /* Efecto parallax: la imagen no se mueve al scrollear */
+}
+
+/* Título principal: "FitStock" con degradado naranja-azul y gran tamaño */
+.hero-title {
+  font-size: 100px;                                 /* Tamaño muy grande para hero */
+  font-weight: 900;                                 /* Peso máximo (black) */
+  background: linear-gradient(135deg, #f97316, #3b82f6);  /* Degradado naranja → azul */
+  -webkit-background-clip: text;                    /* Recorta el degradado al texto (WebKit) */
+  -webkit-text-fill-color: transparent;             /* Hace el texto transparente para ver el fondo (WebKit) */
+  background-clip: text;                            /* Recorta el degradado al texto (estándar) */
+  letter-spacing: -3px;                             /* Reduce el espaciado entre letras para impacto */
+}
+
+/* Subtítulo del hero */
+.hero-sub {
+  font-size: 18px;
+  color: #cbd5e1;                                   /* Gris claro sobre fondo oscuro */
+  max-width: 500px;                                 /* Limita el ancho para mejor legibilidad */
+}
+
+/* Botón de llamada a la acción (CTA) */
+.btn-cta {
+  padding: 14px 40px;                               /* Relleno generoso para botón grande */
+  background: linear-gradient(135deg, #f97316, #ea580c);  /* Degradado naranja */
+  color: white;
+  border: none;                                     /* Sin borde */
+  border-radius: 12px;                              /* Esquinas redondeadas */
+  font-size: 16px;
+  font-weight: 700;                                 /* Negrita */
+  cursor: pointer;                                  /* Manito al hacer hover */
+  font-family: inherit;                             /* Hereda la fuente del padre */
+  box-shadow: 0 8px 28px rgba(249, 115, 22, 0.4);  /* Sombra naranja para profundidad */
+  transition: transform 0.2s;                       /* Animación suave al hacer hover */
+}
+
+/* Efecto hover del botón CTA: se eleva ligeramente */
+.btn-cta:hover {
+  transform: translateY(-2px);
+}
+
+/* Contenedor de Quiénes Somos dentro del hero, separado del botón */
+.hero-about {
+  margin-top: 60px;
+  max-width: 600px;
+}
+
+/* ─── CLASES GENÉRICAS DE SECCIÓN ─── */
+/* Contenedor interno que centra y limita el ancho del contenido de cada sección */
+.section-content {
+  max-width: 720px;                                 /* Ancho máximo legible */
+  margin: 0 auto;                                   /* Centrado horizontal automático */
+  text-align: center;                               /* Texto centrado */
+}
+
+/* Título genérico de sección con degradado naranja */
+.section-title {
+  font-size: 36px;
+  font-weight: 800;                                 /* Extra bold */
+  background: linear-gradient(135deg, #f97316, #fb923c);  /* Degradado naranja */
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  margin-bottom: 12px;
-}
-.hero-sub {
-  font-size: 22px;
-  font-weight: 600;
-  color: #94a3b8;                          /* Gris claro para subtítulo */
-  margin-bottom: 16px;
-}
-.hero-desc {
-  font-size: 16px;
-  color: #64748b;
-  line-height: 1.6;
-  margin-bottom: 32px;
-}
-.btn-cta {
-  padding: 14px 36px;
-  background: linear-gradient(135deg, #f97316, #ea580c);  /* Degradado naranja para CTA */
-  color: white;
-  border: none;
-  border-radius: 12px;
-  font-size: 16px;
-  font-weight: 700;
-  cursor: pointer;
-  font-family: inherit;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-.btn-cta:hover {
-  transform: translateY(-2px);             /* Efecto de elevación sutil */
-  box-shadow: 0 8px 24px rgba(249,115,22,0.4);
+  margin-bottom: 16px;                              /* Espaciado inferior respecto al párrafo */
 }
 
-/* ── Sections ── */
-.section {
-  padding: 80px 20px;
+/* Texto descriptivo genérico de sección */
+.section-text {
+  font-size: 16px;
+  color: #ffffff;                                   /* Blanco puro */
+  line-height: 1.8;                                 /* Interlineado amplio para legibilidad */
 }
-.section-content {
-  max-width: 1000px;
-  margin: 0 auto;
+
+/* ─── BLOQUES DE FUNCIONALIDAD ─── */
+/* Cada bloque representa un apartado individual (Productos, Máquinas, etc.) */
+.feature-block {
+  padding: 100px 24px;                              /* Relleno vertical amplio */
+  display: flex;                                    /* Flexbox para centrar el .section-content interno */
+  align-items: center;
+  justify-content: center;
 }
-.section h2 {
+
+/* ─── BLOQUES CON FONDO DE IMAGEN ─── */
+.feature-block.feature-block-productos {
+  background:
+    linear-gradient(135deg, rgba(249, 115, 22, 0.35) 0%, rgba(15, 23, 42, 0.85) 100%),
+    url('/images/portal-web/Productos.png');
+  background-size: cover;
+  background-position: center;
+}
+
+.feature-block.feature-block-maquinas {
+  background:
+    linear-gradient(135deg, rgba(59, 130, 246, 0.35) 0%, rgba(15, 23, 42, 0.85) 100%),
+    url('/images/portal-web/Cinta de correr.jpg');
+  background-size: cover;
+  background-position: center;
+}
+
+/* ─── FONDOS DISTINTIVOS PARA CADA BLOQUE RESTANTE ─── */
+/* Préstamos: imagen de mancuerna de fondo */
+.feature-block.feature-block-prestamos {
+  background:
+    linear-gradient(135deg, rgba(249, 115, 22, 0.3) 0%, rgba(15, 23, 42, 0.85) 100%),
+    url('/images/portal-web/mancuerda.jpg');
+  background-size: cover;
+  background-position: center;
+}
+
+/* Incidencias: imagen de fondo con overlay rojo oscuro */
+.feature-block.feature-block-incidencias {
+  background:
+    linear-gradient(135deg, rgba(220, 38, 38, 0.35) 0%, rgba(15, 23, 42, 0.85) 100%),
+    url('/images/portal-web/incidencias.jpg');
+  background-size: cover;
+  background-position: center;
+}
+
+/* Usuarios y Roles: imagen de fondo con overlay violeta */
+.feature-block.feature-block-usuarios {
+  background:
+    linear-gradient(135deg, rgba(147, 51, 234, 0.3) 0%, rgba(15, 23, 42, 0.85) 100%),
+    url('/images/portal-web/usuarios y roles.jpg');
+  background-size: cover;
+  background-position: center;
+}
+
+/* Dashboard: imagen de fondo con overlay verde */
+.feature-block.feature-block-dashboard {
+  background:
+    linear-gradient(135deg, rgba(34, 197, 94, 0.3) 0%, rgba(15, 23, 42, 0.85) 100%),
+    url('/images/portal-web/dashboard.jpg');
+  background-size: cover;
+  background-position: center;
+}
+
+/* Contacto: azul oscuro */
+.feature-block.feature-block-contacto {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
+/* Contenedor del icono SVG de cada funcionalidad */
+.feature-icon {
+  color: #f97316;                                   /* Color naranja para los SVGs */
+  margin-bottom: 16px;                              /* Espaciado inferior respecto al título */
+}
+
+/* Título de cada funcionalidad */
+.feature-title {
   font-size: 32px;
   font-weight: 800;
-  text-align: center;
-  margin-bottom: 24px;
-  color: #1e293b;
+  margin-bottom: 12px;                              /* Separación respecto a la descripción */
+  color: #ffffff;                                   /* Blanco puro */
+  letter-spacing: 1px;                              /* Espaciado para impacto visual */
 }
-.section p {
+
+/* Descripción detallada de cada funcionalidad */
+.feature-desc {
   font-size: 16px;
+  color: #ffffff;                                   /* Blanco puro para destacar sobre fondos oscuros */
   line-height: 1.7;
-  color: #475569;
-  text-align: center;
-  max-width: 700px;
-  margin: 0 auto;
+  max-width: 580px;                                 /* Limita el ancho para mejor lectura */
+  margin: 0 auto;                                   /* Centrado */
+  font-family: 'Segoe UI', system-ui, sans-serif;   /* Descripción con fuente legible */
 }
 
-/* ── Cards ── */
-.cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));  /* Columnas responsivas */
-  gap: 24px;
-  margin-top: 40px;
-}
-.card {
-  background: white;
-  border-radius: 14px;
-  padding: 32px 24px;
+/* ─── PIE DE PÁGINA ─── */
+.portal-footer {
   text-align: center;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-  border: 1px solid #e2e8f0;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-.card:hover {
-  transform: translateY(-4px);             /* Se eleva al hacer hover */
-  box-shadow: 0 12px 24px rgba(0,0,0,0.08);
-}
-.card-icon {
-  font-size: 40px;
-  display: block;
-  margin-bottom: 16px;
-}
-.card h3 {
-  font-size: 18px;
-  font-weight: 700;
-  margin-bottom: 8px;
-  color: #1e293b;
-}
-.card p {
+  padding: 40px 24px;
+  background: #0f172a;                              /* Fondo oscuro sólido */
+  color: #475569;                                   /* Gris oscuro para copyright */
   font-size: 14px;
-  color: #64748b;
-  line-height: 1.5;
 }
 
-/* ── About background ── */
-.about {
-  background: #f1f5f9;                     /* Gris claro para diferenciar la sección */
-}
 
-/* ── Footer ── */
-.footer {
-  text-align: center;
-  padding: 24px;
-  background: #1e293b;
-  color: #94a3b8;
-  font-size: 14px;
+
+/* ─── ADAPTACIÓN RESPONSIVE ─── */
+/* Para tablets y móviles grandes (<= 768px de ancho) */
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 60px;                                /* Reduce el tamaño del hero */
+    letter-spacing: -1px;
+  }
+
+  .hero-sub {
+    font-size: 15px;                                /* Subtítulo más pequeño */
+  }
+
+  .section-title {
+    font-size: 28px;                                /* Títulos de sección más compactos */
+  }
+
+  .feature-title {
+    font-size: 22px;                                /* Títulos de bloque más pequeños */
+  }
+
+  /* Reduce el padding vertical de todas las secciones en móvil */
+  .feature-block {
+    padding: 60px 20px;
+  }
 }

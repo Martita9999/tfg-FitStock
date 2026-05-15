@@ -5,10 +5,6 @@
     <div class="header-actions">
       <h2 class="page-title">Productos</h2>
       <div class="header-right">
-        <!-- Botón del carrito (visible solo si hay items) -->
-        <button class="btn-cart" (click)="toggleCart()" *ngIf="totalItems > 0">
-          🛒 {{ totalItems }} · {{ totalCarrito.toFixed(2) }}€
-        </button>
         <button class="btn-create" (click)="abrirModal()" *ngIf="userRole !== 'cliente'">+ Crear Producto</button>
       </div>
     </div>
@@ -43,9 +39,9 @@
         </div>
         <!-- Acciones por producto: carrito, editar, borrar -->
         <div class="card-actions">
-          <button class="btn-add" (click)="agregarAlCarrito(p)" [disabled]="p.cantidad <= 0" title="Añadir al carrito">🛒</button>
-          <button class="btn-edit-icon" (click)="abrirEditar(p)" title="Editar producto" *ngIf="userRole !== 'cliente'">✏️</button>
-          <button class="btn-del" (click)="borrarProducto(p.id, p.nombre)" *ngIf="userRole !== 'cliente'">🗑️</button>
+          <button class="btn-add" (click)="agregarAlCarrito(p)" [disabled]="p.cantidad <= 0" title="Añadir al carrito"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button>
+          <button class="btn-edit-icon" (click)="abrirEditar(p)" title="Editar producto" *ngIf="userRole !== 'cliente'"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></button>
+          <button class="btn-del" (click)="borrarProducto(p.id, p.nombre)" *ngIf="userRole !== 'cliente'"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
         </div>
       </div>
     </div>
@@ -56,48 +52,6 @@
     </div>
   </div>
 
-  <!-- Overlay y panel lateral del carrito -->
-  <div class="cart-overlay" *ngIf="showCart" (click)="cerrarCart()"></div>
-  <aside class="cart-panel" [class.open]="showCart">
-    <div class="cart-header">
-      <h3>🛒 Carrito</h3>
-      <button class="btn-close" (click)="cerrarCart()">✕</button>
-    </div>
-
-    @if (carrito.length > 0) {
-      <!-- Lista de items en el carrito -->
-      <div class="cart-items">
-        <div class="cart-item" *ngFor="let item of carrito">
-          <div class="cart-item-info">
-            <span class="cart-item-name">{{ item.producto.nombre }}</span>
-            <span class="cart-item-price">{{ (item.cantidad * item.producto.precio).toFixed(2) }}€</span>
-          </div>
-          <div class="cart-qty">
-            <button class="qty-btn-sm" (click)="quitarDelCarrito(item)">−</button>
-            <span class="qty-val">{{ item.cantidad }}</span>
-            <button class="qty-btn-sm" (click)="agregarAlCarrito(item.producto)"
-                    [disabled]="item.cantidad >= item.producto.cantidad">+</button>
-            <button class="btn-remove" (click)="eliminarDelCarrito(item)">✕</button>
-          </div>
-        </div>
-      </div>
-    } @else {
-      <div class="cart-empty">
-        <p>El carrito está vacío</p>
-      </div>
-    }
-
-    @if (carrito.length > 0) {
-      <!-- Footer del carrito con total y botón comprar -->
-      <div class="cart-footer">
-        <div class="cart-total">
-          <span>Total</span>
-          <strong>{{ totalCarrito.toFixed(2) }}€</strong>
-        </div>
-        <button class="btn-buy" (click)="comprar()">Comprar</button>
-      </div>
-    }
-  </aside>
 </div>
 
 <!-- Modal de creación de producto -->
@@ -105,7 +59,7 @@
   <div class="modal-card" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h3>Crear Producto</h3>
-      <button class="btn-close" (click)="cerrarModal()">✕</button>
+      <button class="btn-close" (click)="cerrarModal()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
       @if (error) {
@@ -154,7 +108,7 @@
   <div class="modal-card" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h3>Editar Producto #{{ editProducto?.id }}</h3>
-      <button class="btn-close" (click)="cerrarEditar()">✕</button>
+      <button class="btn-close" (click)="cerrarEditar()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
       @if (error) {

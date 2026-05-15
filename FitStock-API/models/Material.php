@@ -53,10 +53,10 @@ class Material {
     public static function obtenerTodos($tipo = null) {
         $conexion = Conexion::conectar();
         if ($tipo) {
-            $stmt = $conexion->prepare("SELECT * FROM material WHERE tipo = ? ORDER BY nombre_equipo, id_tag_material");
+            $stmt = $conexion->prepare("SELECT * FROM material WHERE tipo = ? ORDER BY id_tag_material");
             $stmt->execute([$tipo]);
         } else {
-            $stmt = $conexion->prepare("SELECT * FROM material ORDER BY nombre_equipo, id_tag_material");
+            $stmt = $conexion->prepare("SELECT * FROM material ORDER BY id_tag_material");
             $stmt->execute();
         }
         $materiales = [];

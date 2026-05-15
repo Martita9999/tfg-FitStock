@@ -37,7 +37,7 @@ export class MaterialList implements OnInit {
     { value: 'mantenimiento', label: 'Mantenimiento' },
     { value: 'en_proceso', label: 'En Proceso' },
     { value: 'saliendo', label: 'Saliendo' },
-    { value: 'en_reparacion', label: 'En Reparación' },
+    { value: 'en_reparacion', label: 'Mantenimiento' },
     { value: 'baja', label: 'Baja' },
   ];
 
@@ -58,14 +58,18 @@ export class MaterialList implements OnInit {
     this.incidenciasService.getIncidencias().subscribe(data => this.incidencias = data);
   }
 
-  // Filtra máquinas con estado operativo
-  get maquinasOperativas(): Material[] {
-    return this.lista.filter(m => m.estado === 'operativo');
+  private sortByIdTag(a: Material, b: Material): number {
+    const tagA = a.id_tag_material || '';
+    const tagB = b.id_tag_material || '';
+    return tagA.localeCompare(tagB, undefined, { numeric: true });
   }
 
-  // Filtra máquinas con estado no operativo (averiadas, reparación, etc.)
+  get maquinasOperativas(): Material[] {
+    return this.lista.filter(m => m.estado === 'operativo').sort(this.sortByIdTag);
+  }
+
   get maquinasNoOperativas(): Material[] {
-    return this.lista.filter(m => m.estado !== 'operativo');
+    return this.lista.filter(m => m.estado !== 'operativo').sort(this.sortByIdTag);
   }
 
   // Busca la incidencia activa (abierta o en proceso) de una máquina específica

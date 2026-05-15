@@ -76,11 +76,17 @@ export class DashboardHomeComponent implements OnInit {
 
   // Carga los datos específicos del cliente: máquinas operativas/averiadas,
   // sus préstamos activos y las compras realizadas
+  private sortByIdTag(a: Material, b: Material): number {
+    const tagA = a.id_tag_material || '';
+    const tagB = b.id_tag_material || '';
+    return tagA.localeCompare(tagB, undefined, { numeric: true });
+  }
+
   cargarDatosCliente() {
     this.materialesService.getMateriales('maquina').subscribe({
       next: (data: Material[]) => {
         this.maquinasOperativas = data.filter(m => m.estado === 'operativo').length;
-        this.maquinas = data.filter(m => m.estado === 'averiado' || m.estado === 'en_reparacion');
+        this.maquinas = data.filter(m => m.estado === 'averiado' || m.estado === 'en_reparacion').sort(this.sortByIdTag);
       },
       error: () => this.error = 'Error al cargar máquinas'
     });

@@ -83,19 +83,25 @@ export class PrestamoList implements OnInit {
     return this._grupos(this.selecciones);
   }
 
-  // Agrupa los materiales por nombre y calcula disponibilidad para cada grupo
+  private sortByIdTag(a: Material, b: Material): number {
+    const tagA = a.id_tag_material || '';
+    const tagB = b.id_tag_material || '';
+    return tagA.localeCompare(tagB, undefined, { numeric: true });
+  }
+
   private _grupos(selecciones: { [nombre: string]: number }): MaterialGroup[] {
+    const sorted = [...this.materiales].sort(this.sortByIdTag);
     const agrupados: { [key: string]: Material[] } = {};
-    for (const m of this.materiales) {
+    for (const m of sorted) {
       if (!agrupados[m.nombre]) agrupados[m.nombre] = [];
       agrupados[m.nombre].push(m);
     }
 
     const idsActivos = this.idsEnPrestamoActivo;
 
-    return Object.entries(agrupados).map(([nombre, items]) => {
+    const grupos = Object.entries(agrupados).map(([nombre, items]) => {
       const operativos = items.filter(m => m.estado === 'operativo');
-      const disponibles = operativos.filter(m => !idsActivos.has(m.id));
+      const disponibles = operativos.filter(m => !idsActivos.has(m.id)).sort(this.sortByIdTag);
       return {
         nombre,
         descripcion: items[0].descripcion || '',
@@ -104,6 +110,12 @@ export class PrestamoList implements OnInit {
         seleccionados: selecciones[nombre] ?? 0,
         idsDisponibles: disponibles.map(m => m.id)
       };
+    });
+
+    return grupos.sort((a, b) => {
+      const tagA = (agrupados[a.nombre]?.[0]?.id_tag_material || '').toLowerCase();
+      const tagB = (agrupados[b.nombre]?.[0]?.id_tag_material || '').toLowerCase();
+      return tagA.localeCompare(tagB, undefined, { numeric: true });
     });
   }
 

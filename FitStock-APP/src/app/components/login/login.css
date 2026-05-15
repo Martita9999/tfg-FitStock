@@ -34,11 +34,16 @@
 .btn-primary { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--orange), var(--orange-dark)); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; font-family: inherit; }
 .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 25px rgba(249, 115, 22, 0.4); }
 .btn-primary:active { transform: translateY(0); }
-/* Enlace a la página de registro */
-.register-link { text-align: center; margin-top: 20px; font-size: 14px; color: var(--text-secondary); }
-/* Enlace */
+/* Enlace a la página de registro y portal */
+.register-link { text-align: center; margin-top: 20px; font-size: 14px; color: var(--text-secondary); display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
+/* Separador entre enlaces */
+.separator { color: var(--border); }
+/* Enlace genérico */
 a { color: var(--orange); cursor: pointer; font-weight: 600; text-decoration: none; }
 a:hover { text-decoration: underline; }
+/* Enlace al portal web con icono de casa */
+.portal-link { display: inline-flex; align-items: center; gap: 4px; color: var(--orange); }
+.portal-link:hover { color: var(--orange-dark); }
 
 /* Fondo de superposición del modal */
 .modal-overlay {

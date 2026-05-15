@@ -33,14 +33,19 @@ export class IncidenciaList implements OnInit {
   // Estados disponibles para editar (excluye 'resuelta' del selector si se desea)
   estadosDisponibles = [
     { value: 'abierta', label: 'Averiado' },
-    { value: 'en_proceso', label: 'En Reparación' },
+    { value: 'en_proceso', label: 'Mantenimiento' },
   ];
 
-  // Al iniciar, carga incidencias, materiales y obtiene el rol del usuario
+  private sortByIdTag(a: Material, b: Material): number {
+    const tagA = a.id_tag_material || '';
+    const tagB = b.id_tag_material || '';
+    return tagA.localeCompare(tagB, undefined, { numeric: true });
+  }
+
   ngOnInit() {
     this.usuarioService.currentUser$.subscribe(u => this.userRole = u?.rol ?? '');
     this.loadIncidencias();
-    this.materialesService.getMateriales('maquina').subscribe(data => this.materiales = data);
+    this.materialesService.getMateriales('maquina').subscribe(data => this.materiales = data.sort(this.sortByIdTag));
   }
 
   // Carga la lista de incidencias desde la API
@@ -61,7 +66,7 @@ export class IncidenciaList implements OnInit {
   // Convierte el valor del estado a una etiqueta legible
   getEstadoLabel(valor: string): string {
     if (valor === 'abierta') return 'Averiado';
-    if (valor === 'en_proceso') return 'En Reparación';
+    if (valor === 'en_proceso') return 'Mantenimiento';
     return 'Resuelta';
   }
 

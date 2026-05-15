@@ -1,75 +1,160 @@
+<!-- Contenedor principal del portal, abarca toda la página -->
 <div class="portal">
-  <!-- Navbar -->
-  <nav class="navbar">
-    <div class="nav-logo">FitStock</div>
-  </nav>
 
-  <!-- Hero -->
-  <section class="hero">
-    <div class="hero-content">
-      <h1>FitStock</h1>
-      <p class="hero-sub">Gestión inteligente de tu gimnasio</p>
-      <p class="hero-desc">
-        Control de stock, máquinas, préstamos e incidencias en un solo lugar.
-      </p>
-      <button class="btn-cta" (click)="irALogin()">Acceder al Panel</button>
-    </div>
-  </section>
-
-  <!-- Quiénes somos -->
-  <section class="section about">
-    <div class="section-content">
-      <h2>Quiénes Somos</h2>
-      <p>
+  <!-- SECCIÓN HERO: Ocupa el 100% del viewport, presenta la marca y el botón de acceso -->
+  <section class="hero-section">
+    <!-- Título principal de la marca con degradado naranja-azul -->
+    <h1 class="hero-title">FitStock</h1>
+    <!-- Botón de llamada a la acción: navega al panel de login al hacer clic -->
+    <button class="btn-cta" (click)="irALogin()">Acceder al Panel</button>
+    <!-- Sección Quiénes Somos dentro del hero, debajo del botón -->
+    <div class="hero-about">
+      <h2 class="section-title">Quiénes Somos</h2>
+      <p class="section-text">
         FitStock es una plataforma diseñada para la gestión integral de gimnasios
         y centros deportivos. Nuestro objetivo es facilitar el día a día de
-        administradores, entrenadores y clientes, centralizando todas las
-        operaciones en un sistema rápido, moderno y accesible.
+        administradores, entrenadores y clientes.
       </p>
     </div>
   </section>
 
-  <!-- Qué hacemos -->
-  <section class="section doing">
+  <!-- BLOQUE 1: Productos - Gestión de inventario y suplementos nutricionales -->
+  <!-- Tiene imagen de fondo como el hero, con degradado oscuro encima para legibilidad -->
+  <section class="feature-block feature-block-productos">
     <div class="section-content">
-      <h2>Qué Hacemos</h2>
-      <div class="cards">
-        <div class="card">
-          <span class="card-icon">📦</span>
-          <h3>Control de Stock</h3>
-          <p>Gestiona productos, precios y alertas de stock mínimo en tiempo real.</p>
-        </div>
-        <div class="card">
-          <span class="card-icon">🏋️</span>
-          <h3>Gestión de Máquinas</h3>
-          <p>Administra el estado y mantenimiento de todo el equipamiento del gimnasio.</p>
-        </div>
-        <div class="card">
-          <span class="card-icon">🔄</span>
-          <h3>Préstamos</h3>
-          <p>Controla el material prestable y lleva un historial completo de devoluciones.</p>
-        </div>
-        <div class="card">
-          <span class="card-icon">⚠️</span>
-          <h3>Incidencias</h3>
-          <p>Reporta y gestiona averías, prioridades y tiempos de resolución.</p>
-        </div>
-        <div class="card">
-          <span class="card-icon">👥</span>
-          <h3>Usuarios y Roles</h3>
-          <p>Administra permisos diferenciados para admin, entrenadores y clientes.</p>
-        </div>
-        <div class="card">
-          <span class="card-icon">📊</span>
-          <h3>Dashboard</h3>
-          <p>Visualiza el estado general del gimnasio con estadísticas y alertas.</p>
-        </div>
+      <!-- Icono SVG que representa una caja/estante con productos apilados -->
+      <div class="feature-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <!-- Rectángulo exterior que simula una estantería o caja -->
+          <rect x="3" y="3" width="18" height="18" rx="2" />
+          <!-- Línea horizontal que divide el estante (balda) -->
+          <path d="M3 9h18" />
+          <!-- Línea vertical que sugiere un separador o producto individual -->
+          <path d="M9 21V9" />
+        </svg>
       </div>
+      <!-- Nombre de la funcionalidad -->
+      <h3 class="feature-title">Productos</h3>
+      <!-- Descripción detallada de la funcionalidad -->
+      <p class="feature-desc">Activos de inventario y ofertas de productos escalables para una empresa de suplementos nutricionales.</p>
     </div>
   </section>
 
-  <!-- Footer -->
-  <footer class="footer">
-    <p>&copy; 2026 FitStock — TFG</p>
+  <!-- BLOQUE 2: Gestión de Máquinas - Equipamiento de gimnasio y notificaciones en tiempo real -->
+  <section class="feature-block feature-block-maquinas">
+    <div class="section-content">
+      <!-- Icono SVG que representa una máquina de gimnasio con barras ajustables -->
+      <div class="feature-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <!-- Las líneas "M6.5 6.5h11", "M6 12h12", "M7.5 17.5h9" simulan discos de peso o ajustes -->
+          <path d="M6.5 6.5h11" />
+          <path d="M6 12h12" />
+          <path d="M7.5 17.5h9" />
+          <!-- Rectángulo exterior que representa la estructura de la máquina -->
+          <rect x="4" y="3" width="16" height="18" rx="2" />
+        </svg>
+      </div>
+      <h3 class="feature-title">Gestión de Máquinas</h3>
+      <p class="feature-desc">Marco estratégico de gestión de equipamiento de gimnasio centrado en la optimización de notificación en tiempo real de puntos críticos.</p>
+    </div>
+  </section>
+
+  <!-- BLOQUE 3: Préstamos - Asignación temporal de activos fitness -->
+  <section class="feature-block feature-block-prestamos">
+    <div class="section-content">
+      <!-- Icono SVG que representa una pesa/r que se presta (barra con discos a los lados y agarre central) -->
+      <div class="feature-icon">
+        <svg width="48" height="48" viewBox="0 0 36 36" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <!-- Disco/peso izquierdo de la barra -->
+          <rect x="2" y="4" width="8" height="28" rx="2" />
+          <!-- Disco/peso derecho de la barra -->
+          <rect x="26" y="4" width="8" height="28" rx="2" />
+          <!-- Agarre central de la barra -->
+          <rect x="12" y="13" width="12" height="10" rx="1.5" />
+          <!-- Líneas decorativas en el disco izquierdo -->
+          <line x1="2" y1="9" x2="10" y2="9" />
+          <line x1="2" y1="17" x2="10" y2="17" />
+          <line x1="2" y1="25" x2="10" y2="25" />
+          <!-- Líneas decorativas en el disco derecho -->
+          <line x1="26" y1="9" x2="34" y2="9" />
+          <line x1="26" y1="17" x2="34" y2="17" />
+          <line x1="26" y1="25" x2="34" y2="25" />
+        </svg>
+      </div>
+      <h3 class="feature-title">Préstamos</h3>
+      <p class="feature-desc">Facilitación de la asignación temporal de activos relacionados con el fitness, centrándose en optimizar resultados de bienestar físico.</p>
+    </div>
+  </section>
+
+  <!-- BLOQUE 4: Incidencias - Alertas y análisis de rendimiento de máquinas -->
+  <section class="feature-block feature-block-incidencias">
+    <div class="section-content">
+      <!-- Icono SVG que representa un signo de exclamación de alerta/incidencia -->
+      <div class="feature-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <!-- Círculo exterior que enmarca el icono de alerta -->
+          <circle cx="12" cy="12" r="10" />
+          <!-- Línea vertical superior del signo de exclamación -->
+          <line x1="12" y1="8" x2="12" y2="12" />
+          <!-- Punto inferior del signo de exclamación -->
+          <line x1="12" y1="16" x2="12.01" y2="16" />
+        </svg>
+      </div>
+      <h3 class="feature-title">Incidencias</h3>
+      <p class="feature-desc">Puntos críticos en el rendimiento de las máquinas y análisis detallado de las incidencias.</p>
+    </div>
+  </section>
+
+  <!-- BLOQUE 5: Usuarios y Roles - Segmentación y control de accesos -->
+  <section class="feature-block feature-block-usuarios">
+    <div class="section-content">
+      <!-- Icono SVG que representa múltiples usuarios (gestión de roles y personas) -->
+      <div class="feature-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <!-- Silueta del primer usuario (cuerpo) -->
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+          <!-- Cabeza del primer usuario -->
+          <circle cx="9" cy="7" r="4" />
+          <!-- Silueta del segundo usuario (cuerpo, detrás) -->
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+          <!-- Cabeza del segundo usuario -->
+          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+        </svg>
+      </div>
+      <h3 class="feature-title">Usuarios y Roles</h3>
+      <p class="feature-desc">Segmentación de usuarios y definición de roles, orientados a la optimización de gestión de accesos, experiencia de usuario y escalabilidad de la plataforma.</p>
+    </div>
+  </section>
+
+  <!-- BLOQUE 6: Dashboard - Centralización de métricas y datos clave -->
+  <section class="feature-block feature-block-dashboard">
+    <div class="section-content">
+      <!-- Icono SVG que representa un gráfico de barras (dashboard / analytics) -->
+      <div class="feature-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <!-- Barra derecha del gráfico -->
+          <line x1="18" y1="20" x2="18" y2="10" />
+          <!-- Barra central del gráfico -->
+          <line x1="12" y1="20" x2="12" y2="4" />
+          <!-- Barra izquierda del gráfico -->
+          <line x1="6" y1="20" x2="6" y2="14" />
+        </svg>
+      </div>
+      <h3 class="feature-title">Dashboard</h3>
+      <p class="feature-desc">Centraliza y resume toda la información del usuario, proporcionando una vista integral de su actividad, datos clave y métricas relevantes en la plataforma.</p>
+    </div>
+  </section>
+
+  <!-- BLOQUE 7: Contacto - Formulario incrustado -->
+  <section class="feature-block feature-block-contacto">
+    <div class="section-content">
+      <app-contacto [embed]="true"></app-contacto>
+    </div>
+  </section>
+
+  <!-- PIE DE PÁGINA: Copyright -->
+  <footer class="portal-footer">
+    <p>&copy; 2026 FitStock</p>
   </footer>
+
 </div>
