@@ -1,16 +1,18 @@
 <?php
 require_once __DIR__ . "/../conexion.php";
 
+// Clase modelo para la tabla 'compras' - gestiona los pedidos realizados por los usuarios
 class Compra {
-    private $id_compra;
-    private $id_usuario;
-    private $id_producto;
-    private $nombre_producto;
-    private $cantidad;
-    private $precio_unitario;
-    private $total;
-    private $fecha_compra;
+    private $id_compra;           // ID único de la compra
+    private $id_usuario;          // ID del usuario que realizó la compra
+    private $id_producto;         // ID del producto comprado
+    private $nombre_producto;     // Nombre del producto (de la JOIN)
+    private $cantidad;            // Cantidad de unidades compradas
+    private $precio_unitario;     // Precio por unidad en el momento de la compra
+    private $total;               // Total calculado = cantidad * precio_unitario
+    private $fecha_compra;        // Fecha y hora en que se realizó la compra
 
+    // Constructor: asigna todos los valores al crear una instancia
     public function __construct($id_compra, $id_usuario, $id_producto, $nombre_producto, $cantidad, $precio_unitario, $total, $fecha_compra) {
         $this->id_compra = $id_compra;
         $this->id_usuario = $id_usuario;
@@ -22,6 +24,9 @@ class Compra {
         $this->fecha_compra = $fecha_compra;
     }
 
+    // Obtiene todas las compras, opcionalmente filtradas por usuario.
+    // Incluye el nombre del producto mediante JOIN con productos_stock.
+    // Útil para mostrar historial de compras a administradores o a cada usuario.
     public static function obtenerTodos($id_usuario = null) {
         $conexion = Conexion::conectar();
         $sql = "SELECT c.id_compra, c.id_usuario, c.id_producto,
@@ -46,6 +51,9 @@ class Compra {
         return $compras;
     }
 
+    // Crea una nueva compra en la base de datos.
+    // Calcula el total automáticamente como cantidad * precio_unitario.
+    // Devuelve el ID de la compra insertada.
     public static function crear($id_usuario, $id_producto, $cantidad, $precio_unitario) {
         $conexion = Conexion::conectar();
         $total = $cantidad * $precio_unitario;
@@ -54,6 +62,7 @@ class Compra {
         return $conexion->lastInsertId();
     }
 
+    // Getters para acceder a las propiedades privadas
     public function getId() { return $this->id_compra; }
     public function getIdUsuario() { return $this->id_usuario; }
     public function getIdProducto() { return $this->id_producto; }

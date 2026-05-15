@@ -15,6 +15,9 @@ class Incidencia {
     private $id_tag_material;     // Identificador del material (de JOIN)
     private $ubicacion;           // Ubicación del material (de JOIN)
 
+    // Constructor: asigna todos los valores al crear una instancia.
+    // Los parámetros de JOIN (nombre_material, id_tag_material, ubicacion) son opcionales
+    // y solo se rellenan cuando la consulta incluye la tabla material.
     public function __construct($id_incidencia, $id_material, $id_user_rep, $descripcion, $prioridad, $estado_inc, $created_at = null, $fecha_resolucion = null, $nombre_material = null, $id_tag_material = null, $ubicacion = null) {
         $this->id_incidencia = $id_incidencia;
         $this->id_material = $id_material;
@@ -54,6 +57,7 @@ class Incidencia {
         return $incidencias;
     }
 
+    // Busca una incidencia por su ID, incluyendo los datos del material asociado mediante JOIN
     public static function obtenerPorId($id) {
         $conexion = Conexion::conectar();
         $sql = "SELECT i.id_incidencia, i.id_material, i.id_user_rep, i.descripcion,
@@ -87,7 +91,10 @@ class Incidencia {
         return $conexion->lastInsertId();
     }
 
-    // Actualiza la descripción, prioridad y/o estado de una incidencia
+    // Actualiza la descripción, prioridad y/o estado de una incidencia.
+    // Solo modifica los campos que se proporcionan (no null).
+    // Si el estado cambia a 'resuelta', establece automáticamente la fecha de resolución (NOW()).
+    // Si el estado cambia a otro valor, pone fecha_resolucion a NULL.
     public static function actualizar($id, $prioridad, $estado_inc, $descripcion = null) {
         $conexion = Conexion::conectar();
         $campos = [];
@@ -123,13 +130,13 @@ class Incidencia {
     // Getters para acceder a las propiedades privadas
     public function getId() { return $this->id_incidencia; }
     public function getIdMaterial() { return $this->id_material; }
-    public function getIdUser() { return $this->id_user_rep; }
+    public function getIdUser() { return $this->id_user_rep; }            // ID del usuario que reportó
     public function getDescripcion() { return $this->descripcion; }
     public function getPrioridad() { return $this->prioridad; }
     public function getEstado() { return $this->estado_inc; }
     public function getCreatedAt() { return $this->created_at; }
     public function getFechaResolucion() { return $this->fecha_resolucion; }
-    public function getNombreMaterial() { return $this->nombre_material; }
-    public function getIdTagMaterial() { return $this->id_tag_material; }
-    public function getUbicacion() { return $this->ubicacion; }
+    public function getNombreMaterial() { return $this->nombre_material; }  // Nombre del material (de JOIN)
+    public function getIdTagMaterial() { return $this->id_tag_material; }   // Identificador único del material (de JOIN)
+    public function getUbicacion() { return $this->ubicacion; }             // Ubicación del material (de JOIN)
 }

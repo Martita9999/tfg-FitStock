@@ -12,19 +12,20 @@ import { UsuarioService } from '../../services/usuario';
   templateUrl: './login.html',
   styleUrl: './login.css'
 })
+// Componente de inicio de sesión con soporte de modo oscuro y cambio forzado de contraseña
 export class LoginComponent {
-  private usuarioService = inject(UsuarioService);
-  private router = inject(Router);
+  private usuarioService = inject(UsuarioService);   // Servicio de autenticación de usuarios
+  private router = inject(Router);                   // Router para navegación programática
 
-  email = '';
-  password = '';
-  error = '';
-  darkMode = false; // Indica si el tema oscuro está activo (persistido en localStorage)
+  email = '';               // Email del formulario (two-way binding)
+  password = '';            // Contraseña del formulario (two-way binding)
+  error = '';               // Mensaje de error a mostrar en la vista
+  darkMode = false;         // Indica si el tema oscuro está activo (persistido en localStorage)
 
-  showPasswordModal = false;
-  currentPassword = '';
-  newPassword = '';
-  passwordError = '';
+  showPasswordModal = false;    // Controla la visibilidad del modal de cambio de contraseña
+  currentPassword = '';         // Contraseña actual (para verificar en el cambio forzado)
+  newPassword = '';             // Nueva contraseña a establecer
+  passwordError = '';           // Mensaje de error del modal de cambio de contraseña
 
   // Al iniciar, lee la preferencia de tema oscuro desde localStorage
   // y aplica el atributo `data-theme` al elemento raíz del documento
@@ -47,6 +48,9 @@ export class LoginComponent {
     }
   }
 
+  // Autentica al usuario con email y contraseña.
+  // Si el usuario es cliente/entrenador con cambio forzado de contraseña pendiente,
+  // muestra el modal para establecer una nueva; en caso contrario redirige al dashboard
   login() {
     this.error = '';
     this.usuarioService.login(this.email, this.password).subscribe({
@@ -72,6 +76,8 @@ export class LoginComponent {
     });
   }
 
+  // Envía la nueva contraseña al backend para completar el cambio forzado.
+  // Valida que la nueva contraseña no esté vacía antes de enviarla
   cambiarPassword() {
     this.passwordError = '';
     if (!this.newPassword.trim()) {
@@ -89,14 +95,17 @@ export class LoginComponent {
     });
   }
 
+  // Omite el cambio forzado de contraseña y accede al dashboard
   skipPassword() {
     this.router.navigate(['/admin/home']);
   }
 
+  // Navega a la página de registro de nuevos usuarios
   goToRegistro() {
     this.router.navigate(['/registro']);
   }
 
+  // Navega a la página de aterrizaje (portal público)
   goToPortal() {
     this.router.navigate(['/']);
   }

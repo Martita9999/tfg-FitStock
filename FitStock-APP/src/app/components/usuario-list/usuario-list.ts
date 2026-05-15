@@ -12,23 +12,27 @@ import { Usuario } from '../../interfaces/app.interfaces';
   templateUrl: './usuario-list.html',
   styleUrl: './usuario-list.css',
 })
+// Componente que lista, crea, edita y elimina usuarios del sistema,
+// con filtro por rol y opción de forzar cambio de contraseña
 export class UsuarioList implements OnInit {
-  private usuarioService = inject(UsuarioService);
-  private route = inject(ActivatedRoute);
-  private router = inject(Router);
-  lista: Usuario[] = [];
-  listaFiltrada: Usuario[] = [];
-  userRole = '';
-  filtroRol = '';
+  private usuarioService = inject(UsuarioService);     // Servicio de usuarios
+  private route = inject(ActivatedRoute);               // Ruta activa para leer parámetros (rol)
+  private router = inject(Router);                      // Router para navegación programática
+  lista: Usuario[] = [];           // Lista completa de usuarios desde la API
+  listaFiltrada: Usuario[] = [];   // Lista filtrada según el rol seleccionado
+  userRole = '';                   // Rol del usuario autenticado
+  filtroRol = '';                  // Rol por el que se filtra (desde la URL)
 
-  showModal = false;
-  newUser = { nombre: '', email: '', password: '', rol: 'cliente' };
-  error = '';
+  showModal = false;                                                     // Control del modal de creación
+  newUser = { nombre: '', email: '', password: '', rol: 'cliente' };     // Datos del nuevo usuario
+  error = '';                      // Mensaje de error
 
-  showEditModal = false;
-  editUser: Usuario | null = null;
-  editUserData = { nombre: '', email: '', rol: 'cliente' };
+  showEditModal = false;                                  // Control del modal de edición
+  editUser: Usuario | null = null;                        // Usuario en edición
+  editUserData = { nombre: '', email: '', rol: 'cliente' };  // Datos editados del usuario
 
+  // Al iniciar, se suscribe al usuario actual, lee el parámetro de ruta 'rol'
+  // y carga la lista de usuarios
   ngOnInit() {
     this.usuarioService.currentUser$.subscribe(u => this.userRole = u?.rol ?? '');
     this.route.paramMap.subscribe(params => {
@@ -38,12 +42,14 @@ export class UsuarioList implements OnInit {
     this.loadUsuarios();
   }
 
+  // Devuelve el título dinámico de la página según el filtro de rol activo
   get tituloPagina(): string {
     if (!this.filtroRol) return 'Usuarios';
     const nombres: Record<string, string> = { admin: 'Administradores', entrenador: 'Entrenadores', cliente: 'Clientes' };
     return nombres[this.filtroRol] || 'Usuarios';
   }
 
+  // Carga todos los usuarios desde la API y aplica el filtro de rol si existe
   loadUsuarios() {
     this.usuarioService.getUsuarios().subscribe(data => {
       this.lista = data;
@@ -59,21 +65,25 @@ export class UsuarioList implements OnInit {
     }
   }
 
+  // Navega a la ruta de usuarios sin filtro para mostrar todos
   irATodos() {
     this.router.navigate(['/admin/usuarios']);
   }
 
+  // Abre el modal de creación de usuario con valores por defecto
   abrirModal() {
     this.newUser = { nombre: '', email: '', password: '', rol: 'cliente' };
     this.error = '';
     this.showModal = true;
   }
 
+  // Cierra el modal de creación y limpia errores
   cerrarModal() {
     this.showModal = false;
     this.error = '';
   }
 
+  // Valida los campos obligatorios y envía los datos para crear un nuevo usuario
   crearUsuario() {
     this.error = '';
     if (!this.newUser.nombre || !this.newUser.email || !this.newUser.password) {
@@ -96,6 +106,7 @@ export class UsuarioList implements OnInit {
     });
   }
 
+  // Abre el modal de edición precargando los datos del usuario seleccionado
   abrirEditar(u: Usuario) {
     this.editUser = u;
     this.editUserData = {
@@ -107,12 +118,14 @@ export class UsuarioList implements OnInit {
     this.showEditModal = true;
   }
 
+  // Cierra el modal de edición y limpia errores
   cerrarEditar() {
     this.showEditModal = false;
     this.editUser = null;
     this.error = '';
   }
 
+  // Valida y envía los cambios del usuario editado al backend
   guardarEditar() {
     if (!this.editUser) return;
     this.error = '';
@@ -144,6 +157,7 @@ export class UsuarioList implements OnInit {
     });
   }
 
+  // Confirma y elimina un usuario por su ID tras la confirmación del usuario
   borrarUsuario(id: number, nombre: string) {
     if (!confirm(`¿Borrar usuario "${nombre}"?`)) return;
     this.usuarioService.deleteUsuario(id).subscribe({

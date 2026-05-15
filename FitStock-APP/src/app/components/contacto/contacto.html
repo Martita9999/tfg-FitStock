@@ -1,23 +1,31 @@
+<!-- Fondo decorativo solo en vista completa (no en embed) -->
 @if (!embed) {
   <div class="contacto-bg"></div>
 }
+<!-- Contenedor del formulario de contacto -->
 <div class="contacto-wrapper" [class.contacto-wrapper-embed]="embed">
+  <!-- Tarjeta de contacto -->
   <div class="contacto-card">
+    <!-- Cabecera con logo y título -->
     <div class="contacto-header">
       <div class="contacto-logo">F</div>
       <h2>Contacto</h2>
       <p>Déjanos tu correo y cuéntanos qué necesitas</p>
     </div>
+    <!-- Cuerpo del formulario -->
     <div class="contacto-body">
+      <!-- Mensaje de éxito condicional -->
       @if (success) {
         <div class="success-msg">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
           Mensaje enviado correctamente. Te contactaremos pronto.
         </div>
       }
+      <!-- Mensaje de error condicional -->
       @if (error) {
         <div class="error-msg">{{ error }}</div>
       }
+      <!-- Formulario con campos de email y mensaje -->
       <form (ngSubmit)="enviar()">
         <div class="field">
           <label>Tu correo electrónico</label>
@@ -27,6 +35,7 @@
           <label>Descripción de lo que necesitas</label>
           <textarea [(ngModel)]="mensaje" name="mensaje" required placeholder="Cuéntanos qué necesitas..." rows="6"></textarea>
         </div>
+        <!-- Botón de envío con indicador de carga -->
         <button type="submit" class="btn-primary" [disabled]="sending">
           @if (sending) {
             Enviando...
@@ -35,6 +44,7 @@
           }
         </button>
       </form>
+      <!-- Enlace de vuelta al portal (solo cuando no está embebido) -->
       @if (!embed) {
         <div class="contacto-footer">
           <a class="back-link" (click)="irAPortal()">

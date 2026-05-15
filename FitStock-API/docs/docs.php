@@ -114,18 +114,24 @@ $authLabels = [
 // Asocia cada método HTTP con su clase de color CSS
 $methodColors = ['GET' => 'get', 'POST' => 'post', 'PUT' => 'put', 'DELETE' => 'delete'];
 
+// Itera sobre cada grupo de recursos para construir el HTML de la documentación
 $rows = '';
 foreach ($resources as $title => $res) {
+  // Construye los endpoints de cada grupo
   $eps = '';
   foreach ($res['endpoints'] as $ep) {
+    // Desestructura: [método HTTP, ruta, descripción, nivel de autenticación]
     [$method, $route, $desc, $auth] = $ep;
-    $color = $methodColors[$method];
-    [$authLabel, $authClass] = $authLabels[$auth];
+    $color = $methodColors[$method];                       // Clase CSS según el método (get/post/put/delete)
+    [$authLabel, $authClass] = $authLabels[$auth];          // Etiqueta y clase CSS según el rol requerido
+    // Genera el HTML por endpoint: método + ruta + descripción + badge de autenticación
     $eps .= <<<ROW
       <div class="endpoint"><span class="method {$color}">{$method}</span><span class="route">{$route}</span><span class="desc">{$desc}</span><span class="tags"><span class="auth {$authClass}">{$authLabel}</span></span></div>
 ROW;
   }
+  // Si el grupo tiene ruta base, la muestra como pequeño texto junto al título
   $base = $res['base'] ? " <small>{$res['base']}</small>" : '';
+  // Genera el HTML del grupo: título + lista de endpoints
   $rows .= <<<RES
   <div class="resource">
     <h2>{$title}{$base}</h2>

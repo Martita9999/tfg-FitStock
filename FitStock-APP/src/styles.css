@@ -1,6 +1,8 @@
+/* ─── FUENTES ─── */
 /* Importa la fuente Inter desde Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
+/* ─── VARIABLES - MODO CLARO ─── */
 /* Variables CSS globales - Modo Claro (default) */
 :root {
   --blue-dark: #1e3a5f;
@@ -29,6 +31,7 @@
   --warning-color: #d97706;
 }
 
+/* ─── VARIABLES - MODO OSCURO ─── */
 /* Variables CSS - Modo Oscuro */
 [data-theme="dark"] {
   --blue-dark: #0f172a;
@@ -57,6 +60,7 @@
   --warning-color: #fdba74;
 }
 
+/* ─── KEYFRAMES ─── */
 /* Animación sutil para botones principales */
 @keyframes btnPulse {
   0% { box-shadow: 0 4px 12px rgba(249, 115, 22, 0.25); }
@@ -70,6 +74,7 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* ─── RESET ─── */
 /* Reset básico: elimina márgenes y paddings por defecto */
 * {
   margin: 0;
@@ -77,6 +82,7 @@
   box-sizing: border-box;
 }
 
+/* ─── BODY ─── */
 /* Estilos base del body */
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -91,6 +97,7 @@ router-outlet + * {
   animation: fadeIn 0.3s ease;
 }
 
+/* ─── CABECERA COMPARTIDA ─── */
 /* Shared: cabecera con título y botón de acción (crear) */
 .header-actions {
   display: flex;               /* Diseño flexible */
@@ -98,10 +105,12 @@ router-outlet + * {
   align-items: center;         /* Centra verticalmente */
   margin-bottom: 20px;         /* Espaciado inferior */
 }
+
 .header-actions .page-title {
   margin-bottom: 0;            /* Elimina el margen inferior por defecto del título */
 }
 
+/* ─── BOTONES COMPARTIDOS ─── */
 /* Botón de editar (icono) */
 .btn-edit {
   padding: 6px 8px;
@@ -132,10 +141,12 @@ router-outlet + * {
   box-shadow: 0 4px 12px rgba(249, 115, 22, 0.25);
   transition: transform 0.2s, box-shadow 0.2s;
 }
+
 .btn-create:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(249, 115, 22, 0.4);
 }
+
 .btn-create:active {
   transform: translateY(0);
 }
@@ -150,6 +161,7 @@ router-outlet + * {
   font-size: 14px;
   transition: all 0.2s;
 }
+
 .btn-delete:hover {
   background: #fef2f2;
   border-color: #fca5a5;
@@ -157,6 +169,7 @@ router-outlet + * {
 }
 [data-theme="dark"] .btn-delete:hover { background: #451a1a; }
 
+/* ─── MODAL ─── */
 /* Shared: estilos del modal overlay */
 .modal-overlay {
   position: fixed;                     /* Cubre toda la pantalla */
@@ -168,6 +181,7 @@ router-outlet + * {
   z-index: 1000;                       /* Por encima de todo */
   padding: 20px;                       /* Espaciado en móvil */
 }
+
 .modal-card {
   background: var(--card);
   border-radius: 16px;                 /* Esquinas redondeadas */
@@ -176,6 +190,7 @@ router-outlet + * {
   box-shadow: 0 25px 50px -12px rgba(0,0,0,0.3);  /* Sombra */
   overflow: hidden;                    /* Oculta contenido que sobresale */
 }
+
 .modal-header {
   display: flex;                       /* Título + botón cerrar en fila */
   justify-content: space-between;      /* Separa elementos */
@@ -183,12 +198,14 @@ router-outlet + * {
   padding: 20px 24px;                  /* Relleno */
   border-bottom: 1px solid var(--border);  /* Línea separadora */
 }
+
 .modal-header h3 {
   font-size: 18px;                     /* Tamaño del título */
   font-weight: 700;                    /* Negrita */
   color: var(--text);                  /* Color del texto */
   margin: 0;                           /* Sin margen */
 }
+
 .btn-close {
   background: none;                    /* Sin fondo */
   border: none;                        /* Sin borde */
@@ -197,12 +214,15 @@ router-outlet + * {
   color: var(--text-secondary);        /* Color secundario */
   padding: 4px;                        /* Relleno mínimo */
 }
+
 .btn-close:hover {
   color: var(--text);                  /* Más oscuro al hover */
 }
+
 .modal-body {
   padding: 24px;                       /* Relleno interior */
 }
+
 .modal-footer {
   display: flex;                       /* Botones en fila */
   justify-content: flex-end;           /* Alineados a la derecha */
@@ -211,10 +231,12 @@ router-outlet + * {
   border-top: 1px solid var(--border); /* Línea separadora */
 }
 
+/* ─── FORMULARIOS ─── */
 /* Shared: estilos de campos de formulario */
 .field {
   margin-bottom: 18px;                 /* Espaciado entre campos */
 }
+
 .field label {
   display: block;                      /* La etiqueta ocupa toda la línea */
   font-size: 13px;                     /* Tamaño pequeño */
@@ -222,6 +244,7 @@ router-outlet + * {
   color: var(--text-secondary);        /* Color secundario */
   margin-bottom: 6px;                  /* Espacio debajo de la etiqueta */
 }
+
 .field input,
 .field select,
 .field textarea {
@@ -236,22 +259,27 @@ router-outlet + * {
   background: var(--card);
   color: var(--text);
 }
+
 .field input:focus,
 .field select:focus,
 .field textarea:focus {
   border-color: var(--blue);           /* Borde azul al enfocar */
 }
+
 .field textarea {
   resize: vertical;                    /* Solo redimensionable vertical */
 }
+
 .field-row {
   display: flex;                       /* Campos en fila */
   gap: 12px;                           /* Espacio entre campos */
 }
+
 .field-row .field {
   flex: 1;                             /* Cada campo ocupa el mismo espacio */
 }
 
+/* ─── ERROR ─── */
 /* Mensaje de error genérico */
 .error-msg {
   background: var(--error-bg);
@@ -263,6 +291,7 @@ router-outlet + * {
   border: 1px solid var(--error-border);
 }
 
+/* ─── TABLA DE DATOS ─── */
 /* Shared: tabla de datos */
 .data-table {
   width: 100%;                         /* Ancho completo */
@@ -274,9 +303,11 @@ router-outlet + * {
   box-shadow: 0 1px 3px rgba(0,0,0,0.06);  /* Sombra sutil */
   border: 1px solid var(--border);     /* Borde */
 }
+
 .data-table th.td-center, .data-table td.td-center {
   text-align: center;
 }
+
 .data-table th {
   text-align: left;                    /* Alineación izquierda */
   padding: 14px 16px;                  /* Relleno */
@@ -287,20 +318,25 @@ router-outlet + * {
   background: var(--bg);
   border-bottom: 2px solid var(--border);
 }
+
 .data-table td {
   padding: 14px 16px;                  /* Relleno */
   font-size: 14px;                     /* Tamaño de fuente */
   border-bottom: 1px solid var(--border);  /* Línea entre filas */
 }
+
 .data-table tr:last-child td {
   border-bottom: none;                 /* Última fila sin borde */
 }
+
 .data-table tbody tr:hover {
   background: #f1f5f9;
 }
+
 [data-theme="dark"] .data-table tbody tr:hover {
   background: #1e293b;
 }
+
 .data-table code {
   background: var(--bg);               /* Fondo del código */
   padding: 2px 8px;                    /* Relleno */
@@ -308,6 +344,7 @@ router-outlet + * {
   font-size: 12px;                     /* Tamaño pequeño */
 }
 
+/* ─── TARJETA Y ESTADO VACÍO ─── */
 /* Estado vacío: cuando no hay datos que mostrar */
 .card { background: var(--card); }
 .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); transform: translateY(-1px); }
@@ -319,6 +356,7 @@ router-outlet + * {
   font-size: 15px;                     /* Tamaño de fuente */
 }
 
+/* ─── BOTONES DE MODAL ─── */
 /* Botón de cancelar (modal) */
 .btn-cancel {
   padding: 10px 20px;
@@ -332,6 +370,7 @@ router-outlet + * {
   transition: all 0.2s;
   color: var(--text);
 }
+
 .btn-cancel:hover {
   background: var(--bg);
   border-color: #cbd5e1;
@@ -351,10 +390,12 @@ router-outlet + * {
   box-shadow: 0 4px 12px rgba(249, 115, 22, 0.25);
   transition: transform 0.2s, box-shadow 0.2s;
 }
+
 .btn-save:hover {
   transform: translateY(-1px);
   box-shadow: 0 8px 20px rgba(249, 115, 22, 0.4);
 }
+
 .btn-save:active {
   transform: translateY(0);
 }

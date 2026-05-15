@@ -1,15 +1,18 @@
+<!-- Página principal del dashboard -->
 <div class="dashboard-home">
-  <!-- Admin / Entrenador -->
+  <!-- Bloque visible para admin y entrenador -->
   @if (user?.rol !== 'cliente') {
     <div class="welcome-card">
       <h2>Panel de Control</h2>
       <p>Resumen general del estado del gimnasio</p>
     </div>
 
+    <!-- Mensaje de error condicional -->
     @if (error) {
       <div class="error-msg">{{ error }}</div>
     }
 
+    <!-- Tarjetas de resumen con datos del gimnasio -->
     @if (resumen) {
       <div class="grid-cards">
         <!-- Tarjeta de resumen de incidencias (abiertas, en proceso, resueltas) -->
@@ -143,16 +146,18 @@
     }
   }
 
-  <!-- Cliente -->
+  <!-- Bloque visible solo para clientes -->
   @if (user?.rol === 'cliente') {
     <div class="welcome-card">
       <h2>Bienvenido, {{ user?.nombre }}</h2>
       <p>Panel de cliente — resumen de tu actividad</p>
     </div>
 
+    <!-- Mensaje de error condicional -->
     @if (error) {
       <div class="error-msg">{{ error }}</div>
     }
+    <!-- Mensaje de éxito condicional -->
     @if (successMsg) {
       <div class="success-msg">{{ successMsg }}</div>
     }
@@ -174,6 +179,7 @@
               }
             </span>
           </div>
+          <!-- Formulario de cambio de contraseña -->
           @if (showPasswordForm) {
             <div class="password-form">
               <input type="password" [(ngModel)]="currentPassword" name="currentPass" placeholder="Contraseña actual" class="input-sm">

@@ -162,6 +162,7 @@
   background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
 }
 
+/* ─── ICONOS Y TEXTO DE FUNCIONALIDAD ─── */
 /* Contenedor del icono SVG de cada funcionalidad */
 .feature-icon {
   color: #f97316;                                   /* Color naranja para los SVGs */
@@ -195,8 +196,6 @@
   color: #475569;                                   /* Gris oscuro para copyright */
   font-size: 14px;
 }
-
-
 
 /* ─── ADAPTACIÓN RESPONSIVE ─── */
 /* Para tablets y móviles grandes (<= 768px de ancho) */

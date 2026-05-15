@@ -22,13 +22,13 @@ export class MaterialList implements OnInit {
   incidencias: Incidencia[] = [];   // Incidencias activas asociadas
   userRole = '';                 // Rol del usuario actual
 
-  showModal = false;
-  newMaterial = { nombre: '', descripcion: '', estado: 'operativo', ubicacion: '', id_tag_material: '' };
+  showModal = false;                                                                           // Control del modal de creación
+  newMaterial = { nombre: '', descripcion: '', estado: 'operativo', ubicacion: '', id_tag_material: '' };  // Datos de la nueva máquina
   error = '';   // Mensaje de error
 
-  showEditModal = false;
-  editMaterial: Material | null = null;
-  editData = { nombre: '', descripcion: '', estado: 'operativo', ubicacion: '', id_tag_material: '' };
+  showEditModal = false;                                                                                     // Control del modal de edición
+  editMaterial: Material | null = null;                                                                     // Máquina en edición
+  editData = { nombre: '', descripcion: '', estado: 'operativo', ubicacion: '', id_tag_material: '' };      // Datos editados de la máquina
 
   // Estados disponibles para el selector
   estadosDisponibles = [
@@ -58,16 +58,19 @@ export class MaterialList implements OnInit {
     this.incidenciasService.getIncidencias().subscribe(data => this.incidencias = data);
   }
 
+  // Ordena materiales por su etiqueta ID usando comparación numérica
   private sortByIdTag(a: Material, b: Material): number {
     const tagA = a.id_tag_material || '';
     const tagB = b.id_tag_material || '';
     return tagA.localeCompare(tagB, undefined, { numeric: true });
   }
 
+  // Devuelve las máquinas en estado operativo ordenadas por ID
   get maquinasOperativas(): Material[] {
     return this.lista.filter(m => m.estado === 'operativo').sort(this.sortByIdTag);
   }
 
+  // Devuelve las máquinas en cualquier estado no operativo ordenadas por ID
   get maquinasNoOperativas(): Material[] {
     return this.lista.filter(m => m.estado !== 'operativo').sort(this.sortByIdTag);
   }

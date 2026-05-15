@@ -83,12 +83,15 @@ export class PrestamoList implements OnInit {
     return this._grupos(this.selecciones);
   }
 
+  // Ordena materiales por su etiqueta ID usando comparación numérica
   private sortByIdTag(a: Material, b: Material): number {
     const tagA = a.id_tag_material || '';
     const tagB = b.id_tag_material || '';
     return tagA.localeCompare(tagB, undefined, { numeric: true });
   }
 
+  // Agrupa los materiales por nombre, calcula disponibilidad (operativos y no prestados)
+  // y devuelve un array de MaterialGroup ordenado por ID
   private _grupos(selecciones: { [nombre: string]: number }): MaterialGroup[] {
     const sorted = [...this.materiales].sort(this.sortByIdTag);
     const agrupados: { [key: string]: Material[] } = {};

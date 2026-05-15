@@ -16,6 +16,9 @@ import { UsuarioService, Usuario } from '../../services/usuario';
   templateUrl: './dashboard-home.html',
   styleUrl: './dashboard-home.css'
 })
+// Componente de la página de inicio del panel de administración.
+// Muestra un resumen general para administradores/entrenadores o datos
+// específicos del cliente (máquinas, préstamos, compras)
 export class DashboardHomeComponent implements OnInit {
   // Servicio para obtener el resumen general del panel (incidencias, stock bajo, máquinas)
   private resumenService = inject(ResumenService);
@@ -28,21 +31,23 @@ export class DashboardHomeComponent implements OnInit {
   // Servicio para obtener datos del usuario actual y gestionar sesión
   private usuarioService = inject(UsuarioService);
 
-  user: Usuario | null = null;
-  resumen: ResumenData | null = null;
-  maquinas: Material[] = [];
-  maquinasOperativas = 0;
-  misPrestamos: Prestamo[] = [];
-  compras: Compra[] = [];
-  totalUsuarios = 0;
-  prestamosPendientes: Prestamo[] = [];
-  error = '';
-  successMsg = '';
+  user: Usuario | null = null;            // Usuario autenticado
+  resumen: ResumenData | null = null;     // Datos del resumen general (admin/entrenador)
+  maquinas: Material[] = [];              // Máquinas averiadas o en reparación
+  maquinasOperativas = 0;                 // Conteo de máquinas en estado operativo
+  misPrestamos: Prestamo[] = [];          // Préstamos del cliente actual
+  compras: Compra[] = [];                 // Compras realizadas por el cliente
+  totalUsuarios = 0;                      // Total de usuarios registrados
+  prestamosPendientes: Prestamo[] = [];   // Préstamos aún no devueltos
+  error = '';                             // Mensaje de error
+  successMsg = '';                        // Mensaje de éxito
 
-  currentPassword = '';
-  newPassword = '';
-  showPasswordForm = false;
+  currentPassword = '';     // Contraseña actual (formulario de cambio)
+  newPassword = '';         // Nueva contraseña (formulario de cambio)
+  showPasswordForm = false; // Controla la visibilidad del formulario de cambio de contraseña
 
+  // Al iniciar, carga el usuario desde localStorage y decide qué datos cargar
+  // según el rol: resumen general (admin/entrenador) o datos de cliente
   ngOnInit() {
     const userStr = localStorage.getItem('user');
     if (userStr) {
@@ -76,12 +81,15 @@ export class DashboardHomeComponent implements OnInit {
 
   // Carga los datos específicos del cliente: máquinas operativas/averiadas,
   // sus préstamos activos y las compras realizadas
+  // Ordena materiales por su etiqueta ID (id_tag_material) usando comparación numérica
   private sortByIdTag(a: Material, b: Material): number {
     const tagA = a.id_tag_material || '';
     const tagB = b.id_tag_material || '';
     return tagA.localeCompare(tagB, undefined, { numeric: true });
   }
 
+  // Carga datos específicos del cliente: conteo de máquinas operativas,
+  // lista de máquinas averiadas/en reparación, préstamos activos y compras realizadas
   cargarDatosCliente() {
     this.materialesService.getMateriales('maquina').subscribe({
       next: (data: Material[]) => {

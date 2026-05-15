@@ -1,3 +1,4 @@
+/* ─── TÍTULOS ─── */
 .section-title {
   font-size: 18px;
   font-weight: 700;
@@ -16,12 +17,14 @@
   margin-top: 32px;
 }
 
+/* ─── BOTONES DE ACCIÓN ─── */
 .action-btns {
   display: flex;
   gap: 6px;
   align-items: center;
 }
 
+/* ─── CELDA DE DESCRIPCIÓN ─── */
 .desc-cell {
   max-width: 300px;
 }
@@ -32,6 +35,7 @@
   display: block;
 }
 
+/* ─── INCIDENCIA ─── */
 .incidencia-info {
   font-size: 12px;
   padding: 6px 10px;
@@ -48,6 +52,7 @@
   background: var(--warning-bg);
   border: 1px solid #fed7aa;
 }
+
 /* Modo oscuro: borde de incidencia en proceso adaptado */
 [data-theme="dark"] .inc-proceso { border-color: #7c2d12; }
 
@@ -61,6 +66,7 @@
   color: var(--text);
 }
 
+/* ─── ID TAG ─── */
 .id-tag {
   display: inline-block;
   margin-left: 6px;
@@ -74,6 +80,7 @@
   letter-spacing: 0.3px;
 }
 
+/* ─── BADGES DE ESTADO ─── */
 .status-badge {
   display: inline-block;
   padding: 4px 12px;

@@ -24,10 +24,18 @@ class Material {
         $this->ubicacion = $ubicacion;
     }
 
-    // Genera un identificador único a partir del nombre del material
+    // Genera un identificador único (id_tag_material) a partir del nombre del material.
+    // Algoritmo:
+    //   1. Toma las primeras 3 letras mayúsculas de cada palabra significativa (ignora artículos/preposiciones).
+    //   2. Si el prefijo resultante es muy corto (<2 caracteres), usa 'MAQ' por defecto.
+    //   3. Acorta el prefijo a 5 caracteres máximo.
+    //   4. Busca el último id_tag_material existente con ese prefijo en la BD.
+    //   5. Incrementa el número secuencial (ej: BAN-001, BAN-002, ...).
+    // Esto garantiza identificadores legibles y únicos para cada material.
     private static function generarIdTag($nombre, $conexion) {
         $words = preg_split('/\s+/', $nombre);
         $prefix = '';
+        // Palabras a ignorar (artículos, preposiciones) para evitar prefijos genéricos
         $skip = ['de', 'la', 'el', 'los', 'las', 'del', 'en', 'por', 'con', 'un', 'una'];
         foreach ($words as $w) {
             $lower = strtolower(trim($w));
@@ -38,6 +46,7 @@ class Material {
         if (strlen($prefix) < 2) $prefix = 'MAQ';
         $prefix = substr($prefix, 0, 5);
 
+        // Consulta el último tag existente con este prefijo para continuar la secuencia numérica
         $stmt = $conexion->prepare("SELECT id_tag_material FROM material WHERE id_tag_material LIKE ? ORDER BY id_tag_material DESC LIMIT 1");
         $stmt->execute([$prefix . '-%']);
         $last = $stmt->fetchColumn();
@@ -104,7 +113,9 @@ class Material {
         return false;
     }
 
-    // Actualiza los datos de un material
+    // Actualiza los datos de un material existente en la base de datos.
+    // Permite modificar todos los campos simultáneamente: nombre, descripción, estado,
+    // última revisión, ubicación e identificador. Requiere el ID del material a actualizar.
     public static function actualizar($id_material, $nombre_equipo, $descripcion, $estado, $ultima_rev, $ubicacion = null, $id_tag_material = null) {
         $conexion = Conexion::conectar();
         $stmt = $conexion->prepare("UPDATE material SET nombre_equipo = ?, descripcion = ?, estado = ?, ultima_rev = ?, ubicacion = ?, id_tag_material = ? WHERE id_material = ?");

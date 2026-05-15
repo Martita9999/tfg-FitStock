@@ -19,6 +19,10 @@
 // ─────────────────────────────────────────────────────────────
 // MEJORA: Origen CORS dinámico (misma variable que en router.php)
 // ─────────────────────────────────────────────────────────────
+// Obtiene el origen CORS permitido desde la variable de entorno FRONTEND_URL.
+// En producción, esta variable debe configurarse en el servidor para restringir
+// el acceso únicamente al dominio del frontend desplegado, evitando peticiones
+// desde orígenes no autorizados. En desarrollo se usa localhost:4200.
 $allowedOrigin = getenv('FRONTEND_URL') ?: 'http://localhost:4200';
 
 // Cabeceras CORS para permitir peticiones desde el frontend Angular con credenciales
@@ -54,11 +58,22 @@ session_start();
 // ─────────────────────────────────────────────────────────────
 // Directorio donde se almacenan los intentos de login (archivos temporales)
 define('RATE_LIMIT_DIR', sys_get_temp_dir() . '/fitstock_rate_limit');
-// Máximo de intentos permitidos
+// Máximo de intentos permitidos antes de bloquear temporalmente
 define('RATE_LIMIT_MAX_ATTEMPTS', 10);
-// Ventana de tiempo en segundos (15 minutos)
+// Ventana de tiempo en segundos (15 minutos) en la que cuentan los intentos
 define('RATE_LIMIT_WINDOW', 900);
 
+/**
+ * Verifica el límite de intentos de inicio de sesión para una IP.
+ * Protege contra ataques de fuerza bruta limitando el número de
+ * intentos fallidos dentro de una ventana de tiempo configurable.
+ * Los datos de cada IP se almacenan en un archivo JSON independiente
+ * dentro del directorio temporal del sistema.
+ * Si se supera el límite, responde con HTTP 429 (Too Many Requests).
+ *
+ * @param string $ip Dirección IP del cliente a verificar.
+ * @return void
+ */
 function checkRateLimit($ip) {
     if (!is_dir(RATE_LIMIT_DIR)) {
         @mkdir(RATE_LIMIT_DIR, 0700, true);  // Crea el directorio con permisos restringidos
@@ -87,11 +102,54 @@ function checkRateLimit($ip) {
     }
 }
 
-// Función para limpiar el rate limit tras un login exitoso
+/**
+ * Limpia el registro de rate limiting de una IP tras un inicio de sesión exitoso.
+ * Elimina el archivo temporal para que el contador de intentos se reinicie
+ * y el usuario pueda seguir intentando si es necesario.
+ *
+ * @param string $ip Dirección IP del cliente cuyo registro se eliminará.
+ * @return void
+ */
 function clearRateLimit($ip) {
     $file = RATE_LIMIT_DIR . '/' . md5($ip) . '.json';
     if (is_file($file)) {
         @unlink($file);
+    }
+}
+
+// Rate limiting específico para el formulario de contacto (5 intentos cada 15 minutos)
+define('RATE_LIMIT_CONTACTO_MAX', 5);
+
+/**
+ * Verifica el límite de mensajes del formulario de contacto para una IP.
+ * Similar a checkRateLimit pero con un límite más restrictivo (5 envíos por ventana)
+ * y usando un archivo independiente (prefijo 'contacto_') para no interferir
+ * con el control de intentos de login.
+ *
+ * @param string $ip Dirección IP del cliente a verificar.
+ * @return void Responde con 429 si se excede el límite.
+ */
+function checkRateLimitContacto($ip) {
+    if (!is_dir(RATE_LIMIT_DIR)) {
+        @mkdir(RATE_LIMIT_DIR, 0700, true);
+    }
+    $file = RATE_LIMIT_DIR . '/contacto_' . md5($ip) . '.json';
+    $now = time();
+    $data = ['attempts' => 0, 'first_attempt' => $now];
+
+    if (is_file($file)) {
+        $saved = json_decode(file_get_contents($file), true) ?? $data;
+        if ($now - $saved['first_attempt'] > RATE_LIMIT_WINDOW) {
+            $saved = ['attempts' => 0, 'first_attempt' => $now];
+        }
+        $data = $saved;
+    }
+
+    $data['attempts']++;
+    file_put_contents($file, json_encode($data), LOCK_EX);
+
+    if ($data['attempts'] > RATE_LIMIT_CONTACTO_MAX) {
+        jsonResponse(["error" => "Has superado el límite de mensajes. Intenta de nuevo en 15 minutos."], 429);
     }
 }
 
@@ -110,7 +168,14 @@ require_once __DIR__ . "/../vendor/PHPMailer/src/Exception.php";
 require_once __DIR__ . "/../vendor/PHPMailer/src/PHPMailer.php";
 require_once __DIR__ . "/../vendor/PHPMailer/src/SMTP.php";
 
-// Variables de ruteo: método HTTP, URI y segmentos de la ruta
+// ─────────────────────────────────────────────────────────────
+// Variables de ruteo: descomponen la URL en partes identificables
+// $method   = verbo HTTP (GET, POST, PUT, DELETE, OPTIONS)
+// $uri      = ruta solicitada, ej: /api/usuarios
+// $path     = array de segmentos de la URI, ej: ['api', 'usuarios']
+// $action   = primer segmento (siempre 'api' en este enrutador)
+// $resource = segundo segmento: identifica el recurso a operar
+// ─────────────────────────────────────────────────────────────
 $method = $_SERVER['REQUEST_METHOD'];
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $path = explode('/', trim($uri, '/'));
@@ -118,19 +183,38 @@ $path = explode('/', trim($uri, '/'));
 $action = $path[0] ?? '';       // Primer segmento (debería ser 'api')
 $resource = $path[1] ?? '';     // Segundo segmento (ej: 'login', 'usuarios', 'materiales')
 
-// Función auxiliar: envía respuesta JSON con código HTTP y termina la ejecución
+/**
+ * Envía una respuesta JSON al cliente y finaliza la ejecución del script.
+ * Centraliza el formato de todas las respuestas de la API para garantizar
+ * consistencia en la comunicación con el frontend.
+ *
+ * @param mixed $data Datos a serializar como JSON en el cuerpo de la respuesta.
+ * @param int $code Código de estado HTTP (200 OK por defecto).
+ * @return void
+ */
 function jsonResponse($data, $code = 200) {
     http_response_code($code);
     echo json_encode($data);
     exit;
 }
 
-// Función auxiliar: obtiene el cuerpo JSON de la petición o los datos POST
+/**
+ * Obtiene los datos de entrada de la petición HTTP actual.
+ * Lee el cuerpo de la petición en formato JSON desde php://input.
+ * Si el contenido no es JSON válido, utiliza $_POST como fallback
+ * para peticiones con Content-Type application/x-www-form-urlencoded.
+ *
+ * @return array Array asociativo con los datos recibidos.
+ */
 function getJsonInput() {
     return json_decode(file_get_contents("php://input"), true) ?? $_POST;
 }
 
-// Enrutador principal: redirige según el primer segmento de la URL
+// ─────────────────────────────────────────────────────────────
+// Enrutador principal: evalúa el primer segmento de la URL.
+// Si coincide con 'api', delega el procesamiento en handleApi().
+// Cualquier otro segmento recibe un 404 (Endpoint no encontrado).
+// ─────────────────────────────────────────────────────────────
 switch ($action) {
     case 'api':                                      // Si la ruta empieza por /api
         handleApi($method, $resource, $path);        // Llama al manejador de la API
@@ -139,7 +223,17 @@ switch ($action) {
         jsonResponse(["error" => "Endpoint no encontrado"], 404);   // 404 - No encontrado
 }
 
-// Función principal que maneja todos los endpoints de la API
+/**
+ * Manejador principal de todos los endpoints de la API REST.
+ * Analiza el recurso solicitado ($resource) y el método HTTP ($method),
+ * aplicando la lógica CRUD correspondiente con control de acceso
+ * basado en roles de usuario (admin, entrenador, cliente).
+ *
+ * @param string $method Método HTTP de la petición (GET, POST, PUT, DELETE).
+ * @param string $resource Nombre del recurso solicitado (login, usuarios, etc.).
+ * @param array $path Array completo de segmentos de la URI para sub-rutas.
+ * @return void
+ */
 function handleApi($method, $resource, $path) {
     $data = getJsonInput();    // Obtiene los datos de la petición
 
@@ -166,12 +260,15 @@ function handleApi($method, $resource, $path) {
 
                 if ($email && $password) {
                     $usuario = Usuario::obtenerPorEmail($email);
+                    // password_verify() compara la contraseña en texto plano contra el hash
+                    // almacenado en la BD usando bcrypt. Si coinciden, el usuario queda autenticado.
                     if ($usuario && password_verify($password, $usuario->getPasswordHash())) {
                         // ─────────────────────────────────────────
                         // MEJORA: Regenerar ID de sesión para evitar session fixation
                         // ─────────────────────────────────────────
                         session_regenerate_id(true);
 
+                        // Almacena los datos del usuario en la sesión para persistir la autenticación
                         $_SESSION['usuario_id'] = $usuario->getId();
                         $_SESSION['usuario_nombre'] = $usuario->getNombre();
                         $_SESSION['usuario_rol'] = $usuario->getRol();
@@ -221,6 +318,9 @@ function handleApi($method, $resource, $path) {
                         Usuario::crear($nombre, $email, $password, 'cliente');   // Crea usuario con rol 'cliente' por defecto
                         jsonResponse(["success" => true, "message" => "Usuario registrado"]);
                     } catch (Exception $e) {
+                        // Captura la excepción por violación de la restricción UNIQUE del email en la BD.
+                        // La columna email tiene un índice único, por lo que insertar un email duplicado
+                        // lanza una excepción que se traduce en un mensaje claro para el cliente.
                         jsonResponse(["error" => "El correo ya está registrado"], 400);   // 400 - Email duplicado
                     }
                 }
@@ -269,6 +369,9 @@ function handleApi($method, $resource, $path) {
 
                 if ($old_password && $new_password) {
                     $usuario = Usuario::obtenerPorId($_SESSION['usuario_id']);
+                    // Verifica que la contraseña actual coincida con el hash almacenado en la BD
+                    // antes de permitir el cambio. Esto evita que un usuario con sesión robada
+                    // pueda cambiar la contraseña sin conocer la actual.
                     if ($usuario && password_verify($old_password, $usuario->getPasswordHash())) {
                         $password_hash = password_hash($new_password, PASSWORD_DEFAULT);
                         $conexion = Conexion::conectar();
@@ -285,6 +388,8 @@ function handleApi($method, $resource, $path) {
                 break;
             }
 
+            // Bloquea el acceso a usuarios con rol 'cliente' en toda la sección de usuarios.
+            // Solo administradores y entrenadores pueden gestionar usuarios.
             if ($_SESSION['usuario_rol'] === 'cliente') {    // Los clientes no pueden acceder
                 jsonResponse(["error" => "Acceso denegado"], 403);
             }
@@ -389,6 +494,8 @@ function handleApi($method, $resource, $path) {
                 jsonResponse(["error" => "Acceso denegado"], 403);
             }
             if ($method === 'GET') {                         // GET /api/materiales - Listar todos
+                // Filtro opcional por tipo de material mediante query string: ?tipo=maquina o ?tipo=prestable.
+                // Si no se especifica el parámetro, se devuelven todos los materiales sin filtrar.
                 $tipo = $_GET['tipo'] ?? null;               // Filtro opcional por tipo (?tipo=maquina|prestable)
                 $materiales = Material::obtenerTodos($tipo);
                 $list = array_map(function($m) {
@@ -435,7 +542,9 @@ function handleApi($method, $resource, $path) {
             break;
 
 
-        // PRESTAMOS - CRUD de préstamos de material
+        // PRESTAMOS - Gestión de préstamos de material (GET, POST, PUT, DELETE)
+        // - Clientes: pueden listar y crear préstamos (solo para sí mismos), pero no eliminar.
+        // - Admin/entrenador: CRUD completo sobre cualquier préstamo de la base de datos.
 
         case 'prestamos':
             requireSession();                                // Requiere autenticación
@@ -458,7 +567,9 @@ function handleApi($method, $resource, $path) {
                 }, $prestamos);
                 jsonResponse($list);
             } elseif ($method === 'POST') {                  // POST /api/prestamos - Crear préstamo
-                // Los clientes solo pueden crear préstamos para sí mismos
+                // Los clientes solo pueden crear préstamos para sí mismos.
+                // Admin y entrenadores pueden asignar préstamos a cualquier usuario
+                // especificando el id_usuario en el cuerpo de la petición.
                 if ($_SESSION['usuario_rol'] === 'cliente') {
                     $id_usuario = $_SESSION['usuario_id'];
                 } else {
@@ -581,9 +692,13 @@ function handleApi($method, $resource, $path) {
 
 
         // COMPRAS - Registro de compras de productos por usuarios
+        // - Clientes: solo ven sus propias compras (filtradas automáticamente por su ID de sesión).
+        // - Admin/entrenador: pueden ver todas las compras o filtrar por id_usuario específico.
         case 'compras':
             requireSession();
             if ($method === 'GET') {
+                // Separa la lógica según el rol: el cliente ve solo sus compras,
+                // mientras que admin/entrenador pueden consultar todas o filtrar por usuario.
                 if ($_SESSION['usuario_rol'] === 'cliente') {
                     $compras = Compra::obtenerTodos($_SESSION['usuario_id']);
                 } else {
@@ -615,7 +730,10 @@ function handleApi($method, $resource, $path) {
             }
             break;
 
-        // INCIDENCIAS - CRUD de incidencias en materiales
+        // INCIDENCIAS - Gestión de incidencias reportadas sobre materiales
+        // - Al crear una incidencia, el material asociado se marca como 'averiado' automáticamente.
+        // - Al resolver una incidencia, el material vuelve a estado 'operativo'.
+        // - Clientes: pueden crear y listar incidencias, pero no eliminarlas.
 
         case 'incidencias':
             requireSession();                                // Requiere autenticación
@@ -755,6 +873,9 @@ function handleApi($method, $resource, $path) {
 
         case 'contacto':
             if ($method === 'POST') {
+                // Rate limiting: 5 intentos por IP cada 15 minutos
+                checkRateLimitContacto($_SERVER['REMOTE_ADDR']);
+
                 $email = trim($data['email'] ?? '');
                 $mensaje = trim($data['mensaje'] ?? '');
 
@@ -771,7 +892,7 @@ function handleApi($method, $resource, $path) {
                     $mail->Host       = 'smtp.gmail.com';
                     $mail->SMTPAuth   = true;
                     $mail->Username   = 'infofitstock@gmail.com';
-                    $mail->Password   = getenv('MAIL_PASSWORD') ?: '';
+                    $mail->Password   = getenv('MAIL_PASSWORD') ?: '';      // Contraseña obtenida de variable de entorno por seguridad
                     $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
                     $mail->Port       = 587;
                     $mail->CharSet    = 'UTF-8';
@@ -787,22 +908,32 @@ function handleApi($method, $resource, $path) {
                     $mail->send();
                     jsonResponse(["success" => true, "message" => "Mensaje enviado correctamente"]);
                 } catch (PHPMailer\PHPMailer\Exception $e) {
-                    $errorMsg = $e->getMessage();
-                    jsonResponse(["error" => "Error al enviar el mensaje: $errorMsg"], 500);
+                    error_log("Error PHPMailer en contacto: " . $e->getMessage());
+                    jsonResponse(["error" => "Error al enviar el mensaje. Inténtalo de nuevo más tarde."], 500);
                 } catch (Exception $e) {
+                    error_log("Error interno en contacto: " . $e->getMessage());
                     jsonResponse(["error" => "Error interno del servidor"], 500);
                 }
             }
             break;
 
-        // DEFAULT - no encontrado
+        // DEFAULT - Recurso no reconocido
+        // Se ejecuta cuando el valor de $resource no coincide con ningún case definido.
+        // Responde con 404 (Not Found) para indicar que el endpoint solicitado no existe.
 
         default:
             jsonResponse(["error" => "Recurso no encontrado"], 404);
     }
 }
 
-// Función de seguridad: verifica que el usuario esté autenticado, si no devuelve 401
+/**
+ * Verifica que el usuario tenga una sesión activa antes de acceder a recursos protegidos.
+ * Comprueba si $_SESSION['usuario_id'] está definido. Si no existe, significa que el
+ * usuario no ha iniciado sesión y se rechaza la petición con HTTP 401 (No autenticado).
+ * Debe llamarse al inicio de cualquier endpoint que requiera autenticación.
+ *
+ * @return void Si no hay sesión activa, responde con 401.
+ */
 function requireSession() {
     if (!isset($_SESSION['usuario_id'])) {
         jsonResponse(["error" => "No autenticado"], 401);

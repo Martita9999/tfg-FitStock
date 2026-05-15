@@ -1,8 +1,10 @@
+/* ─── CONTENIDO ─── */
 /* Espaciado derecho para separar el contenido del borde */
 .page-content {
   padding-right: 16px;
 }
 
+/* ─── TÍTULOS ─── */
 .section-title {
   font-size: 18px;
   font-weight: 700;
@@ -25,12 +27,14 @@
   margin-top: 40px;
 }
 
+/* ─── BOTONES DE ACCIÓN ─── */
 .action-btns {
   display: flex;
   gap: 6px;
   align-items: center;
 }
 
+/* ─── BADGES DE ESTADO ─── */
 .status-badge {
   display: inline-block;
   padding: 4px 12px;
@@ -44,6 +48,12 @@
   color: var(--error-color);
 }
 
+.status-badge.en_reparacion {
+  background: var(--warning-bg);
+  color: var(--warning-color);
+}
+
+/* ─── ID TAG ─── */
 .id-tag {
   display: inline-block;
   margin-left: 8px;
@@ -56,11 +66,7 @@
   vertical-align: middle;
 }
 
-.status-badge.en_reparacion {
-  background: var(--warning-bg);
-  color: var(--warning-color);
-}
-
+/* ─── BADGES DE PRIORIDAD ─── */
 .priority-badge {
   display: inline-block;
   padding: 4px 12px;
@@ -71,5 +77,6 @@
 .priority-badge.priority-high { background: var(--error-bg); }
 .priority-badge.priority-medium { background: var(--warning-bg); }
 .priority-badge.priority-low { background: #eff6ff; }
+
 /* Modo oscuro: badge de prioridad baja adaptado */
 [data-theme="dark"] .priority-badge.priority-low { background: #1e3a5f; }

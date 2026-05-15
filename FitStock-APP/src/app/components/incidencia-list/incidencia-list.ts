@@ -36,12 +36,14 @@ export class IncidenciaList implements OnInit {
     { value: 'en_proceso', label: 'Mantenimiento' },
   ];
 
+  // Ordena materiales por su etiqueta ID usando comparación numérica
   private sortByIdTag(a: Material, b: Material): number {
     const tagA = a.id_tag_material || '';
     const tagB = b.id_tag_material || '';
     return tagA.localeCompare(tagB, undefined, { numeric: true });
   }
 
+  // Al iniciar, se suscribe al usuario actual, carga las incidencias y los materiales tipo máquina
   ngOnInit() {
     this.usuarioService.currentUser$.subscribe(u => this.userRole = u?.rol ?? '');
     this.loadIncidencias();

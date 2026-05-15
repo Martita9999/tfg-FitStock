@@ -1,3 +1,4 @@
+/* ─── BARRA LATERAL ─── */
 /* Barra lateral de navegación */
 .sidebar {
   width: 260px;
@@ -128,15 +129,18 @@
   gap: 12px;
   transition: background 0.2s;
 }
+
 .sidebar li:hover {
   background: rgba(255,255,255,0.1);
 }
+
 .sidebar li.active {
   background: rgba(255,255,255,0.2);
   color: white;
   font-weight: 600;
 }
 
+/* ─── SUBMENÚ ─── */
 /* Submenú de Usuarios */
 .sidebar li.has-submenu {
   flex-direction: column;
@@ -144,6 +148,7 @@
   padding: 0;
   gap: 0;
 }
+
 .submenu-trigger {
   display: flex;
   align-items: center;
@@ -158,11 +163,13 @@
 .submenu-trigger:hover { background: rgba(255,255,255,0.1); }
 .submenu-trigger .chevron { margin-left: auto; transition: transform 0.2s; }
 .submenu-trigger .chevron.open { transform: rotate(180deg); }
+
 .submenu {
   list-style: none;
   padding: 0 0 8px 0 !important;
   margin: 0 !important;
 }
+
 .submenu li {
   padding: 10px 16px 10px 46px !important;
   font-size: 13px !important;
@@ -170,11 +177,12 @@
   margin-bottom: 2px !important;
 }
 
-/* Responsive */
+/* ─── RESPONSIVE ─── */
 @media (max-width: 768px) {
   .sidebar {
     transform: translateX(-100%);
   }
+
   .sidebar-close {
     display: flex;
   }

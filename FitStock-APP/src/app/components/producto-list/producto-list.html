@@ -1,15 +1,18 @@
 <!-- Página de productos en stock con carrito de compras -->
+<!-- Diseño de página con listado de productos -->
 <div class="page-layout">
+  <!-- Área principal del listado -->
   <div class="main-area">
     <!-- Cabecera con título y acciones -->
     <div class="header-actions">
       <h2 class="page-title">Productos</h2>
+      <!-- Botones de acción en cabecera. Crear visible solo para no clientes -->
       <div class="header-right">
         <button class="btn-create" (click)="abrirModal()" *ngIf="userRole !== 'cliente'">+ Crear Producto</button>
       </div>
     </div>
 
-    <!-- Mensajes de error y éxito -->
+    <!-- Mensajes de error y éxito condicionales -->
     @if (error) {
       <div class="error-msg">{{ error }}</div>
     }
@@ -37,7 +40,7 @@
             <span class="qty-value" [class.low]="p.cantidad <= p.stock_minimo">{{ p.cantidad }}</span>
           </div>
         </div>
-        <!-- Acciones por producto: carrito, editar, borrar -->
+        <!-- Acciones por producto: carrito (todos), editar y borrar (solo no clientes) -->
         <div class="card-actions">
           <button class="btn-add" (click)="agregarAlCarrito(p)" [disabled]="p.cantidad <= 0" title="Añadir al carrito"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></button>
           <button class="btn-edit-icon" (click)="abrirEditar(p)" title="Editar producto" *ngIf="userRole !== 'cliente'"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></button>

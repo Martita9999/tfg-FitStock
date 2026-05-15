@@ -39,6 +39,7 @@ class Usuario {
         return null;
     }
 
+    // Busca un usuario por su dirección de email (debe ser único en la BD)
     public static function obtenerPorEmail($email) {
         $conexion = Conexion::conectar();
         $stmt = $conexion->prepare("SELECT * FROM usuarios WHERE email = ?");
@@ -84,6 +85,9 @@ class Usuario {
         return $stmt->execute([$nuevoId, $nombre, $email, $password_hash, $rol]);
     }
 
+    // Actualiza un usuario existente desde el panel de administración.
+    // Construye la consulta SQL dinámicamente: solo incluye password_hash y rol
+    // si se proporcionan (evita sobrescribir con null cuando no se modifican).
     public static function actualizarAdmin($id, $nombre, $email, $password = null, $rol = null) {
         $conexion = Conexion::conectar();
         $campos = [];

@@ -1,3 +1,4 @@
+<!-- Página de gestión de préstamos de material deportivo -->
 <div class="loans-page">
   <!-- Cabecera -->
   <div class="loans-header">
@@ -14,6 +15,7 @@
     </button>
   </div>
 
+  <!-- Mensaje de error condicional -->
   @if (error) {
     <div class="error-msg">{{ error }}</div>
   }
@@ -45,6 +47,7 @@
       {{ userRole === 'cliente' ? 'Mis Préstamos' : 'Préstamos Activos' }}
     </h3>
 
+    <!-- Listado de préstamos del usuario actual -->
     @if (prestamosUser.length > 0) {
       <div class="loans-grid">
         @for (p of prestamosUser; track p.id) {
@@ -63,15 +66,18 @@
               </span>
             </div>
             <div class="loan-card-bottom">
+              <!-- Botón para marcar como devuelto (solo si no está devuelto) -->
               @if (!p.devolucion) {
                 <button class="btn-return" (click)="devolverPrestamo(p.id)">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                   Marcar Devuelto
                 </button>
               }
+              <!-- Fecha de devolución si ya se devolvió -->
               @if (p.devolucion) {
                 <span class="return-date">Devuelto {{ p.devolucion | date:'dd/MM/yyyy' }}</span>
               }
+              <!-- Acciones de administración (editar/borrar) solo para no clientes -->
               <div class="loan-actions" *ngIf="userRole !== 'cliente'">
                 <button class="btn-icon" (click)="abrirEditar(p)" title="Editar fecha">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
@@ -102,6 +108,7 @@
       <span class="material-count" *ngIf="grupos.length > 0">{{ grupos.length }} grupos</span>
     </div>
 
+    <!-- Grid de materiales disponibles con control de cantidad -->
     @if (grupos.length > 0) {
       <div class="materials-grid">
         @for (g of grupos; track g.nombre) {
@@ -123,6 +130,7 @@
               <button class="qty-btn" (click)="incrementar(g)" [disabled]="g.seleccionados >= g.disponibles">+</button>
             </div>
 
+            <!-- Acciones de administración sobre materiales (editar/borrar) -->
             @if (userRole !== 'cliente') {
               <div class="material-actions">
                 <button class="btn-outline" (click)="abrirEditarGrupo(g)">

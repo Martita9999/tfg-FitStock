@@ -1,15 +1,20 @@
+<!-- Página de gestión de usuarios -->
 <div>
+  <!-- Cabecera con título dinámico y botón crear -->
   <div class="header-actions">
     <h2 class="page-title">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       {{ tituloPagina }}
+      <!-- Enlace "Ver todos" cuando se filtra por un rol específico -->
       @if (filtroRol) {
         <a class="btn-all" (click)="irATodos()">Ver todos</a>
       }
     </h2>
+    <!-- Botón de crear usuario (visible solo para admin) -->
     <button class="btn-create" (click)="abrirModal()" *ngIf="userRole === 'admin'">+ Crear Usuario</button>
   </div>
 
+  <!-- Tabla de usuarios filtrados por rol -->
   <table class="data-table" *ngIf="listaFiltrada.length > 0">
     <thead>
       <tr>
@@ -33,6 +38,7 @@
           </span>
         </td>
         <td>
+          <!-- Acciones por usuario: editar, cambiar contraseña, borrar -->
           <div class="action-btns">
             <button class="btn-edit" (click)="abrirEditar(u)" title="Editar usuario" *ngIf="(userRole === 'admin' || userRole === 'entrenador') && (userRole === 'admin' || u.rol !== 'admin')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></button>
             <!-- Botón <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg> para solicitar cambio de contraseña (solo admin/entrenador sobre clientes no admin que no tengan ya una solicitud pendiente) -->
@@ -46,11 +52,13 @@
     </tbody>
   </table>
 
+  <!-- Estado cuando no hay usuarios que coincidan con el filtro -->
   <div class="empty-state" *ngIf="listaFiltrada.length === 0">
     <p>{{ filtroRol ? 'No hay ' + tituloPagina.toLowerCase() + ' registrados.' : 'No hay usuarios registrados.' }}</p>
   </div>
 </div>
 
+<!-- Modal de creación de usuario -->
 <div class="modal-overlay" *ngIf="showModal" (click)="cerrarModal()">
   <div class="modal-card" (click)="$event.stopPropagation()">
     <div class="modal-header">
@@ -89,6 +97,7 @@
   </div>
 </div>
 
+<!-- Modal de edición de usuario -->
 <div class="modal-overlay" *ngIf="showEditModal" (click)="cerrarEditar()">
   <div class="modal-card" (click)="$event.stopPropagation()">
     <div class="modal-header">

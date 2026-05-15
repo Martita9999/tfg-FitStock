@@ -19,6 +19,8 @@ export class ResumenService {
   private API_URL = 'http://localhost:8000/api';
   private httpOptions = { withCredentials: true };
 
+  // Obtiene los datos de resumen del panel de administración
+  // (incidencias, stock bajo, máquinas por estado y gastos totales/por usuario)
   obtenerResumen() {
     return this.http.get<ResumenData>(`${this.API_URL}/resumen`, this.httpOptions);
   }

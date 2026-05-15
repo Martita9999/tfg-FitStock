@@ -32,7 +32,7 @@ class Producto {
         return $productos;   // Devuelve array de objetos Producto
     }
 
-    // Busca un producto por su ID
+    // Busca un producto por su ID y devuelve una instancia de Producto o null si no existe
     public static function obtenerPorId($id) {
         $conexion = Conexion::conectar();
         $stmt = $conexion->prepare("SELECT * FROM productos_stock WHERE id_producto = ?");
@@ -44,7 +44,8 @@ class Producto {
         return null;
     }
 
-    // Obtiene productos con stock por debajo del mínimo
+    // Obtiene productos cuya cantidad actual es menor o igual al stock mínimo.
+    // Utilizado por el dashboard para alertar sobre productos que necesitan reposición.
     public static function obtenerStockBajo() {
         $conexion = Conexion::conectar();
         $stmt = $conexion->prepare("SELECT * FROM productos_stock WHERE cant_actual <= stock_minimo ORDER BY nombre_prod");
@@ -95,5 +96,6 @@ class Producto {
     public function getCantidadActual() { return $this->cant_actual; }
     public function getStockMinimo() { return $this->stock_minimo; }
     public function getPrecio() { return $this->precio; }
-    public function tieneStockBajo() { return $this->cant_actual <= $this->stock_minimo; }  // Comprueba si el stock está bajo
+    // Comprueba si la cantidad actual está por debajo del mínimo establecido, útil para alertas de reposición
+    public function tieneStockBajo() { return $this->cant_actual <= $this->stock_minimo; }
 }

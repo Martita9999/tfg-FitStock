@@ -34,7 +34,8 @@ class Prestamo {
         return $prestamos;   // Devuelve array de objetos Prestamo
     }
 
-    // Obtiene solo los préstamos activos (sin fecha de devolución)
+    // Obtiene solo los préstamos activos (aquellos sin fecha de devolución).
+    // Filtra con fecha_devolucion IS NULL para mostrar solo material aún no devuelto.
     public static function obtenerActivos() {
         $conexion = Conexion::conectar();
         $stmt = $conexion->prepare("SELECT p.*, u.nombre as nombre_usuario, m.nombre_equipo FROM prestamos p LEFT JOIN usuarios u ON p.id_usuario = u.id_usuario LEFT JOIN material m ON p.id_material = m.id_material WHERE p.fecha_devolucion IS NULL ORDER BY p.fecha_inicio DESC");
@@ -86,6 +87,6 @@ class Prestamo {
     public function getFechaDevolucion() { return $this->fecha_devolucion; }
     public function getUsuarioNombre() { return $this->nombre_usuario; }
     public function getMaterialNombre() { return $this->nombre_material; }
-    public function getFecha() { return $this->fecha_inicio; }   // Alias para compatibilidad
-    public function estaDevuelto() { return $this->fecha_devolucion !== null; }  // Comprueba si está devuelto
+    public function getFecha() { return $this->fecha_inicio; }   // Alias para compatibilidad con el frontend
+    public function estaDevuelto() { return $this->fecha_devolucion !== null; }  // Comprueba si el material ya fue devuelto
 }

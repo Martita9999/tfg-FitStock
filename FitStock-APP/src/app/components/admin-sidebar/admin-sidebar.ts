@@ -15,8 +15,8 @@ import { UsuarioService, Usuario } from '../../services/usuario';
 export class AdminSidebarComponent implements OnInit {
   private usuarioService = inject(UsuarioService);
   private router = inject(Router);
-  user: Usuario | null = null;
-  darkMode = false; // Estado del tema oscuro local
+  user: Usuario | null = null;  // Usuario actual autenticado
+  darkMode = false;             // Estado del tema oscuro local
   // Propiedades de entrada/salida para controlar el colapso de la sidebar
   @Input() collapsed = false;         // Indica si la sidebar está colapsada
   @Output() toggleSidebar = new EventEmitter<void>(); // Emite evento al alternar colapso
@@ -47,12 +47,14 @@ export class AdminSidebarComponent implements OnInit {
     }
   }
 
-  usuariosSubmenuOpen = false;
+  usuariosSubmenuOpen = false;  // Controla la expansión del submenú de usuarios
 
+  // Alterna la apertura/cierre del submenú de usuarios
   toggleUsuariosSubmenu() {
     this.usuariosSubmenuOpen = !this.usuariosSubmenuOpen;
   }
 
+  // Cierra la sesión del usuario y redirige a la pantalla de login
   logout() {
     this.usuarioService.logout().subscribe(() => {
       this.router.navigate(['/login']);

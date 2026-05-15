@@ -1,17 +1,21 @@
 <!-- Página de registro de nuevo usuario -->
+<!-- Contenedor principal del registro -->
 <div class="registro-wrapper">
+  <!-- Tarjeta de registro -->
   <div class="registro-card">
+    <!-- Cabecera con logo y título -->
     <div class="registro-header">
       <div class="logo-icon">F</div>
       <h2>Crear Cuenta</h2>
       <p>Regístrate en FitStock</p>
     </div>
+    <!-- Cuerpo del formulario de registro -->
     <div class="registro-body">
-      <!-- Mensaje de error -->
+      <!-- Mensaje de error condicional -->
       @if (error) {
         <div class="error-msg">{{ error }}</div>
       }
-      <!-- Mensaje de éxito con redirección automática -->
+      <!-- Mensaje de éxito condicional con redirección automática -->
       @if (success) {
         <div class="success-msg">Cuenta creada. Redirigiendo...</div>
       }

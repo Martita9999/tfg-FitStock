@@ -1,3 +1,4 @@
+<!-- Contenedor principal del login -->
 <div class="login-wrapper">
   <!-- Botón para alternar entre modo claro y modo oscuro -->
   <button class="theme-toggle" (click)="toggleDarkMode()">
@@ -7,13 +8,17 @@
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
     }
   </button>
+  <!-- Tarjeta de inicio de sesión -->
   <div class="login-card">
+    <!-- Cabecera con logo y título -->
     <div class="login-header">
       <div class="logo-icon">F</div>
       <h2>FitStock</h2>
       <p>Inicia sesión para continuar</p>
     </div>
+    <!-- Cuerpo del formulario de login -->
     <div class="login-body">
+      <!-- Mensaje de error condicional -->
       @if (error) {
         <div class="error-msg">{{ error }}</div>
       }
@@ -29,6 +34,7 @@
         </div>
         <button type="submit" class="btn-primary">Iniciar Sesión</button>
       </form>
+      <!-- Enlaces de navegación: registro y portal -->
       <div class="register-link">
         ¿No tienes cuenta? <a (click)="goToRegistro()">Regístrate</a>
         <span class="separator">|</span>

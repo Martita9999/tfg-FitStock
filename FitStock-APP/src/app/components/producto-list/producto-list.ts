@@ -14,39 +14,45 @@ import { ProductoStock } from '../../interfaces/app.interfaces';
   templateUrl: './producto-list.html',
   styleUrl: './producto-list.css',
 })
+// Componente que lista, crea, edita y elimina productos del inventario
+// con soporte de imágenes, carrito de compras y control de stock mínimo
 export class ProductoList implements OnInit {
-  private productosService = inject(ProductosService);
-  private usuarioService = inject(UsuarioService);
-  cartService = inject(CartService);
-  lista: ProductoStock[] = [];
-  userRole = '';
+  private productosService = inject(ProductosService);   // Servicio de productos
+  private usuarioService = inject(UsuarioService);       // Servicio de autenticación
+  cartService = inject(CartService);                     // Servicio del carrito de compras
+  lista: ProductoStock[] = [];     // Lista completa de productos desde la API
+  userRole = '';                   // Rol del usuario autenticado
 
-  showModal = false;
-  newProducto = { nombre: '', descripcion: '', cantidad: 0, stock_minimo: 0, precio: 0 };
-  selectedFile: File | null = null;
-  previewUrl: string | null = null;
-  error = '';
-  successMsg = '';
+  showModal = false;                                                        // Control del modal de creación
+  newProducto = { nombre: '', descripcion: '', cantidad: 0, stock_minimo: 0, precio: 0 };  // Datos del nuevo producto
+  selectedFile: File | null = null;    // Archivo de imagen seleccionado para subir
+  previewUrl: string | null = null;    // URL de previsualización de la imagen
+  error = '';                          // Mensaje de error
+  successMsg = '';                     // Mensaje de éxito
 
-  showEditModal = false;
-  editProducto: ProductoStock | null = null;
-  editProductoData = { nombre: '', descripcion: '', cantidad: 0, stock_minimo: 0, precio: 0 };
+  showEditModal = false;                                                    // Control del modal de edición
+  editProducto: ProductoStock | null = null;                                // Producto en edición
+  editProductoData = { nombre: '', descripcion: '', cantidad: 0, stock_minimo: 0, precio: 0 };  // Datos editados
 
+  // Al iniciar, se suscribe al usuario actual y carga la lista de productos
   ngOnInit() {
     this.usuarioService.currentUser$.subscribe(u => this.userRole = u?.rol ?? '');
     this.loadProductos();
   }
 
+  // Carga la lista de productos desde la API
   loadProductos() {
     this.productosService.getProductos().subscribe(data => {
       this.lista = data;
     });
   }
 
+  // Track function para ngFor optimizado por ID
   trackById(index: number, p: ProductoStock) {
     return p.id;
   }
 
+  // Agrega un producto al carrito de compras
   agregarAlCarrito(p: ProductoStock) {
     this.cartService.agregar(p);
   }
