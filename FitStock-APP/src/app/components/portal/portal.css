@@ -26,7 +26,7 @@
 
 /* Título principal: "FitStock" con degradado naranja-azul y gran tamaño */
 .hero-title {
-  font-size: 100px;                                 /* Tamaño muy grande para hero */
+  font-size: 120px;                                 /* Tamaño muy grande para hero */
   font-weight: 900;                                 /* Peso máximo (black) */
   background: linear-gradient(135deg, #f97316, #3b82f6);  /* Degradado naranja → azul */
   -webkit-background-clip: text;                    /* Recorta el degradado al texto (WebKit) */
@@ -44,16 +44,16 @@
 
 /* Botón de llamada a la acción (CTA) */
 .btn-cta {
-  padding: 14px 40px;                               /* Relleno generoso para botón grande */
-  background: linear-gradient(135deg, #f97316, #ea580c);  /* Degradado naranja */
+  padding: 18px 48px;                               /* Relleno generoso para botón grande */
+  background: linear-gradient(135deg, #d97706, #c2410c);  /* Degradado naranja más sobrio */
   color: white;
   border: none;                                     /* Sin borde */
   border-radius: 12px;                              /* Esquinas redondeadas */
-  font-size: 16px;
+  font-size: 22px;
   font-weight: 700;                                 /* Negrita */
   cursor: pointer;                                  /* Manito al hacer hover */
   font-family: inherit;                             /* Hereda la fuente del padre */
-  box-shadow: 0 8px 28px rgba(249, 115, 22, 0.4);  /* Sombra naranja para profundidad */
+  box-shadow: 0 6px 20px rgba(217, 119, 6, 0.3);   /* Sombra más sutil */
   transition: transform 0.2s;                       /* Animación suave al hacer hover */
 }
 
@@ -78,18 +78,18 @@
 
 /* Título genérico de sección con degradado naranja */
 .section-title {
-  font-size: 36px;
+  font-size: 44px;
   font-weight: 800;                                 /* Extra bold */
   background: linear-gradient(135deg, #f97316, #fb923c);  /* Degradado naranja */
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  margin-bottom: 16px;                              /* Espaciado inferior respecto al párrafo */
+  margin-bottom: 20px;                              /* Espaciado inferior respecto al párrafo */
 }
 
 /* Texto descriptivo genérico de sección */
 .section-text {
-  font-size: 16px;
+  font-size: 21px;
   color: #ffffff;                                   /* Blanco puro */
   line-height: 1.8;                                 /* Interlineado amplio para legibilidad */
 }
@@ -164,6 +164,11 @@
 
 /* ─── ICONOS Y TEXTO DE FUNCIONALIDAD ─── */
 /* Contenedor del icono SVG de cada funcionalidad */
+.feature-icon svg {
+  width: 68px;
+  height: 68px;
+}
+
 .feature-icon {
   color: #f97316;                                   /* Color naranja para los SVGs */
   margin-bottom: 16px;                              /* Espaciado inferior respecto al título */
@@ -171,19 +176,19 @@
 
 /* Título de cada funcionalidad */
 .feature-title {
-  font-size: 32px;
+  font-size: 38px;
   font-weight: 800;
-  margin-bottom: 12px;                              /* Separación respecto a la descripción */
+  margin-bottom: 14px;                              /* Separación respecto a la descripción */
   color: #ffffff;                                   /* Blanco puro */
   letter-spacing: 1px;                              /* Espaciado para impacto visual */
 }
 
 /* Descripción detallada de cada funcionalidad */
 .feature-desc {
-  font-size: 16px;
+  font-size: 19px;
   color: #ffffff;                                   /* Blanco puro para destacar sobre fondos oscuros */
-  line-height: 1.7;
-  max-width: 580px;                                 /* Limita el ancho para mejor lectura */
+  line-height: 1.8;
+  max-width: 620px;                                 /* Limita el ancho para mejor lectura */
   margin: 0 auto;                                   /* Centrado */
   font-family: 'Segoe UI', system-ui, sans-serif;   /* Descripción con fuente legible */
 }
@@ -210,7 +215,7 @@
   }
 
   .section-title {
-    font-size: 28px;                                /* Títulos de sección más compactos */
+    font-size: 32px;                                /* Títulos de sección más compactos */
   }
 
   .feature-title {
