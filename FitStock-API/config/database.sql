@@ -161,6 +161,20 @@ INSERT INTO productos_stock (nombre_prod, descripcion, cant_actual, stock_minimo
 INSERT INTO incidencias (id_material, id_user_rep, descripcion, prioridad, estado_inc, fecha_resolucion) VALUES
 (26, 1, 'ROTO', 'media', 'resuelta', '2026-05-11 12:54:03');
 
+-- Préstamos de ejemplo
+INSERT INTO prestamos (id_usuario, id_material, fecha_inicio, fecha_devolucion, estado) VALUES
+(2, 1, '2026-05-01 10:00:00', '2026-05-05', 'devuelto'),
+(3, 2, '2026-05-10 12:00:00', '2026-05-15', 'devuelto'),
+(3, 3, '2026-05-14 09:00:00', NULL, 'activo'),
+(2, 5, '2026-05-16 11:00:00', NULL, 'pendiente');
+
+-- Compras de ejemplo
+INSERT INTO compras (id_usuario, id_producto, cantidad, precio_unitario, total, fecha_compra) VALUES
+(3, 1, 2, 2.50, 5.00, '2026-05-02 14:30:00'),
+(3, 3, 1, 25.00, 25.00, '2026-05-05 10:00:00'),
+(2, 1, 3, 2.50, 7.50, '2026-05-08 16:00:00'),
+(3, 4, 1, 40.00, 40.00, '2026-05-10 09:00:00'),
+(2, 5, 2, 20.00, 40.00, '2026-05-12 11:00:00');
 
 -- Usuario de BD para la aplicacion (ejecutar como root si no existe)
 CREATE USER IF NOT EXISTS fitstock IDENTIFIED BY 'Tokio2324';
