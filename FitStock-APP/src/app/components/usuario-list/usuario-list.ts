@@ -3,8 +3,16 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { UsuarioService } from '../../services/usuario';
+import { ComprasService } from '../../services/compras.service';
+import { PrestamosService } from '../../services/prestamos.service';
+import { IncidenciasService } from '../../services/incidencias.service';
 import { Usuario } from '../../interfaces/app.interfaces';
 
+/*
+ * UsuarioList: CRUD de usuarios del sistema.
+ * Filtro por rol desde URL (/admin/usuarios/:rol).
+ * Título dinámico, creación, edición, forzar cambio de contraseña y eliminación.
+ */
 @Component({
   selector: 'app-usuario-list',
   standalone: true,
@@ -12,44 +20,46 @@ import { Usuario } from '../../interfaces/app.interfaces';
   templateUrl: './usuario-list.html',
   styleUrl: './usuario-list.css',
 })
-// Componente que lista, crea, edita y elimina usuarios del sistema,
-// con filtro por rol y opción de forzar cambio de contraseña
 export class UsuarioList implements OnInit {
-  private usuarioService = inject(UsuarioService);     // Servicio de usuarios
-  private route = inject(ActivatedRoute);               // Ruta activa para leer parámetros (rol)
-  private router = inject(Router);                      // Router para navegación programática
-  lista: Usuario[] = [];           // Lista completa de usuarios desde la API
-  listaFiltrada: Usuario[] = [];   // Lista filtrada según el rol seleccionado
-  userRole = '';                   // Rol del usuario autenticado
-  filtroRol = '';                  // Rol por el que se filtra (desde la URL)
+  private usuarioService = inject(UsuarioService);
+  private comprasService = inject(ComprasService);
+  private prestamosService = inject(PrestamosService);
+  private incidenciasService = inject(IncidenciasService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  lista: Usuario[] = [];
+  listaFiltrada: Usuario[] = [];
+  userRole = '';
+  filtroRol = '';
+  busquedaEmail = '';
 
-  showModal = false;                                                     // Control del modal de creación
-  newUser = { nombre: '', email: '', password: '', rol: 'cliente' };     // Datos del nuevo usuario
-  error = '';                      // Mensaje de error
+  /* resumenUsuario: mapa de resúmenes por id de usuario */
+  resumenUsuario: Record<number, { totalGastado: number; prestamosPendientes: number; tieneIncidencias: boolean }> = {};
 
-  showEditModal = false;                                  // Control del modal de edición
-  editUser: Usuario | null = null;                        // Usuario en edición
-  editUserData = { nombre: '', email: '', rol: 'cliente' };  // Datos editados del usuario
+  showModal = false;
+  newUser = { nombre: '', email: '', password: '', rol: 'cliente' };
+  error = '';
 
-  // Al iniciar, se suscribe al usuario actual, lee el parámetro de ruta 'rol'
-  // y carga la lista de usuarios
+  showEditModal = false;
+  editUser: Usuario | null = null;
+  editUserData = { nombre: '', email: '', rol: 'cliente' };
+
   ngOnInit() {
     this.usuarioService.currentUser$.subscribe(u => this.userRole = u?.rol ?? '');
     this.route.paramMap.subscribe(params => {
-      this.filtroRol = params.get('rol') || '';
+      this.filtroRol = params.get('rol') || '';                           // Lee :rol de la URL
       if (this.lista.length > 0) this.aplicarFiltro();
     });
     this.loadUsuarios();
+    this.cargarResumenes();
   }
 
-  // Devuelve el título dinámico de la página según el filtro de rol activo
   get tituloPagina(): string {
     if (!this.filtroRol) return 'Usuarios';
     const nombres: Record<string, string> = { admin: 'Administradores', entrenador: 'Entrenadores', cliente: 'Clientes' };
     return nombres[this.filtroRol] || 'Usuarios';
   }
 
-  // Carga todos los usuarios desde la API y aplica el filtro de rol si existe
   loadUsuarios() {
     this.usuarioService.getUsuarios().subscribe(data => {
       this.lista = data;
@@ -57,33 +67,72 @@ export class UsuarioList implements OnInit {
     });
   }
 
-  private aplicarFiltro() {
-    if (this.filtroRol) {
-      this.listaFiltrada = this.lista.filter(u => u.rol === this.filtroRol);
-    } else {
-      this.listaFiltrada = [...this.lista];
+  aplicarFiltro() {
+    let filtrados = this.filtroRol
+      ? this.lista.filter(u => u.rol === this.filtroRol)
+      : [...this.lista];
+    if (this.userRole === 'entrenador') {
+      filtrados = filtrados.filter(u => u.rol !== 'admin');
     }
+    if (this.busquedaEmail) {
+      const q = this.busquedaEmail.toLowerCase();
+      filtrados = filtrados.filter(u => u.email.toLowerCase().includes(q));
+    }
+    this.listaFiltrada = filtrados;
   }
 
-  // Navega a la ruta de usuarios sin filtro para mostrar todos
   irATodos() {
     this.router.navigate(['/admin/usuarios']);
   }
 
-  // Abre el modal de creación de usuario con valores por defecto
+  /* cargarResumenes: obtiene compras, préstamos e incidencias para calcular resumen por usuario */
+  private cargarResumenes() {
+    /* Iniciamos todos en 0/false */
+    this.resumenUsuario = {};
+
+    this.comprasService.getCompras().subscribe(compras => {
+      for (const c of compras) {
+        if (!this.resumenUsuario[c.id_usuario]) {
+          this.resumenUsuario[c.id_usuario] = { totalGastado: 0, prestamosPendientes: 0, tieneIncidencias: false };
+        }
+        this.resumenUsuario[c.id_usuario].totalGastado += c.total;
+      }
+    });
+
+    this.prestamosService.getPrestamos().subscribe(prestamos => {
+      for (const p of prestamos) {
+        if (!p.id_usuario) continue;
+        if (!this.resumenUsuario[p.id_usuario]) {
+          this.resumenUsuario[p.id_usuario] = { totalGastado: 0, prestamosPendientes: 0, tieneIncidencias: false };
+        }
+        if (!p.devolucion) {
+          this.resumenUsuario[p.id_usuario].prestamosPendientes++;
+        }
+      }
+    });
+
+    this.incidenciasService.getIncidencias().subscribe(incidencias => {
+      for (const i of incidencias) {
+        if (!i.id_user_rep) continue;
+        if (!this.resumenUsuario[i.id_user_rep]) {
+          this.resumenUsuario[i.id_user_rep] = { totalGastado: 0, prestamosPendientes: 0, tieneIncidencias: false };
+        }
+        this.resumenUsuario[i.id_user_rep].tieneIncidencias = true;
+      }
+    });
+  }
+
   abrirModal() {
     this.newUser = { nombre: '', email: '', password: '', rol: 'cliente' };
     this.error = '';
     this.showModal = true;
   }
 
-  // Cierra el modal de creación y limpia errores
   cerrarModal() {
     this.showModal = false;
     this.error = '';
   }
 
-  // Valida los campos obligatorios y envía los datos para crear un nuevo usuario
   crearUsuario() {
     this.error = '';
     if (!this.newUser.nombre || !this.newUser.email || !this.newUser.password) {
@@ -106,7 +155,6 @@ export class UsuarioList implements OnInit {
     });
   }
 
-  // Abre el modal de edición precargando los datos del usuario seleccionado
   abrirEditar(u: Usuario) {
     this.editUser = u;
     this.editUserData = {
@@ -118,14 +166,12 @@ export class UsuarioList implements OnInit {
     this.showEditModal = true;
   }
 
-  // Cierra el modal de edición y limpia errores
   cerrarEditar() {
     this.showEditModal = false;
     this.editUser = null;
     this.error = '';
   }
 
-  // Valida y envía los cambios del usuario editado al backend
   guardarEditar() {
     if (!this.editUser) return;
     this.error = '';
@@ -144,20 +190,18 @@ export class UsuarioList implements OnInit {
     });
   }
 
-  // Solicita al backend que fuerce al usuario a cambiar su contraseña
-  // en el próximo inicio de sesión. Actualiza localmente el indicador.
+  /* forzarCambioPassword: marca usuario para que cambie contraseña en próximo login */
   forzarCambioPassword(u: Usuario) {
     if (!confirm(`¿Enviar solicitud de cambio de contraseña a "${u.nombre}"?`)) return;
     this.usuarioService.forzarCambioPassword(u.id).subscribe({
       next: () => {
-        u.forzar_cambio_password = 1;
+        u.forzar_cambio_password = 1;                                     // Actualiza visualmente
         this.error = '';
       },
       error: () => { this.error = 'Error al enviar la solicitud'; }
     });
   }
 
-  // Confirma y elimina un usuario por su ID tras la confirmación del usuario
   borrarUsuario(id: number, nombre: string) {
     if (!confirm(`¿Borrar usuario "${nombre}"?`)) return;
     this.usuarioService.deleteUsuario(id).subscribe({

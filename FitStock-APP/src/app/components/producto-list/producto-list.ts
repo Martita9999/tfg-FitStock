@@ -7,6 +7,11 @@ import { UsuarioService } from '../../services/usuario';
 import { CartService } from '../../services/cart.service';
 import { ProductoStock } from '../../interfaces/app.interfaces';
 
+/*
+ * ProductoList: CRUD de productos del inventario.
+ * Incluye subida de imágenes con previsualización, carrito de compras,
+ * control de stock mínimo y manejo de errores de imagen con reintento.
+ */
 @Component({
   selector: 'app-producto-list',
   standalone: true,
@@ -14,50 +19,46 @@ import { ProductoStock } from '../../interfaces/app.interfaces';
   templateUrl: './producto-list.html',
   styleUrl: './producto-list.css',
 })
-// Componente que lista, crea, edita y elimina productos del inventario
-// con soporte de imágenes, carrito de compras y control de stock mínimo
 export class ProductoList implements OnInit {
-  private productosService = inject(ProductosService);   // Servicio de productos
-  private usuarioService = inject(UsuarioService);       // Servicio de autenticación
-  cartService = inject(CartService);                     // Servicio del carrito de compras
-  lista: ProductoStock[] = [];     // Lista completa de productos desde la API
-  userRole = '';                   // Rol del usuario autenticado
+  private productosService = inject(ProductosService);
+  private usuarioService = inject(UsuarioService);
+  cartService = inject(CartService);
+  lista: ProductoStock[] = [];
+  userRole = '';
+  selectedProductId: number | null = null;
 
-  showModal = false;                                                        // Control del modal de creación
-  newProducto = { nombre: '', descripcion: '', cantidad: 0, stock_minimo: 0, precio: 0 };  // Datos del nuevo producto
-  selectedFile: File | null = null;    // Archivo de imagen seleccionado para subir
-  previewUrl: string | null = null;    // URL de previsualización de la imagen
-  error = '';                          // Mensaje de error
-  successMsg = '';                     // Mensaje de éxito
+  showModal = false;
+  newProducto = { nombre: '', descripcion: '', cantidad: 0, stock_minimo: 0, precio: 0 };
+  selectedFile: File | null = null;
+  previewUrl: string | null = null;
+  error = '';
+  successMsg = '';
 
-  showEditModal = false;                                                    // Control del modal de edición
-  editProducto: ProductoStock | null = null;                                // Producto en edición
-  editProductoData = { nombre: '', descripcion: '', cantidad: 0, stock_minimo: 0, precio: 0 };  // Datos editados
+  showEditModal = false;
+  editProducto: ProductoStock | null = null;
+  editProductoData = { nombre: '', descripcion: '', cantidad: 0, stock_minimo: 0, precio: 0 };
 
-  // Al iniciar, se suscribe al usuario actual y carga la lista de productos
   ngOnInit() {
     this.usuarioService.currentUser$.subscribe(u => this.userRole = u?.rol ?? '');
     this.loadProductos();
   }
 
-  // Carga la lista de productos desde la API
   loadProductos() {
     this.productosService.getProductos().subscribe(data => {
       this.lista = data;
     });
   }
 
-  // Track function para ngFor optimizado por ID
   trackById(index: number, p: ProductoStock) {
     return p.id;
   }
 
-  // Agrega un producto al carrito de compras
-  agregarAlCarrito(p: ProductoStock) {
+  toggleDescripcion(p: ProductoStock) {
+    this.selectedProductId = this.selectedProductId === p.id ? null : p.id;  // Toggle descripción
     this.cartService.agregar(p);
+    this.cartService.triggerOpenCart();                                   // Abre el carrito automáticamente
   }
 
-  // Abre el modal de creación de producto
   abrirModal() {
     this.newProducto = { nombre: '', descripcion: '', cantidad: 0, stock_minimo: 0, precio: 0 };
     this.selectedFile = null;
@@ -66,17 +67,15 @@ export class ProductoList implements OnInit {
     this.showModal = true;
   }
 
-  // Cierra el modal de creación
   cerrarModal() {
     this.showModal = false;
     this.error = '';
     this.previewUrl = null;
   }
 
-  // Envía los datos para crear un nuevo producto
   async crearProducto() {
     this.error = '';
-    if (!this.newProducto.nombre) {              // Validación: nombre obligatorio
+    if (!this.newProducto.nombre) {
       this.error = 'El nombre es obligatorio';
       return;
     }
@@ -88,9 +87,8 @@ export class ProductoList implements OnInit {
         stock_minimo: this.newProducto.stock_minimo,
         precio: this.newProducto.precio,
       }));
-      // Si hay imagen seleccionada, espera a que termine la subida antes de recargar
       if (this.selectedFile) {
-        await firstValueFrom(this.productosService.subirImagen(this.newProducto.nombre, this.selectedFile));
+        await firstValueFrom(this.productosService.subirImagen(this.newProducto.nombre, this.selectedFile));  // Sube imagen tras crear
       }
       this.cerrarModal();
       this.loadProductos();
@@ -99,20 +97,17 @@ export class ProductoList implements OnInit {
     }
   }
 
-  // Guarda el archivo seleccionado y genera una previsualización
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       this.selectedFile = input.files[0];
-      // Limpia la URL anterior si existe
       if (this.previewUrl) {
         URL.revokeObjectURL(this.previewUrl);
       }
-      this.previewUrl = URL.createObjectURL(this.selectedFile);
+      this.previewUrl = URL.createObjectURL(this.selectedFile);             // Previsualización local
     }
   }
 
-  // Abre el modal de edición con los datos del producto seleccionado
   abrirEditar(p: ProductoStock) {
     this.editProducto = p;
     this.editProductoData = {
@@ -126,18 +121,16 @@ export class ProductoList implements OnInit {
     this.showEditModal = true;
   }
 
-  // Cierra el modal de edición
   cerrarEditar() {
     this.showEditModal = false;
     this.editProducto = null;
     this.error = '';
   }
 
-  // Guarda los cambios del producto editado
   guardarEditar() {
     if (!this.editProducto) return;
     this.error = '';
-    if (!this.editProductoData.nombre) {              // Validación: nombre obligatorio
+    if (!this.editProductoData.nombre) {
       this.error = 'El nombre es obligatorio';
       return;
     }
@@ -153,25 +146,23 @@ export class ProductoList implements OnInit {
     });
   }
 
-  // Construye la URL absoluta de la imagen del producto a partir de su nombre
   getImagenUrl(nombre: string): string {
     return '/images/productos/' + encodeURIComponent(nombre) + '.jpg';
   }
 
-  // Reintenta cargar la imagen tras 2s (por si aún se está subiendo), luego la oculta
+  /* onImgError: reintenta cargar imagen 1 vez, si falla oculta el elemento */
   onImgError(event: Event) {
     const img = event.target as HTMLImageElement;
     if (!img.getAttribute('data-retried')) {
       img.setAttribute('data-retried', '1');
-      setTimeout(() => { img.src = img.src; }, 2000);
+      setTimeout(() => { img.src = img.src; }, 2000);                       // Reintenta tras 2s
     } else {
-      img.style.display = 'none';
+      img.style.display = 'none';                                            // Oculta si sigue fallando
     }
   }
 
-  // Confirma y elimina un producto por su ID
   borrarProducto(id: number, nombre: string) {
-    if (!confirm(`¿Borrar producto "${nombre}"?`)) return;    // Confirmación del usuario
+    if (!confirm(`¿Borrar producto "${nombre}"?`)) return;
     this.productosService.deleteProducto(id).subscribe({
       next: () => this.loadProductos(),
       error: () => alert('Error al borrar el producto')

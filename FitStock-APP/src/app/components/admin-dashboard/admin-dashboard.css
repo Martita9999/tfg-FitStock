@@ -6,10 +6,10 @@
   width: 100%;
   background: var(--bg-gradient);
 }
-
-.sidebar-overlay {
-  display: none;
+.btn-logout:hover {
+  background: rgba(239, 68, 68, 0.1);
 }
+
 
 .main-content {
   flex: 1;
@@ -24,23 +24,14 @@
 .app-header {
   background: var(--card);
   border-bottom: 1px solid var(--border);
-  padding: 16px 40px 16px 0;
-  margin-left: -260px;
-  width: calc(100% + 260px);
+  padding: 16px 40px 16px 24px;
+  margin-left: 0;
+  width: 100%;
   position: sticky;
   top: 0;
   z-index: 100;
   display: flex;
   align-items: center;
-}
-
-.header-logo {
-  width: 260px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
 }
 
 .header-content {
@@ -49,35 +40,6 @@
   justify-content: flex-end;
   align-items: center;
   gap: 12px;
-}
-
-.logo-icon-sm {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-}
-
-.header-brand {
-  display: flex;
-  flex-direction: column;
-}
-
-.brand-name {
-  font-size: 18px;
-  font-weight: 800;
-  line-height: 1.2;
-  background: linear-gradient(135deg, var(--orange), var(--blue));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.brand-role {
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--text-secondary);
 }
 
 .user-info {
@@ -146,7 +108,6 @@
   color: var(--text);
   padding: 0;
 }
-
 .theme-toggle-btn:hover {
   background: var(--border);
 }
@@ -155,10 +116,6 @@
   background: rgba(239, 68, 68, 0.05);
   color: #dc2626;
   border-color: rgba(239, 68, 68, 0.2);
-}
-
-.btn-logout:hover {
-  background: rgba(239, 68, 68, 0.1);
 }
 
 /* ─── CONTENIDO ─── */
@@ -229,10 +186,6 @@
   color: var(--text);
 }
 
-.data-table tbody tr:hover {
-  background: var(--bg);
-}
-
 .data-table tbody tr:last-child td {
   border-bottom: none;
 }
@@ -264,7 +217,7 @@
 /* ─── TOAST ─── */
 .toast-container {
   position: fixed;
-  top: 20px;
+  top: 80px;
   right: 20px;
   z-index: 9999;
   display: flex;
@@ -273,7 +226,7 @@
   pointer-events: none;
 }
 
-.toast {
+:host ::ng-deep .toast {
   pointer-events: auto;
   padding: 14px 20px;
   border-radius: 12px;
@@ -287,9 +240,9 @@
   gap: 10px;
 }
 
-.toast-success { background: #16a34a; color: white; }
-.toast-error { background: #dc2626; color: white; }
-.toast-info { background: var(--blue); color: white; }
+:host ::ng-deep .toast-success { background: #16a34a; color: white; }
+:host ::ng-deep .toast-error { background: #dc2626; color: white; }
+:host ::ng-deep .toast-info { background: var(--blue); color: white; }
 
 @keyframes toastIn {
   from { transform: translateX(100%); opacity: 0; }
@@ -418,15 +371,33 @@
 .cart-dropdown-items { flex: 1; overflow-y: auto; padding: 8px 16px; max-height: 320px; }
 
 .cart-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   padding: 10px 0;
   border-bottom: 1px solid var(--border);
 }
 .cart-item:last-child { border-bottom: none; }
 
+.cart-item-img {
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--bg);
+}
+
 .cart-item-info {
+  flex: 1;
   display: flex;
   justify-content: space-between;
-  margin-bottom: 6px;
+  align-items: center;
+  gap: 8px;
+}
+
+.cart-qty {
+  flex-shrink: 0;
 }
 
 .cart-item-name { font-weight: 600; font-size: 13px; color: var(--text); }
@@ -448,6 +419,29 @@
 }
 .qty-btn-sm:hover:not(:disabled) { background: var(--blue); color: white; }
 .qty-btn-sm:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.qty-input {
+  width: 40px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 2px;
+  -moz-appearance: textfield;
+}
+.qty-input::-webkit-inner-spin-button,
+.qty-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.qty-input:focus {
+  outline: none;
+  border-color: var(--orange);
+}
 
 .qty-val {
   font-size: 15px; font-weight: 800;

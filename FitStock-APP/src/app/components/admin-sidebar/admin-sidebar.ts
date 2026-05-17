@@ -3,8 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { UsuarioService, Usuario } from '../../services/usuario';
 
-// Decorador de componente: selector HTML, módulos importados,
-// plantilla y hoja de estilos de la barra lateral de administración
+/*
+ * AdminSidebarComponent: barra lateral de navegación del panel admin.
+ * Incluye enlaces por rol, submenú de usuarios, modo oscuro y logout.
+ * @Input collapsed: estado colapsado del dashboard padre.
+ * Emite toggleSidebar y closeSidebar al padre.
+ */
 @Component({
   selector: 'app-admin-sidebar',
   standalone: true,
@@ -15,15 +19,12 @@ import { UsuarioService, Usuario } from '../../services/usuario';
 export class AdminSidebarComponent implements OnInit {
   private usuarioService = inject(UsuarioService);
   private router = inject(Router);
-  user: Usuario | null = null;  // Usuario actual autenticado
-  darkMode = false;             // Estado del tema oscuro local
-  // Propiedades de entrada/salida para controlar el colapso de la sidebar
-  @Input() collapsed = false;         // Indica si la sidebar está colapsada
-  @Output() toggleSidebar = new EventEmitter<void>(); // Emite evento al alternar colapso
-  @Output() closeSidebar = new EventEmitter<void>();  // Emite evento al cerrar sidebar
+  user: Usuario | null = null;
+  darkMode = false;
+  @Input() collapsed = false;
+  @Output() toggleSidebar = new EventEmitter<void>();
+  @Output() closeSidebar = new EventEmitter<void>();
 
-  // Al iniciar, verifica la sesión, se suscribe al usuario actual
-  // y aplica el tema guardado en localStorage
   ngOnInit() {
     this.usuarioService.checkSession();
     this.usuarioService.currentUser$.subscribe(u => this.user = u);
@@ -31,14 +32,12 @@ export class AdminSidebarComponent implements OnInit {
     this.applyTheme();
   }
 
-  // Alterna el modo oscuro, persiste en localStorage y aplica el tema
   toggleDarkMode() {
     this.darkMode = !this.darkMode;
     localStorage.setItem('darkMode', String(this.darkMode));
     this.applyTheme();
   }
 
-  // Aplica o elimina el atributo `data-theme` en el elemento raíz del documento
   private applyTheme() {
     if (this.darkMode) {
       document.documentElement.setAttribute('data-theme', 'dark');
@@ -47,14 +46,39 @@ export class AdminSidebarComponent implements OnInit {
     }
   }
 
-  usuariosSubmenuOpen = false;  // Controla la expansión del submenú de usuarios
-
-  // Alterna la apertura/cierre del submenú de usuarios
-  toggleUsuariosSubmenu() {
-    this.usuariosSubmenuOpen = !this.usuariosSubmenuOpen;
+  get roleLabel(): string {
+    switch (this.user?.rol) {
+      case 'admin': return 'Administrador';
+      case 'entrenador': return 'Entrenador';
+      default: return 'Cliente';
+    }
   }
 
-  // Cierra la sesión del usuario y redirige a la pantalla de login
+  usuariosSubmenuOpen = false;
+  prestamosSubmenuOpen = false;
+  materialesSubmenuOpen = false;
+  incidenciasSubmenuOpen = false;
+
+  toggleUsuariosSubmenu() {
+    this.usuariosSubmenuOpen = !this.usuariosSubmenuOpen;
+    this.router.navigate(['/admin/usuarios']);
+  }
+
+  togglePrestamosSubmenu() {
+    this.prestamosSubmenuOpen = !this.prestamosSubmenuOpen;
+    this.router.navigate(['/admin/prestamos']);
+  }
+
+  toggleMaterialesSubmenu() {
+    this.materialesSubmenuOpen = !this.materialesSubmenuOpen;
+    this.router.navigate(['/admin/materiales']);
+  }
+
+  toggleIncidenciasSubmenu() {
+    this.incidenciasSubmenuOpen = !this.incidenciasSubmenuOpen;
+    this.router.navigate(['/admin/incidencias']);
+  }
+
   logout() {
     this.usuarioService.logout().subscribe(() => {
       this.router.navigate(['/login']);

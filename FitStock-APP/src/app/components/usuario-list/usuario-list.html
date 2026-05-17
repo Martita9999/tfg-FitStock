@@ -10,6 +10,12 @@
         <a class="btn-all" (click)="irATodos()">Ver todos</a>
       }
     </h2>
+    @if (!filtroRol) {
+    <div class="search-bar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" [(ngModel)]="busquedaEmail" (input)="aplicarFiltro()" placeholder="Buscar por email...">
+    </div>
+    }
     <!-- Botón de crear usuario (visible solo para admin) -->
     <button class="btn-create" (click)="abrirModal()" *ngIf="userRole === 'admin'">+ Crear Usuario</button>
   </div>
@@ -22,6 +28,11 @@
         <th>Nombre</th>
         <th>Email</th>
         <th>Rol</th>
+        @if (filtroRol) {
+          <th class="col-resumen">Gasto Total</th>
+          <th class="col-resumen">Préstamos Pend.</th>
+          <th class="col-resumen">Incidencias</th>
+        }
         <th>Acciones</th>
       </tr>
     </thead>
@@ -37,12 +48,27 @@
             {{ u.rol }}
           </span>
         </td>
+        @if (filtroRol) {
+          <td class="col-resumen">
+            <span class="summary-badge gasto">{{ resumenUsuario[u.id] ? (resumenUsuario[u.id].totalGastado | currency:'EUR':'symbol':'1.2-2') : '—' }}</span>
+          </td>
+          <td class="col-resumen">
+            <span class="summary-badge prestamo" [class.peligro]="resumenUsuario[u.id] && resumenUsuario[u.id].prestamosPendientes > 0">
+              {{ resumenUsuario[u.id] ? resumenUsuario[u.id].prestamosPendientes : '—' }}
+            </span>
+          </td>
+          <td class="col-resumen">
+            <span class="summary-badge incidencia" [class.si]="resumenUsuario[u.id]?.tieneIncidencias">
+              {{ resumenUsuario[u.id] ? (resumenUsuario[u.id].tieneIncidencias ? 'Sí' : 'No') : '—' }}
+            </span>
+          </td>
+        }
         <td>
           <!-- Acciones por usuario: editar, cambiar contraseña, borrar -->
           <div class="action-btns">
             <button class="btn-edit" (click)="abrirEditar(u)" title="Editar usuario" *ngIf="(userRole === 'admin' || userRole === 'entrenador') && (userRole === 'admin' || u.rol !== 'admin')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></button>
             <!-- Botón <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg> para solicitar cambio de contraseña (solo admin/entrenador sobre clientes no admin que no tengan ya una solicitud pendiente) -->
-            <button class="btn-key" (click)="forzarCambioPassword(u)" title="Solicitar cambio de contraseña" *ngIf="(userRole === 'admin' || userRole === 'entrenador') && (userRole === 'admin' || u.rol === 'cliente') && u.rol !== 'admin' && !u.forzar_cambio_password"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg></button>
+            <button class="btn-key" (click)="forzarCambioPassword(u)" title="Solicitar cambio de contraseña" *ngIf="(userRole === 'admin' || userRole === 'entrenador') && u.rol !== 'admin' && !u.forzar_cambio_password"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg></button>
             <!-- Badge <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Pendiente que indica que el usuario tiene un cambio de contraseña pendiente -->
             <span class="pwd-pending" *ngIf="u.forzar_cambio_password"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Pendiente</span>
             <button class="btn-delete" (click)="borrarUsuario(u.id, u.nombre)" title="Borrar usuario" *ngIf="userRole === 'admin'"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>

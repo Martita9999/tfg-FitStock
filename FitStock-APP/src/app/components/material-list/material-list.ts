@@ -1,11 +1,17 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { MaterialesService } from '../../services/materiales.service';
 import { IncidenciasService } from '../../services/incidencias.service';
 import { UsuarioService } from '../../services/usuario';
 import { Material, Incidencia } from '../../interfaces/app.interfaces';
 
+/*
+ * MaterialList: CRUD de máquinas del gimnasio.
+ * Muestra operativas y no operativas separadas, con incidencias activas.
+ * Incluye modales de creación y edición.
+ */
 @Component({
   selector: 'app-material-list',
   standalone: true,
@@ -13,24 +19,24 @@ import { Material, Incidencia } from '../../interfaces/app.interfaces';
   templateUrl: './material-list.html',
   styleUrl: './material-list.css',
 })
-// Componente que lista y gestiona las máquinas del gimnasio con sus incidencias
 export class MaterialList implements OnInit {
-  private materialesService = inject(MaterialesService);     // Servicio de materiales
-  private incidenciasService = inject(IncidenciasService);   // Servicio de incidencias
-  private usuarioService = inject(UsuarioService);            // Servicio de autenticación
-  lista: Material[] = [];        // Lista de máquinas
-  incidencias: Incidencia[] = [];   // Incidencias activas asociadas
-  userRole = '';                 // Rol del usuario actual
+  private materialesService = inject(MaterialesService);
+  private incidenciasService = inject(IncidenciasService);
+  private usuarioService = inject(UsuarioService);
+  private route = inject(ActivatedRoute);
+  lista: Material[] = [];
+  incidencias: Incidencia[] = [];
+  userRole = '';
+  vista: 'completa' | 'operativas' | 'incidencias' = 'completa';
 
-  showModal = false;                                                                           // Control del modal de creación
-  newMaterial = { nombre: '', descripcion: '', estado: 'operativo', ubicacion: '', id_tag_material: '' };  // Datos de la nueva máquina
-  error = '';   // Mensaje de error
+  showModal = false;
+  newMaterial = { nombre: '', descripcion: '', estado: 'operativo', ubicacion: '', id_tag_material: '' };
+  error = '';
 
-  showEditModal = false;                                                                                     // Control del modal de edición
-  editMaterial: Material | null = null;                                                                     // Máquina en edición
-  editData = { nombre: '', descripcion: '', estado: 'operativo', ubicacion: '', id_tag_material: '' };      // Datos editados de la máquina
+  showEditModal = false;
+  editMaterial: Material | null = null;
+  editData = { nombre: '', descripcion: '', estado: 'operativo', ubicacion: '', id_tag_material: '' };
 
-  // Estados disponibles para el selector
   estadosDisponibles = [
     { value: 'operativo', label: 'Operativo' },
     { value: 'averiado', label: 'Averiado' },
@@ -41,41 +47,43 @@ export class MaterialList implements OnInit {
     { value: 'baja', label: 'Baja' },
   ];
 
-  // Al iniciar, carga materiales, incidencias y obtiene el rol del usuario
   ngOnInit() {
     this.usuarioService.currentUser$.subscribe(u => this.userRole = u?.rol ?? '');
     this.loadMateriales();
     this.loadIncidencias();
+    this.route.paramMap.subscribe(params => {
+      const v = params.get('vista');
+      if (v === 'operativas' || v === 'incidencias') {
+        this.vista = v;
+      } else {
+        this.vista = 'completa';
+      }
+    });
   }
 
-  // Carga la lista de máquinas desde la API
   loadMateriales() {
     this.materialesService.getMateriales('maquina').subscribe(data => this.lista = data);
   }
 
-  // Carga las incidencias para mostrarlas asociadas a cada máquina
   loadIncidencias() {
     this.incidenciasService.getIncidencias().subscribe(data => this.incidencias = data);
   }
 
-  // Ordena materiales por su etiqueta ID usando comparación numérica
   private sortByIdTag(a: Material, b: Material): number {
     const tagA = a.id_tag_material || '';
     const tagB = b.id_tag_material || '';
     return tagA.localeCompare(tagB, undefined, { numeric: true });
   }
 
-  // Devuelve las máquinas en estado operativo ordenadas por ID
   get maquinasOperativas(): Material[] {
     return this.lista.filter(m => m.estado === 'operativo').sort(this.sortByIdTag);
   }
 
-  // Devuelve las máquinas en cualquier estado no operativo ordenadas por ID
   get maquinasNoOperativas(): Material[] {
     return this.lista.filter(m => m.estado !== 'operativo').sort(this.sortByIdTag);
   }
 
-  // Busca la incidencia activa (abierta o en proceso) de una máquina específica
+  /* getIncidenciaActiva: busca si hay una incidencia abierta/en_proceso para un material */
   getIncidenciaActiva(idMaterial: number): Incidencia | undefined {
     return this.incidencias.find(i =>
       i.id_material === idMaterial &&
@@ -83,23 +91,20 @@ export class MaterialList implements OnInit {
     );
   }
 
-  // Abre el modal de creación de máquina
   abrirModal() {
     this.newMaterial = { nombre: '', descripcion: '', estado: 'operativo', ubicacion: '', id_tag_material: '' };
     this.error = '';
     this.showModal = true;
   }
 
-  // Cierra el modal de creación
   cerrarModal() {
     this.showModal = false;
     this.error = '';
   }
 
-  // Crea una nueva máquina en la API
   crearMaterial() {
     this.error = '';
-    if (!this.newMaterial.nombre) {           // Validación: nombre obligatorio
+    if (!this.newMaterial.nombre) {
       this.error = 'El nombre es obligatorio';
       return;
     }
@@ -115,7 +120,6 @@ export class MaterialList implements OnInit {
     });
   }
 
-  // Abre el modal de edición con los datos de la máquina seleccionada
   abrirEditar(m: Material) {
     this.editMaterial = m;
     this.editData = {
@@ -129,18 +133,16 @@ export class MaterialList implements OnInit {
     this.showEditModal = true;
   }
 
-  // Cierra el modal de edición
   cerrarEditar() {
     this.showEditModal = false;
     this.editMaterial = null;
     this.error = '';
   }
 
-  // Guarda los cambios de la máquina y actualiza la fecha de revisión automáticamente
   guardarEditar() {
     if (!this.editMaterial) return;
     this.error = '';
-    if (!this.editData.nombre) {           // Validación: nombre obligatorio
+    if (!this.editData.nombre) {
       this.error = 'El nombre es obligatorio';
       return;
     }
@@ -150,23 +152,21 @@ export class MaterialList implements OnInit {
       ubicacion: this.editData.ubicacion,
       estado: this.editData.estado,
       id_tag_material: this.editData.id_tag_material,
-      ultima_rev: new Date().toISOString().split('T')[0]
+      ultima_rev: new Date().toISOString().split('T')[0]                  // Fecha de revisión = hoy
     }).subscribe({
       next: () => { this.cerrarEditar(); this.loadMateriales(); },
       error: () => { this.error = 'Error al actualizar el material'; }
     });
   }
 
-  // Confirma y elimina una máquina por su ID
   borrarMaterial(id: number, nombre: string) {
-    if (!confirm(`¿Borrar material "${nombre}"?`)) return;   // Confirmación del usuario
+    if (!confirm(`¿Borrar material "${nombre}"?`)) return;
     this.materialesService.deleteMaterial(id).subscribe({
       next: () => this.loadMateriales(),
       error: () => alert('Error al borrar el material')
     });
   }
 
-  // Convierte el valor del estado a una etiqueta legible
   getEstadoLabel(valor: string): string {
     const e = this.estadosDisponibles.find(e => e.value === valor);
     return e ? e.label : valor;

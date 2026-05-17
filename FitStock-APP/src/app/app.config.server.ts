@@ -3,12 +3,18 @@ import { provideServerRendering, withRoutes } from '@angular/ssr';
 import { appConfig } from './app.config';
 import { serverRoutes } from './app.routes.server';
 
-// Configuración específica para el servidor (SSR)
+/*
+ * serverConfig: configuración específica para SSR.
+ * provideServerRendering habilita el renderizado en servidor
+ * (Node.js) usando las rutas definidas en serverRoutes.
+ * 
+ * mergeApplicationConfig fusiona la configuración general
+ * (appConfig) con la del servidor para producción.
+ */
 const serverConfig: ApplicationConfig = {
   providers: [
-    provideServerRendering(withRoutes(serverRoutes))    // Habilita renderizado del lado del servidor
+    provideServerRendering(withRoutes(serverRoutes))
   ]
 };
 
-// Combina la configuración general (appConfig) con la del servidor
 export const config = mergeApplicationConfig(appConfig, serverConfig);

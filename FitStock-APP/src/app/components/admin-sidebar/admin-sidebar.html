@@ -1,7 +1,14 @@
 <!-- Barra lateral de navegación -->
 <aside class="sidebar" [class.collapsed]="collapsed">
-  <!-- Cabecera con botón de cierre -->
+  <!-- Cabecera del sidebar con logo y cierre -->
   <div class="sidebar-header">
+    <div class="sidebar-brand">
+      <img src="icono.jpg" class="sidebar-logo" alt="FitStock">
+      <div class="sidebar-brand-text">
+        <span class="brand-name">FitStock</span>
+        <span class="brand-role">{{ roleLabel }}</span>
+      </div>
+    </div>
     <button class="sidebar-close" (click)="closeSidebar.emit()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
   </div>
 
@@ -11,10 +18,72 @@
       <!-- Menú visible solo para administradores -->
       @if (user?.rol === 'admin') {
         <li routerLink="/admin/home" routerLinkActive="active" (click)="closeSidebar.emit()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 15v2"/><path d="M12 11v6"/><path d="M17 7v10"/></svg> Dashboard</li>
+        <li class="menu-divider"></li>
         <li routerLink="/admin/inventario" routerLinkActive="active" (click)="closeSidebar.emit()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg> Productos</li>
-        <li routerLink="/admin/prestamos" routerLinkActive="active" (click)="closeSidebar.emit()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8.5a2.5 2.5 0 0 0-4 0 2.5 2.5 0 0 0-4 0c0 1.38 1.1 3 4 4.5 2.9-1.5 4-3.12 4-4.5z"/><path d="M2 12a10 10 0 1 0 20 0 10 10 0 0 0-20 0z"/><path d="M8 14v2"/><path d="M16 14v2"/></svg> Préstamos</li>
-        <li routerLink="/admin/incidencias" routerLinkActive="active" (click)="closeSidebar.emit()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Incidencias</li>
-        <li routerLink="/admin/materiales" routerLinkActive="active" (click)="closeSidebar.emit()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="4" height="10" rx="1"/><rect x="18" y="7" width="4" height="10" rx="1"/><rect x="7" y="9" width="10" height="6" rx="1"/></svg> Máquinas</li>
+        <li class="menu-divider"></li>
+        <!-- Submenú de incidencias (admin) -->
+        <li class="has-submenu">
+          <div class="submenu-trigger" (click)="toggleIncidenciasSubmenu()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            Incidencias
+            <svg class="chevron" [class.open]="incidenciasSubmenuOpen" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          @if (incidenciasSubmenuOpen) {
+            <ul class="submenu">
+              <li routerLink="/admin/incidencias/activas" (click)="closeSidebar.emit()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Activas
+              </li>
+              <li routerLink="/admin/incidencias/resueltas" (click)="closeSidebar.emit()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Resueltas
+              </li>
+            </ul>
+          }
+        </li>
+        <li class="menu-divider"></li>
+        <!-- Submenú de máquinas (admin) -->
+        <li class="has-submenu">
+          <div class="submenu-trigger" (click)="toggleMaterialesSubmenu()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="4" height="10" rx="1"/><rect x="18" y="7" width="4" height="10" rx="1"/><rect x="7" y="9" width="10" height="6" rx="1"/></svg>
+            Máquinas
+            <svg class="chevron" [class.open]="materialesSubmenuOpen" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          @if (materialesSubmenuOpen) {
+            <ul class="submenu">
+              <li routerLink="/admin/materiales/operativas" (click)="closeSidebar.emit()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Máquinas operativas
+              </li>
+              <li routerLink="/admin/incidencias/activas" (click)="closeSidebar.emit()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Incidencias activas
+              </li>
+            </ul>
+          }
+        </li>
+        <li class="menu-divider"></li>
+        <!-- Submenú de préstamos con opciones desplegables (admin) -->
+        <li class="has-submenu">
+          <div class="submenu-trigger" (click)="togglePrestamosSubmenu()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8.5a2.5 2.5 0 0 0-4 0 2.5 2.5 0 0 0-4 0c0 1.38 1.1 3 4 4.5 2.9-1.5 4-3.12 4-4.5z"/><path d="M2 12a10 10 0 1 0 20 0 10 10 0 0 0-20 0z"/><path d="M8 14v2"/><path d="M16 14v2"/></svg>
+            Préstamos
+            <svg class="chevron" [class.open]="prestamosSubmenuOpen" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          @if (prestamosSubmenuOpen) {
+            <ul class="submenu">
+              <li routerLink="/admin/prestamos/activos" (click)="closeSidebar.emit()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Activos
+              </li>
+              <li routerLink="/admin/prestamos/materiales" (click)="closeSidebar.emit()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="4" height="10" rx="1"/><rect x="18" y="7" width="4" height="10" rx="1"/><rect x="7" y="9" width="10" height="6" rx="1"/></svg> Material disponible
+              </li>
+              <li routerLink="/admin/prestamos/completados" (click)="closeSidebar.emit()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Completados
+              </li>
+              <li routerLink="/admin/prestamos/pendientes-devolucion" (click)="closeSidebar.emit()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Pendientes de devolver
+              </li>
+            </ul>
+          }
+        </li>
+        <li class="menu-divider"></li>
         <!-- Submenú de usuarios con opciones desplegables (admin) -->
         <li class="has-submenu">
           <div class="submenu-trigger" (click)="toggleUsuariosSubmenu()">
@@ -24,13 +93,13 @@
           </div>
           @if (usuariosSubmenuOpen) {
             <ul class="submenu">
-              <li routerLink="/admin/usuarios/admin" routerLinkActive="active" (click)="closeSidebar.emit()">
+              <li routerLink="/admin/usuarios/admin" (click)="closeSidebar.emit()">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Administradores
               </li>
-              <li routerLink="/admin/usuarios/entrenador" routerLinkActive="active" (click)="closeSidebar.emit()">
+              <li routerLink="/admin/usuarios/entrenador" (click)="closeSidebar.emit()">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Entrenadores
               </li>
-              <li routerLink="/admin/usuarios/cliente" routerLinkActive="active" (click)="closeSidebar.emit()">
+              <li routerLink="/admin/usuarios/cliente" (click)="closeSidebar.emit()">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Clientes
               </li>
             </ul>
@@ -40,10 +109,72 @@
       <!-- Menú visible solo para entrenadores -->
       @if (user?.rol === 'entrenador') {
         <li routerLink="/admin/home" routerLinkActive="active" (click)="closeSidebar.emit()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 15v2"/><path d="M12 11v6"/><path d="M17 7v10"/></svg> Dashboard</li>
+        <li class="menu-divider"></li>
         <li routerLink="/admin/inventario" routerLinkActive="active" (click)="closeSidebar.emit()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg> Productos</li>
-        <li routerLink="/admin/prestamos" routerLinkActive="active" (click)="closeSidebar.emit()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8.5a2.5 2.5 0 0 0-4 0 2.5 2.5 0 0 0-4 0c0 1.38 1.1 3 4 4.5 2.9-1.5 4-3.12 4-4.5z"/><path d="M2 12a10 10 0 1 0 20 0 10 10 0 0 0-20 0z"/><path d="M8 14v2"/><path d="M16 14v2"/></svg> Préstamos</li>
-        <li routerLink="/admin/incidencias" routerLinkActive="active" (click)="closeSidebar.emit()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Incidencias</li>
-        <li routerLink="/admin/materiales" routerLinkActive="active" (click)="closeSidebar.emit()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="4" height="10" rx="1"/><rect x="18" y="7" width="4" height="10" rx="1"/><rect x="7" y="9" width="10" height="6" rx="1"/></svg> Máquinas</li>
+        <li class="menu-divider"></li>
+        <!-- Submenú de incidencias (entrenador) -->
+        <li class="has-submenu">
+          <div class="submenu-trigger" (click)="toggleIncidenciasSubmenu()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            Incidencias
+            <svg class="chevron" [class.open]="incidenciasSubmenuOpen" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          @if (incidenciasSubmenuOpen) {
+            <ul class="submenu">
+              <li routerLink="/admin/incidencias/activas" (click)="closeSidebar.emit()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Activas
+              </li>
+              <li routerLink="/admin/incidencias/resueltas" (click)="closeSidebar.emit()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Resueltas
+              </li>
+            </ul>
+          }
+        </li>
+        <li class="menu-divider"></li>
+        <!-- Submenú de máquinas (entrenador) -->
+        <li class="has-submenu">
+          <div class="submenu-trigger" (click)="toggleMaterialesSubmenu()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="4" height="10" rx="1"/><rect x="18" y="7" width="4" height="10" rx="1"/><rect x="7" y="9" width="10" height="6" rx="1"/></svg>
+            Máquinas
+            <svg class="chevron" [class.open]="materialesSubmenuOpen" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          @if (materialesSubmenuOpen) {
+            <ul class="submenu">
+              <li routerLink="/admin/materiales/operativas" (click)="closeSidebar.emit()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Máquinas operativas
+              </li>
+              <li routerLink="/admin/incidencias/activas" (click)="closeSidebar.emit()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Incidencias activas
+              </li>
+            </ul>
+          }
+        </li>
+        <li class="menu-divider"></li>
+        <!-- Submenú de préstamos con opciones desplegables (entrenador) -->
+        <li class="has-submenu">
+          <div class="submenu-trigger" (click)="togglePrestamosSubmenu()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8.5a2.5 2.5 0 0 0-4 0 2.5 2.5 0 0 0-4 0c0 1.38 1.1 3 4 4.5 2.9-1.5 4-3.12 4-4.5z"/><path d="M2 12a10 10 0 1 0 20 0 10 10 0 0 0-20 0z"/><path d="M8 14v2"/><path d="M16 14v2"/></svg>
+            Préstamos
+            <svg class="chevron" [class.open]="prestamosSubmenuOpen" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          @if (prestamosSubmenuOpen) {
+            <ul class="submenu">
+              <li routerLink="/admin/prestamos/activos" (click)="closeSidebar.emit()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Activos
+              </li>
+              <li routerLink="/admin/prestamos/materiales" (click)="closeSidebar.emit()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="4" height="10" rx="1"/><rect x="18" y="7" width="4" height="10" rx="1"/><rect x="7" y="9" width="10" height="6" rx="1"/></svg> Material disponible
+              </li>
+              <li routerLink="/admin/prestamos/completados" (click)="closeSidebar.emit()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Completados
+              </li>
+              <li routerLink="/admin/prestamos/pendientes-devolucion" (click)="closeSidebar.emit()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Pendientes de devolver
+              </li>
+            </ul>
+          }
+        </li>
+        <li class="menu-divider"></li>
         <!-- Submenú de usuarios con opciones desplegables (entrenador) -->
         <li class="has-submenu">
           <div class="submenu-trigger" (click)="toggleUsuariosSubmenu()">
@@ -53,7 +184,10 @@
           </div>
           @if (usuariosSubmenuOpen) {
             <ul class="submenu">
-              <li routerLink="/admin/usuarios/cliente" routerLinkActive="active" (click)="closeSidebar.emit()">
+              <li routerLink="/admin/usuarios/entrenador" (click)="closeSidebar.emit()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Entrenadores
+              </li>
+              <li routerLink="/admin/usuarios/cliente" (click)="closeSidebar.emit()">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Clientes
               </li>
             </ul>
@@ -63,10 +197,62 @@
       <!-- Menú visible solo para clientes -->
       @if (user?.rol === 'cliente') {
         <li routerLink="/admin/home" routerLinkActive="active" (click)="closeSidebar.emit()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 15v2"/><path d="M12 11v6"/><path d="M17 7v10"/></svg> Dashboard</li>
+        <li class="menu-divider"></li>
         <li routerLink="/admin/inventario" routerLinkActive="active" (click)="closeSidebar.emit()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg> Productos</li>
-        <li routerLink="/admin/prestamos" routerLinkActive="active" (click)="closeSidebar.emit()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8.5a2.5 2.5 0 0 0-4 0 2.5 2.5 0 0 0-4 0c0 1.38 1.1 3 4 4.5 2.9-1.5 4-3.12 4-4.5z"/><path d="M2 12a10 10 0 1 0 20 0 10 10 0 0 0-20 0z"/><path d="M8 14v2"/><path d="M16 14v2"/></svg> Préstamos</li>
-        <li routerLink="/admin/incidencias" routerLinkActive="active" (click)="closeSidebar.emit()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Incidencias</li>
-        <li routerLink="/admin/materiales" routerLinkActive="active" (click)="closeSidebar.emit()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="4" height="10" rx="1"/><rect x="18" y="7" width="4" height="10" rx="1"/><rect x="7" y="9" width="10" height="6" rx="1"/></svg> Máquinas</li>
+        <li class="menu-divider"></li>
+        <!-- Submenú de incidencias (cliente) -->
+        <li class="has-submenu">
+          <div class="submenu-trigger" (click)="toggleIncidenciasSubmenu()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            Incidencias
+            <svg class="chevron" [class.open]="incidenciasSubmenuOpen" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          @if (incidenciasSubmenuOpen) {
+            <ul class="submenu">
+              <li routerLink="/admin/incidencias/activas" (click)="closeSidebar.emit()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Activas
+              </li>
+              <li routerLink="/admin/incidencias/resueltas" (click)="closeSidebar.emit()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Resueltas
+              </li>
+            </ul>
+          }
+        </li>
+        <li class="menu-divider"></li>
+        <!-- Submenú de máquinas (cliente) -->
+        <li class="has-submenu">
+          <div class="submenu-trigger" (click)="toggleMaterialesSubmenu()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="4" height="10" rx="1"/><rect x="18" y="7" width="4" height="10" rx="1"/><rect x="7" y="9" width="10" height="6" rx="1"/></svg>
+            Máquinas
+            <svg class="chevron" [class.open]="materialesSubmenuOpen" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          @if (materialesSubmenuOpen) {
+            <ul class="submenu">
+              <li routerLink="/admin/materiales/operativas" (click)="closeSidebar.emit()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Máquinas operativas
+              </li>
+            </ul>
+          }
+        </li>
+        <li class="menu-divider"></li>
+        <!-- Submenú de préstamos (cliente) -->
+        <li class="has-submenu">
+          <div class="submenu-trigger" (click)="togglePrestamosSubmenu()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8.5a2.5 2.5 0 0 0-4 0 2.5 2.5 0 0 0-4 0c0 1.38 1.1 3 4 4.5 2.9-1.5 4-3.12 4-4.5z"/><path d="M2 12a10 10 0 1 0 20 0 10 10 0 0 0-20 0z"/><path d="M8 14v2"/><path d="M16 14v2"/></svg>
+            Préstamos
+            <svg class="chevron" [class.open]="prestamosSubmenuOpen" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          @if (prestamosSubmenuOpen) {
+            <ul class="submenu">
+              <li routerLink="/admin/prestamos/activos" (click)="closeSidebar.emit()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Mis Préstamos
+              </li>
+              <li routerLink="/admin/prestamos/materiales" (click)="closeSidebar.emit()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="4" height="10" rx="1"/><rect x="18" y="7" width="4" height="10" rx="1"/><rect x="7" y="9" width="10" height="6" rx="1"/></svg> Material disponible
+              </li>
+            </ul>
+          }
+        </li>
       }
     </ul>
   </nav>

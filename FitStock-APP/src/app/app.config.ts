@@ -3,11 +3,16 @@ import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 import { provideHttpClient, withFetch } from '@angular/common/http';
 
-// Configuración global de la aplicación Angular
+/*
+ * appConfig: configuración global de Angular.
+ * eventCoalescing: agrupa eventos para optimizar detección de cambios.
+ * provideRouter: registra las rutas de app.routes.ts.
+ * provideHttpClient(withFetch): usa fetch nativo del navegador.
+ */
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideZoneChangeDetection({ eventCoalescing: true }),    // Optimización de detección de cambios (reduce número de detecciones)
-    provideRouter(routes),                                    // Proveedor de enrutamiento con las rutas definidas
-    provideHttpClient(withFetch())                            // Proveedor del cliente HTTP con API fetch para realizar peticiones al backend
+    provideZoneChangeDetection({ eventCoalescing: true }),               // Optimiza detección de cambios
+    provideRouter(routes),                                               // Registra rutas
+    provideHttpClient(withFetch())                                       // HTTP con fetch() nativo
   ]
 };

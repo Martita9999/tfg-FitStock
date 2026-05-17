@@ -80,3 +80,41 @@
 
 /* Modo oscuro: badge de prioridad baja adaptado */
 [data-theme="dark"] .priority-badge.priority-low { background: #1e3a5f; }
+
+/* ─── SECTION HEADER ROW (título + botones exportar) ─── */
+.section-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.section-header-row .section-title {
+  margin-bottom: 0;
+}
+
+.export-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-export {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card-bg);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-export:hover {
+  background: var(--orange);
+  color: white;
+  border-color: var(--orange);
+}

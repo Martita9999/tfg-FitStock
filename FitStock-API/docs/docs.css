@@ -1,16 +1,22 @@
-/* ============================================
-   FitStock API — Documentación
-   Hoja de estilos para la página de docs
-   ============================================ */
+/*
+ * Hoja de estilos para la página de documentación de la API FitStock.
+ * 
+ * He diseñado estos estilos para que la documentación se vea limpia,
+ * moderna y responsive. Usé colores suaves y un diseño de tarjetas
+ * (cards) para que cada grupo de endpoints sea fácil de leer.
+ */
 
-/* --- Reset básico --- */
+/* Reset básico: quitamos márgenes y paddings por defecto del navegador */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-/* --- Estilos del body: fondo degradado, tipografía y espaciado --- */
+/*
+ * Body: fondo con degradado sutil (de gris claro a más claro),
+ * tipografía moderna con Segoe UI, y espaciado alrededor.
+ */
 body {
   font-family: 'Segoe UI', system-ui, sans-serif;
   background: linear-gradient(135deg, #f8fafc, #f1f5f9);
@@ -18,12 +24,13 @@ body {
   padding: 40px 24px;
 }
 
-/* --- Contenedor principal centrado --- */
+/* Contenedor centrado con ancho máximo para que no se estire demasiado */
 .container {
   max-width: 1000px;
   margin: 0 auto;
 }
 
+/* Título principal: grande, bold, con espacio inferior */
 h1 {
   font-size: 32px;
   font-weight: 800;
@@ -33,6 +40,7 @@ h1 {
   gap: 10px;
 }
 
+/* Badge "API" dentro del título con degradado azul-naranja */
 h1 span {
   background: linear-gradient(135deg, #3b82f6, #f97316);
   color: white;
@@ -42,13 +50,18 @@ h1 span {
   font-weight: 600;
 }
 
+/* Subtítulo: gris suave para no competir con el título */
 .subtitle {
   color: #64748b;
   font-size: 16px;
   margin-bottom: 32px;
 }
 
-/* --- Tarjetas de recurso: fondo blanco, bordes redondeados y sombra --- */
+/*
+ * Tarjetas de recurso: fondo blanco, bordes redondeados, sombra sutil
+ * y borde gris claro. Así cada grupo de endpoints parece una tarjeta
+ * independiente y se diferencia visualmente de los demás.
+ */
 .resource {
   background: white;
   border-radius: 14px;
@@ -58,6 +71,7 @@ h1 span {
   border: 1px solid #e2e8f0;
 }
 
+/* Título del grupo con borde inferior separador */
 .resource h2 {
   font-size: 18px;
   font-weight: 700;
@@ -68,12 +82,17 @@ h1 span {
   gap: 10px;
 }
 
+/* Ruta base del grupo en pequeño y gris */
 .resource h2 small {
   font-weight: 400;
   font-size: 13px;
   color: #64748b;
 }
 
+/*
+ * Cada endpoint es una fila con el método, la ruta, la descripción
+ * y los badges. Usamos flexbox para alinearlos horizontalmente.
+ */
 .endpoint {
   display: flex;
   align-items: flex-start;
@@ -82,11 +101,15 @@ h1 span {
   gap: 12px;
 }
 
+/* El último endpoint no necesita borde inferior */
 .endpoint:last-child {
   border-bottom: none;
 }
 
-/* --- Badges de método HTTP: colores según el verbo (GET, POST, PUT, DELETE) --- */
+/*
+ * Badges de método HTTP: cada verbo tiene su color característico.
+ * GET azul, POST verde, PUT naranja, DELETE rojo.
+ */
 .method {
   font-weight: 700;
   font-size: 12px;
@@ -103,7 +126,7 @@ h1 span {
 .put { background: #fef3c7; color: #92400e; }
 .delete { background: #fecaca; color: #b91c1c; }
 
-/* --- Ruta del endpoint: fuente monospace y peso seminegrita --- */
+/* Ruta del endpoint: fuente monospace para parecer código */
 .route {
   font-weight: 600;
   font-size: 14px;
@@ -113,12 +136,16 @@ h1 span {
   flex-shrink: 0;
 }
 
+/* Descripción: texto normal en gris medio */
 .desc {
   font-size: 14px;
   color: #475569;
 }
 
-/* --- Badges de autenticación: colores según el rol requerido (admin, autenticado, público) --- */
+/*
+ * Badges de autenticación: colores según el rol requerido.
+ * Admin rojo, autenticado azul, público gris.
+ */
 .auth {
   font-size: 11px;
   padding: 2px 8px;
@@ -131,6 +158,7 @@ h1 span {
 .auth-all { background: #dbeafe; color: #1d4ed8; }
 .auth-any { background: #f1f5f9; color: #475569; }
 
+/* Contenedor flexible para los badges */
 .tags {
   display: flex;
   gap: 6px;
@@ -138,6 +166,7 @@ h1 span {
   flex-wrap: wrap;
 }
 
+/* Footer centrado y en gris claro */
 footer {
   text-align: center;
   margin-top: 40px;
@@ -145,7 +174,10 @@ footer {
   color: #94a3b8;
 }
 
-/* --- Media query para móviles: apila los elementos del endpoint verticalmente --- */
+/*
+ * En móviles (pantallas < 768px): los elementos del endpoint se apilan
+ * verticalmente porque no cabe todo en horizontal.
+ */
 @media (max-width: 768px) {
   .endpoint { flex-wrap: wrap; }
   .route { min-width: 0; }

@@ -1,51 +1,56 @@
 import { Injectable, inject } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
+import { Subject, firstValueFrom } from 'rxjs';
 import { ProductoStock } from '../interfaces/app.interfaces';
 import { ProductosService } from './productos.service';
 import { ComprasService } from './compras.service';
 
-// Representa un producto dentro del carrito con su cantidad seleccionada
 export interface CartItem {
   producto: ProductoStock;
   cantidad: number;
 }
 
-// Servicio que implementa la lógica del carrito de compras en memoria.
-// Permite agregar, quitar, eliminar productos, calcular totales y
-// finalizar la compra descontando stock y registrando las transacciones.
+/*
+ * CartService: carrito de compras en memoria (sin persistencia).
+ * Al comprar: verifica stock, descuenta inventario y registra en compras.
+ * NOTA: no se guarda en localStorage, se pierde al recargar la página.
+ */
 @Injectable({ providedIn: 'root' })
 export class CartService {
   private productosService = inject(ProductosService);
   private comprasService = inject(ComprasService);
 
-  // Array con los productos actuales en el carrito
   carrito: CartItem[] = [];
 
-  // Calcula el importe total del carrito (suma de cantidad * precio de cada producto)
+  /* openCartSubject: señal para que el dashboard abra el carrito automáticamente */
+  private openCartSubject = new Subject<void>();
+  openCart$ = this.openCartSubject.asObservable();
+
+  triggerOpenCart() {
+    this.openCartSubject.next();
+  }                                                  // Array de items en el carrito
+
+  /* totalCarrito: suma de (cantidad * precio) de todos los items */
   get totalCarrito(): number {
     return this.carrito.reduce((sum, item) => sum + item.cantidad * item.producto.precio, 0);
   }
 
-  // Calcula el número total de unidades (suma de cantidades) en el carrito
+  /* totalItems: suma total de unidades en el carrito */
   get totalItems(): number {
     return this.carrito.reduce((sum, item) => sum + item.cantidad, 0);
   }
 
-  // Agrega una unidad de un producto al carrito.
-  // Si el producto ya existe, incrementa la cantidad siempre que no supere el stock disponible.
-  // No permite agregar productos con stock cero.
+  /* agregar: añade 1 unidad. Si ya existe, incrementa sin superar stock real. No permite stock 0. */
   agregar(producto: ProductoStock) {
-    if (producto.cantidad <= 0) return;
+    if (producto.cantidad <= 0) return;                                      // No agregamos si no hay stock
     const existente = this.carrito.find(item => item.producto.id === producto.id);
     if (existente) {
-      if (existente.cantidad < producto.cantidad) existente.cantidad++;
+      if (existente.cantidad < producto.cantidad) existente.cantidad++;      // Incrementamos sin superar stock
     } else {
-      this.carrito.push({ producto, cantidad: 1 });
+      this.carrito.push({ producto, cantidad: 1 });                         // Nuevo item con cantidad 1
     }
   }
 
-  // Reduce en una unidad la cantidad de un item del carrito.
-  // Si la cantidad llega a 0, elimina el item completamente.
+  /* quitar: reduce una unidad. Si llega a 0, elimina el item. */
   quitar(item: CartItem) {
     if (item.cantidad > 1) {
       item.cantidad--;
@@ -54,40 +59,43 @@ export class CartService {
     }
   }
 
-  // Elimina un item del carrito independientemente de su cantidad
+  /* setCantidad: asigna una cantidad específica a un item (validada entre 1 y stock máximo) */
+  setCantidad(item: CartItem, nueva: number) {
+    if (nueva <= 0) {
+      this.carrito = this.carrito.filter(i => i.producto.id !== item.producto.id);  // Elimina si 0 o negativo
+    } else {
+      item.cantidad = Math.min(nueva, item.producto.cantidad);                       // No supera el stock real
+    }
+  }
+
   eliminar(item: CartItem) {
     this.carrito = this.carrito.filter(i => i.producto.id !== item.producto.id);
   }
 
-  // Vacía el carrito por completo
   limpiar() {
     this.carrito = [];
   }
 
-  // Procesa la compra de todos los items del carrito:
-  // 1. Verifica stock suficiente para cada producto.
-  // 2. Actualiza el stock llamando a ProductosService.updateProducto().
-  // 3. Registra cada compra llamando a ComprasService.createCompra().
-  // 4. Si todo es exitoso, vacía el carrito y devuelve null.
-  // 5. Si hay error, devuelve un mensaje de error sin vaciar el carrito.
+  /* comprar: procesa toda la compra. Por cada item verifica stock, descuenta y registra compra.
+     Si todo ok: vacía carrito y devuelve null. Si error: devuelve mensaje sin vaciar. */
   async comprar(): Promise<string | null> {
     for (const item of this.carrito) {
-      const nuevaCant = item.producto.cantidad - item.cantidad;
+      const nuevaCant = item.producto.cantidad - item.cantidad;              // Stock resultante
       if (nuevaCant < 0) {
-        return `Stock insuficiente para ${item.producto.nombre}`;
+        return `Stock insuficiente para ${item.producto.nombre}`;            // Error: no hay suficiente stock
       }
       try {
-        await firstValueFrom(this.productosService.updateProducto(item.producto.id, { cantidad: nuevaCant }));
+        await firstValueFrom(this.productosService.updateProducto(item.producto.id, { cantidad: nuevaCant }));  // Descontamos stock
         await firstValueFrom(this.comprasService.createCompra({
           id_producto: item.producto.id,
           cantidad: item.cantidad,
           precio_unitario: item.producto.precio
-        }));
+        }));                                                                 // Registramos la compra
       } catch {
-        return `Error al comprar ${item.producto.nombre}`;
+        return `Error al comprar ${item.producto.nombre}`;                  // Error: devolvemos mensaje
       }
     }
-    this.limpiar();
+    this.limpiar();                                                          // Todo ok: vaciamos carrito
     return null;
   }
 }

@@ -1,18 +1,24 @@
 <?php
 /*
- * MEJORA DE SEGURIDAD: Las credenciales se cargan desde un archivo .env
- * en lugar de estar hardcodeadas. Si no existe .env, usa valores por defecto
- * (solo para desarrollo local).
- *
- * Archivo modificado: conexion.php
- * Líneas modificadas: 3-23 (carga de .env), 28-30 (die() genérico)
- * Cambios:
- *   - Credenciales hardcodeadas  →  Carga desde .env con fallback seguro
- *   - die($e->getMessage())     →  die("Error interno del servidor")
- *   - Se añadió .env.example como plantilla
+ * Conexión a la base de datos de FitStock.
+ * Este archivo gestiona cómo nos conectamos a MySQL usando PDO,
+ * y carga las credenciales desde un archivo .env por seguridad.
+ * 
+ * Os explico por qué es importante cada parte: desde cómo se
+ * cargan las variables de entorno hasta cómo manejamos los errores
+ * de conexión sin exponer información sensible.
  */
 
-// Intenta cargar variables desde el archivo .env (si existe)
+/*
+ * Carga de variables desde el archivo .env:
+ * Si existe un archivo .env en la raíz del proyecto, lo leemos línea
+ * por línea y extraemos las variables. Las líneas que empiezan por #
+ * son comentarios y las ignoramos.
+ * 
+ * Esto es más seguro que tener las credenciales hardcodeadas aquí,
+ * porque el .env no se sube a GitHub (está en .gitignore) y cada
+ * entorno (desarrollo, producción) tiene su propio .env.
+ */
 $envFile = __DIR__ . '/.env';
 if (is_file($envFile)) {
     $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
@@ -28,36 +34,71 @@ if (is_file($envFile)) {
             putenv("$key=$value");
         }
     }
+    /*
+     * Asignamos las variables con el operador ?? (null coalescing):
+     * si la clave no existe en el array $env, usamos el valor por defecto.
+     * Esto evita errores si alguien se olvida de definir alguna variable.
+     */
     $DB_HOST = $env['DB_HOST'] ?? "127.0.0.1";
     $DB_NAME = $env['DB_NAME'] ?? "fitstock";
     $DB_USER = $env['DB_USER'] ?? "fitstock";
     $DB_PASS = $env['DB_PASS'] ?? "";
 } else {
-    // Fallback seguro para desarrollo local 
+    /*
+     * Fallback para desarrollo local:
+     * Solo se usa si no hay archivo .env. En producción nunca debería
+     * llegar aquí, porque tendremos el .env configurado correctamente.
+     */
     $DB_HOST = "127.0.0.1";
     $DB_NAME = "fitstock";
     $DB_USER = "fitstock";
     $DB_PASS = "Tokio2324";
 }
 
-// Función que crea y devuelve una conexión PDO a la base de datos
+/*
+ * Función obtenerConexion():
+ * Crea y devuelve una conexión PDO a la base de datos MySQL.
+ * 
+ * Uso: $pdo = obtenerConexion();
+ * 
+ * La conexión usa charset utf8mb4 para que los emojis y caracteres
+ * especiales (acentos, ñ) se guarden y recuperen correctamente.
+ * 
+ * Configuramos PDO para que lance excepciones (ERRMODE_EXCEPTION)
+ * en lugar de errores silenciosos. Así podemos capturarlas con
+ * try-catch y manejarlas adecuadamente.
+ */
 function obtenerConexion() {
-    global $DB_HOST, $DB_NAME, $DB_USER, $DB_PASS;          // Importa las variables de configuración
+    global $DB_HOST, $DB_NAME, $DB_USER, $DB_PASS;
     try {
-        $pdo = new PDO("mysql:host=$DB_HOST;dbname=$DB_NAME;charset=utf8mb4", $DB_USER, $DB_PASS);  // Crea la conexión PDO con charset seguro
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);   // Configura PDO para lanzar excepciones en errores
-        return $pdo;                                                     // Devuelve la conexión
+        $pdo = new PDO("mysql:host=$DB_HOST;dbname=$DB_NAME;charset=utf8mb4", $DB_USER, $DB_PASS);
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        return $pdo;
     } catch (PDOException $e) {
-        // SEGURIDAD: No exponer detalles de la DB al usuario (antes mostraba $e->getMessage())
-        // El error real queda registrado en el log del servidor PHP
-        error_log("Error de conexión DB: " . $e->getMessage());          // Guarda el error real en logs internos
-        die("Error interno del servidor");                               // Mensaje genérico al usuario
+        /*
+         * Seguridad: nunca mostrar detalles de la base de datos al usuario.
+         * Si mostráramos $e->getMessage(), un atacante podría ver el nombre
+         * de la base de datos, usuario, o incluso la contraseña en algunos casos.
+         * 
+         * En su lugar, guardamos el error real en el log de PHP (error_log)
+         * para que el administrador pueda depurar, y mostramos un mensaje
+         * genérico "Error interno del servidor" al usuario.
+         */
+        error_log("Error de conexión DB: " . $e->getMessage());
+        die("Error interno del servidor");
     }
 }
 
-// Clase estática de utilidad para obtener la conexión
+/*
+ * Clase Conexion:
+ * Un wrapper estático para obtener la conexión. La ventaja de tener
+ * una clase es que podemos llamar a Conexion::conectar() desde cualquier
+ * parte del código sin necesidad de incluir la función global.
+ * 
+ * También facilita hacer mocking en tests si algún día los escribimos.
+ */
 class Conexion {
     public static function conectar() {
-        return obtenerConexion();   // Delega en la función obtenerConexion()
+        return obtenerConexion();
     }
 }

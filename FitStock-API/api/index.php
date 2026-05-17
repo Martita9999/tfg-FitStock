@@ -1,114 +1,132 @@
 <?php
 /*
  * Enrutador interno de la API REST de FitStock.
- * Recibe todas las peticiones cuyo path comienza con /api (derivadas desde router.php)
- * y las distribuye según el recurso solicitado: login, usuarios, materiales, etc.
- * Cada recurso implementa las operaciones CRUD correspondientes con control de roles.
- *
- * MEJORAS DE SEGURIDAD APLICADAS (v2):
- *   - CORS dinámico (líneas 13-17)
- *   - Parámetros de sesión seguros: httponly, samesite, secure (líneas 29-34)
- *   - CSRF protection con token (líneas 37-51, 82-86, 41-47)
- *   - Rate limiting en login con archivo temporal (líneas 53-79)
- *   - Regeneración de ID de sesión tras login exitoso (línea 99)
- *   - Política de contraseñas: longitud mínima 8 caracteres (líneas 91, 123, 216, 230)
- *   - Validación de tipo MIME real con finfo (líneas 396-401)
- *   - Permisos de directorio upload: 0777 → 0755 (línea 404)
- *   - Validación de email con filter_var (varias líneas)
+ * 
+ * Este archivo recibe todas las peticiones que empiezan por /api
+ * (derivadas desde router.php) y las distribuye según el recurso
+ * solicitado: login, usuarios, materiales, préstamos, etc.
+ * 
+ * Es el corazón de la API: aquí se implementa todo el CRUD con
+ * control de roles y las medidas de seguridad como rate limiting,
+ * validación de entrada, y política de contraseñas.
+ * 
+ * Os explico cada sección para que entendáis cómo funciona cada endpoint.
  */
-// ─────────────────────────────────────────────────────────────
-// MEJORA: Origen CORS dinámico (misma variable que en router.php)
-// ─────────────────────────────────────────────────────────────
-// Obtiene el origen CORS permitido desde la variable de entorno FRONTEND_URL.
-// En producción, esta variable debe configurarse en el servidor para restringir
-// el acceso únicamente al dominio del frontend desplegado, evitando peticiones
-// desde orígenes no autorizados. En desarrollo se usa localhost:4200.
-$allowedOrigin = getenv('FRONTEND_URL') ?: 'http://localhost:4200';
 
-// Cabeceras CORS para permitir peticiones desde el frontend Angular con credenciales
-header("Content-Type: application/json");                                          // Tipo de contenido JSON
-header("Access-Control-Allow-Origin: $allowedOrigin");                             // Origen dinámico
-header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");           // Métodos HTTP permitidos
-header("Access-Control-Allow-Headers: Content-Type, Authorization"); // Cabeceras permitidas
-header("Access-Control-Allow-Credentials: true");                                  // Permite cookies de sesión
+/*
+ * Origen CORS dinámico:
+ * Usamos la variable de entorno FRONTEND_URL para saber desde dónde
+ * puede llegar el frontend. En desarrollo es localhost:4200 (Angular),
+ * en producción será la URL donde esté desplegado el frontend.
+ * 
+ * Así no hace falta cambiar el código cuando pase a producción:
+ * solo configurar la variable de entorno en el servidor.
+ */
+$allowedOrigin = getenv('FRONTEND_URL') ?: 'http://localhost:4200';  // Origen dinámico CORS (variable de entorno o fallback local)
 
-// Si la petición es OPTIONS (preflight CORS), responder con 200 y salir sin ejecutar nada más
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+/*
+ * Cabeceras CORS y tipo de contenido:
+ * Decimos que devolvemos JSON, permitimos peticiones desde nuestro
+ * frontend con cualquier método HTTP, y permitimos credenciales
+ * (cookies de sesión) para mantener la autenticación.
+ */
+header("Content-Type: application/json");                          // Respuestas en JSON
+header("Access-Control-Allow-Origin: $allowedOrigin");             // CORS: permitimos nuestro frontend
+header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");  // Métodos HTTP permitidos
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Access-Control-Allow-Credentials: true");                  // Permitimos cookies de sesión
+
+/*
+ * Preflight CORS: si el navegador manda una petición OPTIONS
+ * (que hace automáticamente antes de PUT/DELETE), respondemos
+ * 200 y salimos. Las cabeceras CORS ya se enviaron arriba.
+ */
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {                    // Preflight CORS (navegador antes de PUT/DELETE)
     http_response_code(200);
-    exit;
+    exit;                                                          // Respondemos y salimos
 }
 
-// ─────────────────────────────────────────────────────────────
-// MEJORA: Configurar parámetros seguros de sesión ANTES de session_start()
-// httponly: la cookie de sesión no es accesible desde JavaScript (previene XSS)
-// samesite=Lax: la cookie no se envía en peticiones cross-site (previene CSRF básico)
-// secure: la cookie solo se envía por HTTPS (se marca como seguro aunque en localhost vaya sin HTTPS)
-// ─────────────────────────────────────────────────────────────
-session_set_cookie_params([
-    'httponly' => true,
-    'samesite' => 'Lax',
-    'secure' => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on',
+/*
+ * Configuración segura de la cookie de sesión:
+ * Es importante configurar estos parámetros ANTES de session_start().
+ * 
+ * httponly=true: la cookie de sesión no es accesible desde JavaScript.
+ *   Si alguien inyecta un script (XSS), no podrá robar la cookie.
+ * 
+ * samesite=Lax: la cookie no se envía en peticiones que vienen de
+ *   otros sitios web. Esto evita ataques CSRF básicos.
+ * 
+ * secure=true: la cookie solo se envía por HTTPS. En localhost no
+ *   tenemos HTTPS, así que lo marcamos como condicional.
+ */
+session_set_cookie_params([                                       // Configuración segura de la cookie de sesión
+    'httponly' => true,                                            // No accesible desde JavaScript (anti-XSS)
+    'samesite' => 'Lax',                                           // No se envía desde otros sitios (anti-CSRF)
+    'secure' => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on',  // Solo HTTPS si está disponible
 ]);
 
-// Inicia la sesión PHP para mantener autenticación entre peticiones
-session_start();
+/* Iniciamos la sesión para mantener la autenticación entre peticiones */
+session_start();                                                   // Iniciamos sesión para mantener autenticación
 
-// ─────────────────────────────────────────────────────────────
-// MEJORA: Rate Limiting para login (protección contra fuerza bruta)
-// ─────────────────────────────────────────────────────────────
-// Directorio donde se almacenan los intentos de login (archivos temporales)
-define('RATE_LIMIT_DIR', sys_get_temp_dir() . '/fitstock_rate_limit');
-// Máximo de intentos permitidos antes de bloquear temporalmente
-define('RATE_LIMIT_MAX_ATTEMPTS', 10);
-// Ventana de tiempo en segundos (15 minutos) en la que cuentan los intentos
-define('RATE_LIMIT_WINDOW', 900);
+/*
+ * RATE LIMITING - Protección contra fuerza bruta:
+ * 
+ * Guardamos en archivos temporales (dentro del directorio temporal del
+ * sistema) el número de intentos de login por IP. Si alguien supera
+ * los 10 intentos en 15 minutos, se bloquea temporalmente.
+ * 
+ * Esto evita que un atacante pruebe miles de contraseñas con un script
+ * automatizado (ataque de fuerza bruta).
+ */
+define('RATE_LIMIT_DIR', sys_get_temp_dir() . '/fitstock_rate_limit');  // Directorio temporal para archivos de rate limiting
+define('RATE_LIMIT_MAX_ATTEMPTS', 10);                                   // Máximo 10 intentos
+define('RATE_LIMIT_WINDOW', 900);                                        // Ventana de 15 minutos (900 segundos)
 
-/**
- * Verifica el límite de intentos de inicio de sesión para una IP.
- * Protege contra ataques de fuerza bruta limitando el número de
- * intentos fallidos dentro de una ventana de tiempo configurable.
- * Los datos de cada IP se almacenan en un archivo JSON independiente
- * dentro del directorio temporal del sistema.
- * Si se supera el límite, responde con HTTP 429 (Too Many Requests).
- *
- * @param string $ip Dirección IP del cliente a verificar.
- * @return void
+/*
+ * checkRateLimit($ip):
+ * Verifica cuántos intentos de login ha hecho una IP en los últimos 15 minutos.
+ * 
+ * Cada IP tiene su propio archivo JSON (identificado por el hash MD5 de la IP)
+ * que guarda el número de intentos y cuándo empezó a contar.
+ * 
+ * Si han pasado más de 15 minutos desde el primer intento, reiniciamos
+ * el contador automáticamente (la ventana se desliza).
+ * 
+ * Usamos LOCK_EX en file_put_contents para evitar condiciones de carrera
+ * si dos peticiones de la misma IP llegan al mismo tiempo.
+ * 
+ * Si se supera el límite, respondemos con HTTP 429 (Too Many Requests)
+ * y un mensaje claro para el usuario.
  */
 function checkRateLimit($ip) {
     if (!is_dir(RATE_LIMIT_DIR)) {
-        @mkdir(RATE_LIMIT_DIR, 0700, true);  // Crea el directorio con permisos restringidos
+        @mkdir(RATE_LIMIT_DIR, 0700, true);                          // Creamos el directorio si no existe
     }
-    $file = RATE_LIMIT_DIR . '/' . md5($ip) . '.json';  // Archivo único por IP (hasheada)
+    $file = RATE_LIMIT_DIR . '/' . md5($ip) . '.json';              // Archivo por IP (hash MD5)
     $now = time();
     $data = ['attempts' => 0, 'first_attempt' => $now];
 
-    // Si existe el archivo, leer los intentos actuales
     if (is_file($file)) {
         $saved = json_decode(file_get_contents($file), true) ?? $data;
-        // Si la ventana de tiempo ha expirado, reiniciar contador
-        if ($now - $saved['first_attempt'] > RATE_LIMIT_WINDOW) {
+        if ($now - $saved['first_attempt'] > RATE_LIMIT_WINDOW) {   // Si pasaron 15 min, reiniciamos
             $saved = ['attempts' => 0, 'first_attempt' => $now];
         }
         $data = $saved;
     }
 
-    // Incrementar contador de intentos
     $data['attempts']++;
-    file_put_contents($file, json_encode($data), LOCK_EX);  // LOCK_EX evita condiciones de carrera
+    file_put_contents($file, json_encode($data), LOCK_EX);          // Guardamos con bloqueo (evita condiciones de carrera)
 
-    if ($data['attempts'] > RATE_LIMIT_MAX_ATTEMPTS) {
-        // 429 = Too Many Requests
-        jsonResponse(["error" => "Demasiados intentos. Intenta de nuevo en 15 minutos."], 429);
+    if ($data['attempts'] > RATE_LIMIT_MAX_ATTEMPTS) {               // Superó el límite
+        jsonResponse(["error" => "Demasiados intentos. Intenta de nuevo en 15 minutos."], 429);  // HTTP 429
     }
 }
 
-/**
- * Limpia el registro de rate limiting de una IP tras un inicio de sesión exitoso.
- * Elimina el archivo temporal para que el contador de intentos se reinicie
- * y el usuario pueda seguir intentando si es necesario.
- *
- * @param string $ip Dirección IP del cliente cuyo registro se eliminará.
- * @return void
+/*
+ * clearRateLimit($ip):
+ * Cuando el usuario inicia sesión correctamente, eliminamos su archivo
+ * de rate limiting. Así el contador se reinicia y no se bloquea
+ * injustamente después de un login exitoso.
  */
 function clearRateLimit($ip) {
     $file = RATE_LIMIT_DIR . '/' . md5($ip) . '.json';
@@ -117,18 +135,16 @@ function clearRateLimit($ip) {
     }
 }
 
-// Rate limiting específico para el formulario de contacto (5 intentos cada 15 minutos)
+/*
+ * Rate limiting específico para el formulario de contacto:
+ * Es más restrictivo (5 intentos por ventana) porque el formulario
+ * de contacto podría usarse para enviar spam.
+ * 
+ * Usamos un archivo independiente con prefijo 'contacto_' para no
+ * mezclar los intentos de contacto con los de login.
+ */
 define('RATE_LIMIT_CONTACTO_MAX', 5);
 
-/**
- * Verifica el límite de mensajes del formulario de contacto para una IP.
- * Similar a checkRateLimit pero con un límite más restrictivo (5 envíos por ventana)
- * y usando un archivo independiente (prefijo 'contacto_') para no interferir
- * con el control de intentos de login.
- *
- * @param string $ip Dirección IP del cliente a verificar.
- * @return void Responde con 429 si se excede el límite.
- */
 function checkRateLimitContacto($ip) {
     if (!is_dir(RATE_LIMIT_DIR)) {
         @mkdir(RATE_LIMIT_DIR, 0700, true);
@@ -153,9 +169,15 @@ function checkRateLimitContacto($ip) {
     }
 }
 
-// Importa la conexión a la base de datos
+/*
+ * Importamos la conexión a la base de datos y todos los modelos.
+ * Cada modelo encapsula las consultas SQL de su recurso correspondiente
+ * (usuarios, materiales, préstamos, incidencias, productos, compras).
+ * 
+ * También importamos PHPMailer para el envío de correos desde
+ * el formulario de contacto.
+ */
 require_once __DIR__ . "/../conexion.php";
-// Importa todos los modelos
 require_once __DIR__ . "/../models/Usuario.php";
 require_once __DIR__ . "/../models/Material.php";
 require_once __DIR__ . "/../models/Prestamo.php";
@@ -163,34 +185,36 @@ require_once __DIR__ . "/../models/Incidencia.php";
 require_once __DIR__ . "/../models/Producto.php";
 require_once __DIR__ . "/../models/Compra.php";
 
-// Importa PHPMailer para envío de correos
 require_once __DIR__ . "/../vendor/PHPMailer/src/Exception.php";
 require_once __DIR__ . "/../vendor/PHPMailer/src/PHPMailer.php";
 require_once __DIR__ . "/../vendor/PHPMailer/src/SMTP.php";
 
-// ─────────────────────────────────────────────────────────────
-// Variables de ruteo: descomponen la URL en partes identificables
-// $method   = verbo HTTP (GET, POST, PUT, DELETE, OPTIONS)
-// $uri      = ruta solicitada, ej: /api/usuarios
-// $path     = array de segmentos de la URI, ej: ['api', 'usuarios']
-// $action   = primer segmento (siempre 'api' en este enrutador)
-// $resource = segundo segmento: identifica el recurso a operar
-// ─────────────────────────────────────────────────────────────
+/*
+ * Variables de ruteo: descomponemos la URL en partes para saber
+ * qué recurso nos pide el frontend y con qué método HTTP.
+ * 
+ * $method   = verbo HTTP (GET, POST, PUT, DELETE)
+ * $uri      = ruta completa, ej: /api/usuarios/5
+ * $path     = array de segmentos: ['api', 'usuarios', '5']
+ * $action   = primer segmento (siempre 'api' aquí)
+ * $resource = segundo segmento: login, usuarios, materiales...
+ * 
+ * Los segmentos adicionales ($path[2] y superiores) se usan para
+ * IDs específicos o sub-rutas como cambiar-password.
+ */
 $method = $_SERVER['REQUEST_METHOD'];
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $path = explode('/', trim($uri, '/'));
 
-$action = $path[0] ?? '';       // Primer segmento (debería ser 'api')
-$resource = $path[1] ?? '';     // Segundo segmento (ej: 'login', 'usuarios', 'materiales')
+$action = $path[0] ?? '';
+$resource = $path[1] ?? '';
 
-/**
- * Envía una respuesta JSON al cliente y finaliza la ejecución del script.
- * Centraliza el formato de todas las respuestas de la API para garantizar
- * consistencia en la comunicación con el frontend.
- *
- * @param mixed $data Datos a serializar como JSON en el cuerpo de la respuesta.
- * @param int $code Código de estado HTTP (200 OK por defecto).
- * @return void
+/*
+ * jsonResponse($data, $code):
+ * Función helper que todos los endpoints usan para responder.
+ * Centraliza el envío de respuestas JSON con su código HTTP,
+ * para que todas tengan el mismo formato y no tengamos que
+ * repetir http_response_code + echo json_encode + exit en cada sitio.
  */
 function jsonResponse($data, $code = 200) {
     http_response_code($code);
@@ -198,96 +222,91 @@ function jsonResponse($data, $code = 200) {
     exit;
 }
 
-/**
- * Obtiene los datos de entrada de la petición HTTP actual.
- * Lee el cuerpo de la petición en formato JSON desde php://input.
- * Si el contenido no es JSON válido, utiliza $_POST como fallback
- * para peticiones con Content-Type application/x-www-form-urlencoded.
- *
- * @return array Array asociativo con los datos recibidos.
+/*
+ * getJsonInput():
+ * Lee los datos que envía el frontend en el cuerpo de la petición.
+ * Esperamos JSON (application/json), pero si no puede parsearlo,
+ * cae en $_POST como fallback (por si alguien envía form-data).
+ * 
+ * php://input es un stream de solo lectura que contiene el cuerpo
+ * de la petición HTTP. file_get_contents lo lee como string.
  */
 function getJsonInput() {
     return json_decode(file_get_contents("php://input"), true) ?? $_POST;
 }
 
-// ─────────────────────────────────────────────────────────────
-// Enrutador principal: evalúa el primer segmento de la URL.
-// Si coincide con 'api', delega el procesamiento en handleApi().
-// Cualquier otro segmento recibe un 404 (Endpoint no encontrado).
-// ─────────────────────────────────────────────────────────────
+/*
+ * Enrutador principal: evaluamos el primer segmento de la URL.
+ * Si es 'api', llamamos a handleApi() que procesa el recurso.
+ * Si no, respondemos 404 porque no hay nada aquí.
+ */
 switch ($action) {
-    case 'api':                                      // Si la ruta empieza por /api
-        handleApi($method, $resource, $path);        // Llama al manejador de la API
+    case 'api':
+        handleApi($method, $resource, $path);
         break;
-    default:                                         // Si no es una ruta válida
-        jsonResponse(["error" => "Endpoint no encontrado"], 404);   // 404 - No encontrado
+    default:
+        jsonResponse(["error" => "Endpoint no encontrado"], 404);
 }
 
-/**
- * Manejador principal de todos los endpoints de la API REST.
- * Analiza el recurso solicitado ($resource) y el método HTTP ($method),
- * aplicando la lógica CRUD correspondiente con control de acceso
- * basado en roles de usuario (admin, entrenador, cliente).
- *
- * @param string $method Método HTTP de la petición (GET, POST, PUT, DELETE).
- * @param string $resource Nombre del recurso solicitado (login, usuarios, etc.).
- * @param array $path Array completo de segmentos de la URI para sub-rutas.
- * @return void
+/*
+ * handleApi($method, $resource, $path):
+ * 
+ * Esta es la función principal que maneja TODOS los endpoints de la API.
+ * 
+ * Recibe el método HTTP, el recurso solicitado y los segmentos de la URL,
+ * y según el recurso aplica la lógica CRUD correspondiente con control
+ * de acceso basado en roles (admin, entrenador, cliente).
+ * 
+ * Es un switch grande pero cada case es autocontenido y fácil de seguir.
  */
 function handleApi($method, $resource, $path) {
-    $data = getJsonInput();    // Obtiene los datos de la petición
+    $data = getJsonInput();
 
     switch ($resource) {
 
-        // LOGIN - Inicio de sesión (POST /api/login)
-
+        /*
+         * LOGIN (POST /api/login):
+         * 
+         * 1. Validamos que el email tenga formato correcto antes de
+         *    consultar la base de datos (FILTER_VALIDATE_EMAIL).
+         * 2. Aplicamos rate limiting para evitar fuerza bruta.
+         * 3. Buscamos al usuario por email y verificamos la contraseña
+         *    con password_verify() contra el hash bcrypt almacenado.
+         * 4. Si coincide: regeneramos el ID de sesión (para evitar
+         *    session fixation), guardamos los datos en $_SESSION,
+         *    limpiamos el rate limit, y devolvemos los datos del usuario
+         *    incluyendo forzar_cambio_password.
+         * 5. Si no coincide: devolvemos 401 (Credenciales inválidas).
+         */
         case 'login':
             if ($method === 'POST') {
                 $email = trim($data['email'] ?? '');
                 $password = $data['password'] ?? '';
 
-                // ─────────────────────────────────────────────
-                // MEJORA: Validar formato de email antes de consultar DB
-                // ─────────────────────────────────────────────
                 if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                     jsonResponse(["error" => "Email inválido"], 400);
                 }
 
-                // ─────────────────────────────────────────────
-                // MEJORA: Rate limiting - verificar intentos antes de procesar login
-                // ─────────────────────────────────────────────
                 checkRateLimit($_SERVER['REMOTE_ADDR']);
 
                 if ($email && $password) {
                     $usuario = Usuario::obtenerPorEmail($email);
-                    // password_verify() compara la contraseña en texto plano contra el hash
-                    // almacenado en la BD usando bcrypt. Si coinciden, el usuario queda autenticado.
                     if ($usuario && password_verify($password, $usuario->getPasswordHash())) {
-                        // ─────────────────────────────────────────
-                        // MEJORA: Regenerar ID de sesión para evitar session fixation
-                        // ─────────────────────────────────────────
                         session_regenerate_id(true);
 
-                        // Almacena los datos del usuario en la sesión para persistir la autenticación
                         $_SESSION['usuario_id'] = $usuario->getId();
                         $_SESSION['usuario_nombre'] = $usuario->getNombre();
                         $_SESSION['usuario_rol'] = $usuario->getRol();
 
-                        // ─────────────────────────────────────────
-                        // MEJORA: Limpiar rate limit tras login exitoso
-                        // ─────────────────────────────────────────
                         clearRateLimit($_SERVER['REMOTE_ADDR']);
 
                         jsonResponse([
                             "success" => true,
-
                             "user" => [
                                 "id" => $usuario->getId(),
                                 "nombre" => $usuario->getNombre(),
                                 "email" => $usuario->getEmail(),
                                 "rol" => $usuario->getRol(),
-                                // Indica si el usuario debe cambiar su contraseña (1 = sí, 0 = no).
-                                // El frontend usa este campo para redirigir al formulario de cambio de contraseña tras el login.
                                 "forzar_cambio_password" => intval($usuario->getForzarCambioPassword())
                             ]
                         ]);
@@ -297,42 +316,51 @@ function handleApi($method, $resource, $path) {
             }
             break;
 
-
-        // REGISTRO - Crear cuenta nueva (POST /api/registro)
-
+        /*
+         * REGISTRO (POST /api/registro):
+         * 
+         * Crea un nuevo usuario con rol 'cliente' por defecto.
+         * 
+         * Validaciones:
+         * - Contraseña mínima de 8 caracteres
+         * - Email válido
+         * - Nombre, email y password no vacíos
+         * 
+         * Si el email ya existe en la BD (violación de UNIQUE),
+         * la excepción se captura y devolvemos un mensaje claro.
+         */
         case 'registro':
             if ($method === 'POST') {
-                $nombre = trim($data['nombre'] ?? '');       // Nombre del formulario
-                $email = trim($data['email'] ?? '');         // Email del formulario
-                $password = $data['password'] ?? '';         // Contraseña del formulario
+                $nombre = trim($data['nombre'] ?? '');
+                $email = trim($data['email'] ?? '');
+                $password = $data['password'] ?? '';
 
-                // ─────────────────────────────────────────────
-                // MEJORA: Política de contraseñas - longitud mínima 8 caracteres
-                // ─────────────────────────────────────────────
                 if (strlen($password) < 8) {
                     jsonResponse(["error" => "La contraseña debe tener al menos 8 caracteres"], 400);
                 }
 
                 if ($nombre && $email && $password && filter_var($email, FILTER_VALIDATE_EMAIL)) {
                     try {
-                        Usuario::crear($nombre, $email, $password, 'cliente');   // Crea usuario con rol 'cliente' por defecto
+                        Usuario::crear($nombre, $email, $password, 'cliente');
                         jsonResponse(["success" => true, "message" => "Usuario registrado"]);
                     } catch (Exception $e) {
-                        // Captura la excepción por violación de la restricción UNIQUE del email en la BD.
-                        // La columna email tiene un índice único, por lo que insertar un email duplicado
-                        // lanza una excepción que se traduce en un mensaje claro para el cliente.
-                        jsonResponse(["error" => "El correo ya está registrado"], 400);   // 400 - Email duplicado
+                        jsonResponse(["error" => "El correo ya está registrado"], 400);
                     }
                 }
-                jsonResponse(["error" => "Datos inválidos"], 400);   // 400 - Datos incompletos
+                jsonResponse(["error" => "Datos inválidos"], 400);
             }
             break;
 
-
-        // LOGOUT - Cerrar sesión (POST /api/logout)
-
+        /*
+         * LOGOUT (POST /api/logout):
+         * 
+         * Cerramos la sesión del usuario:
+         * 1. Eliminamos la cookie de sesión del navegador
+         *    (poniendo una fecha pasada para que expire).
+         * 2. Vaciamos $_SESSION.
+         * 3. Destruimos la sesión en el servidor con session_destroy().
+         */
         case 'logout':
-            // Limpiar la cookie de sesión del lado del cliente
             if (ini_get("session.use_cookies")) {
                 $params = session_get_cookie_params();
                 setcookie(session_name(), '', time() - 42000,
@@ -340,42 +368,55 @@ function handleApi($method, $resource, $path) {
                     $params["secure"], $params["httponly"]
                 );
             }
-            $_SESSION = [];      // Vacía el array de sesión
-            session_destroy();   // Destruye toda la sesión en el servidor
-            jsonResponse(["success" => true]);   // Confirma el cierre de sesión
+            $_SESSION = [];
+            session_destroy();
+            jsonResponse(["success" => true]);
             break;
 
 
 
 
-        // USUARIOS - CRUD de usuarios (solo admin y entrenador)
-
+        /*
+         * USUARIOS - CRUD de usuarios:
+         * 
+         * Este es el endpoint más complejo porque maneja varias
+         * sub-rutas y roles. Os explico cada caso:
+         * 
+         * - PUT /api/usuarios/cambiar-password: cualquier usuario
+         *   autenticado puede cambiar su propia contraseña. Necesita
+         *   la contraseña actual (old_password) para verificarla.
+         * 
+         * - GET /api/usuarios: lista todos los usuarios (admin/entrenador).
+         *   Los clientes no pueden acceder.
+         * 
+         * - POST /api/usuarios/forzar-cambio: marca a un usuario
+         *   para que deba cambiar la contraseña en el próximo login
+         *   (admin/entrenador).
+         * 
+         * - POST /api/usuarios: crea un nuevo usuario (solo admin).
+         * 
+         * - PUT /api/usuarios/{id}: actualiza nombre, email,
+         *   contraseña y/o rol de un usuario (admin/entrenador).
+         *   Los entrenadores no pueden editar admins ni asignar rol admin.
+         * 
+         * - DELETE /api/usuarios/{id}: elimina un usuario (solo admin).
+         */
         case 'usuarios':
-            requireSession();                                // Requiere autenticación
+            requireSession();
 
-            // Permitir a cualquier usuario autenticado cambiar su propia contraseña.
-            // Al completar el cambio exitosamente, se resetea forzar_cambio_password a 0
-            // para que el usuario no tenga que cambiar la contraseña de nuevo en el próximo login.
             if ($method === 'PUT' && isset($path[2]) && $path[2] === 'cambiar-password') {
                 $old_password = $data['old_password'] ?? '';
                 $new_password = $data['new_password'] ?? '';
 
-                // ─────────────────────────────────────────────
-                // MEJORA: Política de contraseñas en cambio de contraseña
-                // ─────────────────────────────────────────────
                 if (strlen($new_password) < 8) {
                     jsonResponse(["error" => "La nueva contraseña debe tener al menos 8 caracteres"], 400);
                 }
 
                 if ($old_password && $new_password) {
                     $usuario = Usuario::obtenerPorId($_SESSION['usuario_id']);
-                    // Verifica que la contraseña actual coincida con el hash almacenado en la BD
-                    // antes de permitir el cambio. Esto evita que un usuario con sesión robada
-                    // pueda cambiar la contraseña sin conocer la actual.
                     if ($usuario && password_verify($old_password, $usuario->getPasswordHash())) {
                         $password_hash = password_hash($new_password, PASSWORD_DEFAULT);
                         $conexion = Conexion::conectar();
-                        // Actualiza la contraseña y limpia la marca de cambio forzado simultáneamente
                         $stmt = $conexion->prepare("UPDATE usuarios SET password_hash = ?, forzar_cambio_password = 0 WHERE id_usuario = ?");
                         $stmt->execute([$password_hash, $_SESSION['usuario_id']]);
                         jsonResponse(["success" => true]);
@@ -388,12 +429,10 @@ function handleApi($method, $resource, $path) {
                 break;
             }
 
-            // Bloquea el acceso a usuarios con rol 'cliente' en toda la sección de usuarios.
-            // Solo administradores y entrenadores pueden gestionar usuarios.
-            if ($_SESSION['usuario_rol'] === 'cliente') {    // Los clientes no pueden acceder
+            if ($_SESSION['usuario_rol'] === 'cliente') {
                 jsonResponse(["error" => "Acceso denegado"], 403);
             }
-            if ($method === 'GET') {                         // GET /api/usuarios - Listar todos (admin/entrenador)
+            if ($method === 'GET') {
                 $usuarios = Usuario::obtenerTodos();
                 $list = array_map(function($u) {
                     return [
@@ -401,14 +440,10 @@ function handleApi($method, $resource, $path) {
                         "nombre" => $u->getNombre(),
                         "email" => $u->getEmail(),
                         "rol" => $u->getRol(),
-                        // Incluye el estado de cambio forzado de contraseña para que el administrador
-                        // pueda ver qué usuarios tienen pendiente el cambio de contraseña.
                         "forzar_cambio_password" => intval($u->getForzarCambioPassword())
                     ];
                 }, $usuarios);
                 jsonResponse($list);
-            // POST /api/usuarios/forzar-cambio - Marca a un usuario para que deba cambiar su contraseña
-            // en el próximo inicio de sesión. Acción restringida a administradores y entrenadores.
             } elseif ($method === 'POST' && isset($path[2]) && $path[2] === 'forzar-cambio') {
                 if ($_SESSION['usuario_rol'] !== 'admin' && $_SESSION['usuario_rol'] !== 'entrenador') {
                     jsonResponse(["error" => "Acceso denegado"], 403);
@@ -420,7 +455,7 @@ function handleApi($method, $resource, $path) {
                 } else {
                     jsonResponse(["error" => "ID de usuario requerido"], 400);
                 }
-            } elseif ($method === 'POST') {                  // POST /api/usuarios - Crear usuario (solo admin)
+            } elseif ($method === 'POST') {
                 if ($_SESSION['usuario_rol'] !== 'admin') {
                     jsonResponse(["error" => "Acceso denegado"], 403);
                 }
@@ -429,9 +464,6 @@ function handleApi($method, $resource, $path) {
                 $password = $data['password'] ?? '';
                 $rol = $data['rol'] ?? 'cliente';
 
-                // ─────────────────────────────────────────────
-                // MEJORA: Política de contraseñas al crear usuario como admin
-                // ─────────────────────────────────────────────
                 if (strlen($password) < 8) {
                     jsonResponse(["error" => "La contraseña debe tener al menos 8 caracteres"], 400);
                 }
@@ -454,13 +486,9 @@ function handleApi($method, $resource, $path) {
                     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                         jsonResponse(["error" => "Email inválido"], 400);
                     }
-                    // ─────────────────────────────────────────
-                    // MEJORA: Política de contraseñas al editar usuario (si se cambia la contraseña)
-                    // ─────────────────────────────────────────
                     if ($password !== null && strlen($password) < 8) {
                         jsonResponse(["error" => "La contraseña debe tener al menos 8 caracteres"], 400);
                     }
-                    // Entrenador no puede editar admins ni asignar rol admin
                     if ($_SESSION['usuario_rol'] === 'entrenador') {
                         $target = Usuario::obtenerPorId($path[2]);
                         if ($target && $target->getRol() === 'admin') {
@@ -475,28 +503,35 @@ function handleApi($method, $resource, $path) {
                 } else {
                     jsonResponse(["error" => "Datos inválidos"], 400);
                 }
-            } elseif ($method === 'DELETE' && isset($path[2])) {   // DELETE /api/usuarios/{id} (solo admin)
+            } elseif ($method === 'DELETE' && isset($path[2])) {
                 if ($_SESSION['usuario_rol'] !== 'admin') {
                     jsonResponse(["error" => "Acceso denegado"], 403);
                 }
-                Usuario::eliminar($path[2]);                 // Elimina usuario por ID
+                Usuario::eliminar($path[2]);
                 jsonResponse(["success" => true]);
             }
             break;
 
 
-        // MATERIALES - CRUD de equipamiento deportivo
-
+        /*
+         * MATERIALES - CRUD de equipamiento deportivo:
+         * 
+         * GET /api/materiales (opcional: ?tipo=maquina|prestable)
+         * POST /api/materiales
+         * PUT /api/materiales/{id}
+         * DELETE /api/materiales/{id}
+         * 
+         * Los clientes pueden ver materiales pero no crear ni eliminar.
+         * El filtro por tipo (?tipo=maquina) se usa en el frontend para
+         * separar máquinas de material prestable en vistas diferentes.
+         */
         case 'materiales':
-            requireSession();                                // Requiere autenticación
-            // Los clientes no pueden crear ni eliminar materiales
+            requireSession();
             if (($method === 'POST' || $method === 'DELETE') && $_SESSION['usuario_rol'] === 'cliente') {
                 jsonResponse(["error" => "Acceso denegado"], 403);
             }
-            if ($method === 'GET') {                         // GET /api/materiales - Listar todos
-                // Filtro opcional por tipo de material mediante query string: ?tipo=maquina o ?tipo=prestable.
-                // Si no se especifica el parámetro, se devuelven todos los materiales sin filtrar.
-                $tipo = $_GET['tipo'] ?? null;               // Filtro opcional por tipo (?tipo=maquina|prestable)
+            if ($method === 'GET') {
+                $tipo = $_GET['tipo'] ?? null;
                 $materiales = Material::obtenerTodos($tipo);
                 $list = array_map(function($m) {
                     return [
@@ -511,11 +546,11 @@ function handleApi($method, $resource, $path) {
                     ];
                 }, $materiales);
                 jsonResponse($list);
-            } elseif ($method === 'POST') {                  // POST /api/materiales - Crear material
+            } elseif ($method === 'POST') {
                 $nombre = trim($data['nombre'] ?? '');
                 $descripcion = trim($data['descripcion'] ?? '');
-                $estado = $data['estado'] ?? 'operativo';    // Estado por defecto
-                $tipo = $data['tipo'] ?? 'maquina';          // Tipo por defecto
+                $estado = $data['estado'] ?? 'operativo';
+                $tipo = $data['tipo'] ?? 'maquina';
                 $id_tag_material = trim($data['id_tag_material'] ?? '');
                 $ubicacion = trim($data['ubicacion'] ?? '');
                 if ($nombre) {
@@ -523,7 +558,7 @@ function handleApi($method, $resource, $path) {
                     jsonResponse(["success" => true]);
                 }
                 jsonResponse(["error" => "Datos inválidos"], 400);
-            } elseif ($method === 'PUT' && isset($path[2])) {   // PUT /api/materiales/{id} - Actualizar material
+            } elseif ($method === 'PUT' && isset($path[2])) {
                 $nombre = trim($data['nombre'] ?? '');
                 $descripcion = trim($data['descripcion'] ?? '');
                 $estado = $data['estado'] ?? null;
@@ -535,25 +570,39 @@ function handleApi($method, $resource, $path) {
                     jsonResponse(["success" => true]);
                 }
                 jsonResponse(["error" => "Datos inválidos"], 400);
-            } elseif ($method === 'DELETE' && isset($path[2])) {   // DELETE /api/materiales/{id}
+            } elseif ($method === 'DELETE' && isset($path[2])) {
                 Material::eliminar($path[2]);
                 jsonResponse(["success" => true]);
             }
             break;
 
-
-        // PRESTAMOS - Gestión de préstamos de material (GET, POST, PUT, DELETE)
-        // - Clientes: pueden listar y crear préstamos (solo para sí mismos), pero no eliminar.
-        // - Admin/entrenador: CRUD completo sobre cualquier préstamo de la base de datos.
-
+        /*
+         * PRESTAMOS - Gestión de préstamos de material:
+         * 
+         * GET /api/prestamos - lista todos con JOINs para obtener
+         *   el nombre del usuario y del material.
+         * POST /api/prestamos - crea un préstamo. Los clientes solo
+         *   pueden crear préstamos para sí mismos (usamos el ID de sesión).
+         *   Admin/entrenador pueden asignar a cualquier usuario.
+         * PUT /api/prestamos/{id} - actualiza la fecha de devolución
+         *   o marca como devuelto (si no se envía fecha_devolucion).
+         * DELETE /api/prestamos/{id} - elimina (solo admin/entrenador).
+         */
         case 'prestamos':
-            requireSession();                                // Requiere autenticación
-            // Los clientes no pueden eliminar préstamos (sí pueden crearlos)
+            requireSession();
             if ($method === 'DELETE' && $_SESSION['usuario_rol'] === 'cliente') {
                 jsonResponse(["error" => "Acceso denegado"], 403);
             }
-            if ($method === 'GET') {                         // GET /api/prestamos - Listar todos con JOINs
-                $prestamos = Prestamo::obtenerTodos();
+            if ($method === 'GET') {
+                $estadoFiltro = $_GET['estado'] ?? null;
+                if ($estadoFiltro) {
+                    $prestamos = Prestamo::obtenerPendientes($estadoFiltro);
+                } elseif ($_SESSION['usuario_rol'] === 'cliente') {
+                    $prestamos = Prestamo::obtenerTodos($_SESSION['usuario_id']);
+                } else {
+                    $id_usuario = $_GET['id_usuario'] ?? null;
+                    $prestamos = Prestamo::obtenerTodos($id_usuario);
+                }
                 $list = array_map(function($p) {
                     return [
                         "id" => $p->getId(),
@@ -562,50 +611,76 @@ function handleApi($method, $resource, $path) {
                         "usuario" => $p->getUsuarioNombre(),
                         "material" => $p->getMaterialNombre(),
                         "fecha" => $p->getFecha(),
-                        "devolucion" => $p->getFechaDevolucion()
+                        "devolucion" => $p->getFechaDevolucion(),
+                        "estado" => $p->getEstado()
                     ];
                 }, $prestamos);
                 jsonResponse($list);
-            } elseif ($method === 'POST') {                  // POST /api/prestamos - Crear préstamo
-                // Los clientes solo pueden crear préstamos para sí mismos.
-                // Admin y entrenadores pueden asignar préstamos a cualquier usuario
-                // especificando el id_usuario en el cuerpo de la petición.
+            } elseif ($method === 'POST') {
                 if ($_SESSION['usuario_rol'] === 'cliente') {
                     $id_usuario = $_SESSION['usuario_id'];
+                    $estado = 'pendiente';
                 } else {
                     $id_usuario = $data['id_usuario'] ?? $_SESSION['usuario_id'];
+                    $estado = $data['estado'] ?? 'pendiente';
                 }
                 $id_material = $data['id_material'] ?? '';
-                $fecha_devolucion = $data['fecha_devolucion'] ?? null;          // Fecha devolución opcional
+                $fecha_devolucion = $data['fecha_devolucion'] ?? null;
                 if ($id_material) {
-                    Prestamo::crear($id_usuario, $id_material, $fecha_devolucion);
+                    Prestamo::crear($id_usuario, $id_material, $fecha_devolucion, $estado);
                     jsonResponse(["success" => true]);
                 }
                 jsonResponse(["error" => "Datos inválidos"], 400);
-            } elseif ($method === 'PUT' && isset($path[2])) {   // PUT /api/prestamos/{id} - Actualizar préstamo
+            } elseif ($method === 'PUT' && isset($path[2]) && isset($path[3])) {
+                if ($path[3] === 'aprobar') {
+                    Prestamo::aprobar($path[2]);
+                    jsonResponse(["success" => true, "message" => "Préstamo aprobado"]);
+                } elseif ($path[3] === 'confirmar-devolucion') {
+                    Prestamo::confirmarDevolucion($path[2]);
+                    jsonResponse(["success" => true, "message" => "Devolución confirmada"]);
+                } else {
+                    jsonResponse(["error" => "Acción no reconocida"], 400);
+                }
+            } elseif ($method === 'PUT' && isset($path[2])) {
                 $fecha_devolucion = $data['fecha_devolucion'] ?? null;
                 if ($fecha_devolucion !== null || array_key_exists('fecha_devolucion', $data)) {
                     Prestamo::actualizar($path[2], $fecha_devolucion);
                     jsonResponse(["success" => true, "message" => "Préstamo actualizado"]);
                 } else {
                     Prestamo::devolver($path[2]);
-                    jsonResponse(["success" => true, "message" => "Préstamo devuelto"]);
+                    jsonResponse(["success" => true, "message" => "Préstamo marcado para devolución"]);
                 }
-            } elseif ($method === 'DELETE' && isset($path[2])) {   // DELETE /api/prestamos/{id}
+            } elseif ($method === 'DELETE' && isset($path[2])) {
                 Prestamo::eliminar($path[2]);
                 jsonResponse(["success" => true]);
             }
             break;
 
-        // PRODUCTOS - CRUD de productos en stock
-
+        /*
+         * PRODUCTOS - CRUD de productos en stock:
+         * 
+         * GET /api/productos - lista todos con cantidad, stock mínimo y precio
+         * POST /api/productos/subir-imagen - sube imagen (validando tipo MIME real con finfo)
+         * POST /api/productos - crea producto
+         * PUT /api/productos/{id} - actualiza datos o solo stock
+         * DELETE /api/productos/{id} - elimina producto
+         * 
+         * Los clientes pueden ver productos pero no crear/eliminar.
+         * 
+         * Para la subida de imágenes:
+         * - Validamos el tipo MIME real con finfo (lee los bytes del archivo)
+         *   en lugar de confiar en $_FILES['type'] que el navegador envía
+         *   y puede ser falseado por un atacante.
+         * - Guardamos en public/images/productos/ con permisos 0755.
+         * - El nombre siempre es .jpg para que coincida con getImagenUrl()
+         *   del frontend.
+         */
         case 'productos':
-            requireSession();                                // Requiere autenticación
-            // Los clientes no pueden crear ni eliminar productos
+            requireSession();
             if (($method === 'POST' || $method === 'DELETE') && $_SESSION['usuario_rol'] === 'cliente') {
                 jsonResponse(["error" => "Acceso denegado"], 403);
             }
-            if ($method === 'GET') {                         // GET /api/productos - Listar todos
+            if ($method === 'GET') {
                 $productos = Producto::obtenerTodos();
                 $list = array_map(function($p) {
                     return [
@@ -619,22 +694,15 @@ function handleApi($method, $resource, $path) {
                 }, $productos);
                 jsonResponse($list);
             } elseif ($method === 'POST' && isset($path[2]) && $path[2] === 'subir-imagen') {
-                // POST /api/productos/subir-imagen - Subir imagen de un producto
-                $nombre = trim($data['nombre'] ?? '');             // Nombre del producto para nombrar el archivo
+                $nombre = trim($data['nombre'] ?? '');
                 if (!$nombre) {
                     jsonResponse(["error" => "Nombre del producto requerido"], 400);
                 }
-                // Verifica que se haya recibido un archivo sin errores
                 if (!isset($_FILES['imagen']) || $_FILES['imagen']['error'] !== UPLOAD_ERR_OK) {
                     jsonResponse(["error" => "No se recibió ninguna imagen"], 400);
                 }
                 $imagen = $_FILES['imagen'];
 
-                // ─────────────────────────────────────────────
-                // MEJORA: Validar tipo MIME real con finfo en lugar de confiar en $_FILES['type']
-                // $_FILES['type'] lo envía el cliente y puede ser falseado.
-                // finfo lee los primeros bytes reales del archivo para determinar el tipo.
-                // ─────────────────────────────────────────────
                 $finfo = finfo_open(FILEINFO_MIME_TYPE);
                 $mimeReal = finfo_file($finfo, $imagen['tmp_name']);
                 finfo_close($finfo);
@@ -644,21 +712,17 @@ function handleApi($method, $resource, $path) {
                     jsonResponse(["error" => "Formato no válido. Usa JPG, PNG, GIF o WebP"], 400);
                 }
 
-                // Ruta absoluta hasta la carpeta pública del frontend donde se almacenan las imágenes
                 $uploadDir = __DIR__ . '/../../FitStock-APP/public/images/productos/';
                 if (!is_dir($uploadDir)) {
-                    // ─────────────────────────────────────────
-                    // MEJORA: Permisos 0755 en lugar de 0777 (0777 permite ejecución a cualquiera)
-                    // ─────────────────────────────────────────
                     mkdir($uploadDir, 0755, true);
                 }
-                $filename = $nombre . '.jpg';                      // Siempre .jpg para que coincida con getImagenUrl() en el frontend
+                $filename = $nombre . '.jpg';
                 if (move_uploaded_file($imagen['tmp_name'], $uploadDir . $filename)) {
                     jsonResponse(["success" => true, "imagen" => $filename]);
                 } else {
                     jsonResponse(["error" => "Error al guardar la imagen"], 500);
                 }
-            } elseif ($method === 'POST') {                  // POST /api/productos - Crear producto
+            } elseif ($method === 'POST') {
                 $nombre = trim($data['nombre'] ?? '');
                 $descripcion = trim($data['descripcion'] ?? '');
                 $cantidad = intval($data['cantidad'] ?? 0);
@@ -669,7 +733,7 @@ function handleApi($method, $resource, $path) {
                     jsonResponse(["success" => true]);
                 }
                 jsonResponse(["error" => "Datos inválidos"], 400);
-            } elseif ($method === 'PUT' && isset($path[2])) {   // PUT /api/productos/{id} - Actualizar producto
+            } elseif ($method === 'PUT' && isset($path[2])) {
                 $nombre = trim($data['nombre'] ?? '');
                 $descripcion = trim($data['descripcion'] ?? '');
                 $cantidad = intval($data['cantidad'] ?? -1);
@@ -683,22 +747,27 @@ function handleApi($method, $resource, $path) {
                     jsonResponse(["success" => true]);
                 }
                 jsonResponse(["error" => "Datos inválidos"], 400);
-            } elseif ($method === 'DELETE' && isset($path[2])) {   // DELETE /api/productos/{id}
+            } elseif ($method === 'DELETE' && isset($path[2])) {
                 Producto::eliminar($path[2]);
                 jsonResponse(["success" => true]);
             }
             break;
 
-
-
-        // COMPRAS - Registro de compras de productos por usuarios
-        // - Clientes: solo ven sus propias compras (filtradas automáticamente por su ID de sesión).
-        // - Admin/entrenador: pueden ver todas las compras o filtrar por id_usuario específico.
+        /*
+         * COMPRAS - Registro de compras de productos:
+         * 
+         * GET /api/compras:
+         *   - Clientes: solo ven sus propias compras (filtradas por ID de sesión)
+         *   - Admin/entrenador: ven todas, pueden filtrar por ?id_usuario=
+         * 
+         * POST /api/compras:
+         *   - Crea una compra para el usuario autenticado
+         *   - Necesita id_producto, cantidad y precio_unitario
+         *   - El frontend calcula el total (cantidad * precio_unitario)
+         */
         case 'compras':
             requireSession();
             if ($method === 'GET') {
-                // Separa la lógica según el rol: el cliente ve solo sus compras,
-                // mientras que admin/entrenador pueden consultar todas o filtrar por usuario.
                 if ($_SESSION['usuario_rol'] === 'cliente') {
                     $compras = Compra::obtenerTodos($_SESSION['usuario_id']);
                 } else {
@@ -730,19 +799,31 @@ function handleApi($method, $resource, $path) {
             }
             break;
 
-        // INCIDENCIAS - Gestión de incidencias reportadas sobre materiales
-        // - Al crear una incidencia, el material asociado se marca como 'averiado' automáticamente.
-        // - Al resolver una incidencia, el material vuelve a estado 'operativo'.
-        // - Clientes: pueden crear y listar incidencias, pero no eliminarlas.
-
+        /*
+         * INCIDENCIAS - Gestión de averías y problemas:
+         * 
+         * GET /api/incidencias - lista todas con JOINs para obtener
+         *   nombre del material, tag y ubicación.
+         * POST /api/incidencias - crea una incidencia y automáticamente
+         *   marca el material como 'averiado'. El usuario de la sesión
+         *   se asigna como reportador.
+         * PUT /api/incidencias/{id} - actualiza estado/prioridad/descripción.
+         *   Si se resuelve, el material vuelve a 'operativo'.
+         *   Si se marca como 'en_proceso', el material pasa a 'en_reparacion'.
+         * DELETE /api/incidencias/{id} - elimina (solo admin/entrenador).
+         */
         case 'incidencias':
-            requireSession();                                // Requiere autenticación
-            // Los clientes no pueden eliminar incidencias (sí pueden crearlas)
+            requireSession();
             if ($method === 'DELETE' && $_SESSION['usuario_rol'] === 'cliente') {
                 jsonResponse(["error" => "Acceso denegado"], 403);
             }
-            if ($method === 'GET') {                         // GET /api/incidencias - Listar todas
-                $incidencias = Incidencia::obtenerTodos();
+            if ($method === 'GET') {
+                if ($_SESSION['usuario_rol'] === 'cliente') {
+                    $incidencias = Incidencia::obtenerTodos($_SESSION['usuario_id']);
+                } else {
+                    $id_usuario = $_GET['id_usuario'] ?? null;
+                    $incidencias = Incidencia::obtenerTodos($id_usuario);
+                }
                 $list = array_map(function($inc) {
                     return [
                         "id" => $inc->getId(),
@@ -759,26 +840,23 @@ function handleApi($method, $resource, $path) {
                     ];
                 }, $incidencias);
                 jsonResponse($list);
-            } elseif ($method === 'POST') {                  // POST /api/incidencias - Crear incidencia
+            } elseif ($method === 'POST') {
                 $id_material = $data['id_material'] ?? '';
                 $descripcion = trim($data['descripcion'] ?? '');
-                $prioridad = $data['prioridad'] ?? 'media';  // Prioridad por defecto
+                $prioridad = $data['prioridad'] ?? 'media';
                 if ($id_material && $descripcion) {
-                    // Asigna automáticamente el usuario de la sesión como reportador
                     Incidencia::crear($id_material, $_SESSION['usuario_id'], $descripcion, $prioridad);
-                    // Cambia el estado del material a 'averiado' al reportar una incidencia
                     $conexion = Conexion::conectar();
                     $stmt = $conexion->prepare("UPDATE material SET estado = 'averiado' WHERE id_material = ?");
                     $stmt->execute([$id_material]);
                     jsonResponse(["success" => true]);
                 }
                 jsonResponse(["error" => "Datos inválidos"], 400);
-            } elseif ($method === 'PUT' && isset($path[2])) {   // PUT /api/incidencias/{id} - Actualizar descripción/prioridad/estado
+            } elseif ($method === 'PUT' && isset($path[2])) {
                 $descripcion = isset($data['descripcion']) ? trim($data['descripcion']) : null;
                 $prioridad = $data['prioridad'] ?? null;
                 $estado = $data['estado'] ?? null;
                 Incidencia::actualizar($path[2], $prioridad, $estado, $descripcion);
-                // Cambia el estado de la máquina según el estado de la incidencia
                 $inc = Incidencia::obtenerPorId($path[2]);
                 if ($inc && $inc->getIdMaterial()) {
                     $conexion = Conexion::conectar();
@@ -791,28 +869,35 @@ function handleApi($method, $resource, $path) {
                     }
                 }
                 jsonResponse(["success" => true]);
-            } elseif ($method === 'DELETE' && isset($path[2])) {   // DELETE /api/incidencias/{id}
+            } elseif ($method === 'DELETE' && isset($path[2])) {
                 Incidencia::eliminar($path[2]);
                 jsonResponse(["success" => true]);
             }
             break;
 
-
-        // RESUMEN - Dashboard de administración (GET /api/resumen)
-
+        /*
+         * RESUMEN - Dashboard de administración (GET /api/resumen):
+         * 
+         * Devuelve datos agregados para el panel principal:
+         * - Conteo de incidencias por estado (abierta, en_proceso, resuelta)
+         * - Productos con stock por debajo del mínimo (alertas de reposición)
+         * - Máquinas agrupadas por estado (operativo, averiado, en_reparacion)
+         * - Gasto total de todos los usuarios y desglose por usuario
+         * 
+         * Todo se obtiene con consultas SQL directas desde aquí porque
+         * son consultas de agregación que no encajan en un modelo CRUD.
+         */
         case 'resumen':
             requireSession();
             if ($method === 'GET') {
                 $conexion = Conexion::conectar();
 
-                // Conteo de incidencias por estado
                 $stmt = $conexion->query("SELECT estado_inc, COUNT(*) as total FROM incidencias GROUP BY estado_inc");
                 $incidencias = ['abierta' => 0, 'en_proceso' => 0, 'resuelta' => 0];
                 while ($fila = $stmt->fetch(PDO::FETCH_ASSOC)) {
                     $incidencias[$fila['estado_inc']] = intval($fila['total']);
                 }
 
-                // Productos con stock por debajo del mínimo
                 $stmt = $conexion->query("SELECT id_producto, nombre_prod, cant_actual, stock_minimo FROM productos_stock WHERE cant_actual < stock_minimo ORDER BY cant_actual ASC");
                 $stock_bajo = [];
                 while ($fila = $stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -824,7 +909,6 @@ function handleApi($method, $resource, $path) {
                     ];
                 }
 
-                // Conteo de máquinas por estado
                 $stmt = $conexion->query("SELECT estado, COUNT(*) as total FROM material WHERE tipo = 'maquina' GROUP BY estado");
                 $maquinas = [];
                 while ($fila = $stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -832,11 +916,9 @@ function handleApi($method, $resource, $path) {
                 }
                 $total_maquinas = array_sum($maquinas);
 
-                // Gasto total de todos los usuarios
                 $stmt = $conexion->query("SELECT COALESCE(SUM(total), 0) as total FROM compras");
                 $total_gastado = floatval($stmt->fetch(PDO::FETCH_ASSOC)['total']);
 
-                // Desglose por usuario
                 $stmt = $conexion->query(
                     "SELECT u.id_usuario, u.nombre, u.email, COALESCE(SUM(c.total), 0) as total
                      FROM usuarios u
@@ -869,11 +951,25 @@ function handleApi($method, $resource, $path) {
             }
             break;
 
-        // CONTACTO - Formulario de contacto público (POST /api/contacto)
-
+        /*
+         * CONTACTO (POST /api/contacto):
+         * 
+         * Formulario de contacto público que envía un correo usando PHPMailer.
+         * 
+         * Tiene su propio rate limiting (5 envíos por IP cada 15 minutos)
+         * para evitar spam.
+         * 
+         * La contraseña de Gmail se obtiene de la variable de entorno
+         * MAIL_PASSWORD por seguridad, nunca hardcodeada.
+         * 
+         * El proceso:
+         * 1. Validar email y mensaje
+         * 2. Configurar PHPMailer con SMTP de Gmail
+         * 3. Enviar el correo a infofitstock@gmail.com
+         * 4. Responder éxito o error (con logging interno)
+         */
         case 'contacto':
             if ($method === 'POST') {
-                // Rate limiting: 5 intentos por IP cada 15 minutos
                 checkRateLimitContacto($_SERVER['REMOTE_ADDR']);
 
                 $email = trim($data['email'] ?? '');
@@ -892,7 +988,7 @@ function handleApi($method, $resource, $path) {
                     $mail->Host       = 'smtp.gmail.com';
                     $mail->SMTPAuth   = true;
                     $mail->Username   = 'infofitstock@gmail.com';
-                    $mail->Password   = getenv('MAIL_PASSWORD') ?: '';      // Contraseña obtenida de variable de entorno por seguridad
+                    $mail->Password   = getenv('MAIL_PASSWORD') ?: '';
                     $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
                     $mail->Port       = 587;
                     $mail->CharSet    = 'UTF-8';
@@ -917,22 +1013,23 @@ function handleApi($method, $resource, $path) {
             }
             break;
 
-        // DEFAULT - Recurso no reconocido
-        // Se ejecuta cuando el valor de $resource no coincide con ningún case definido.
-        // Responde con 404 (Not Found) para indicar que el endpoint solicitado no existe.
-
+        /*
+         * DEFAULT: Si el recurso solicitado no coincide con ningún
+         * case de los anteriores, respondemos 404 (Not Found).
+         */
         default:
             jsonResponse(["error" => "Recurso no encontrado"], 404);
     }
 }
 
-/**
- * Verifica que el usuario tenga una sesión activa antes de acceder a recursos protegidos.
- * Comprueba si $_SESSION['usuario_id'] está definido. Si no existe, significa que el
- * usuario no ha iniciado sesión y se rechaza la petición con HTTP 401 (No autenticado).
- * Debe llamarse al inicio de cualquier endpoint que requiera autenticación.
- *
- * @return void Si no hay sesión activa, responde con 401.
+/*
+ * requireSession():
+ * 
+ * Función helper que verifica si el usuario tiene una sesión activa.
+ * Si $_SESSION['usuario_id'] no existe, significa que el usuario no
+ * ha iniciado sesión, y respondemos con HTTP 401 (No autenticado).
+ * 
+ * Se llama al inicio de cualquier endpoint protegido.
  */
 function requireSession() {
     if (!isset($_SESSION['usuario_id'])) {

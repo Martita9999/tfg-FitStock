@@ -12,8 +12,6 @@
   display: flex; align-items: center; justify-content: center;
   transition: background 0.2s, transform 0.15s; z-index: 10;
 }
-
-/* Efecto hover del botón de tema */
 .theme-toggle:hover { background: rgba(255,255,255,0.2); transform: scale(1.05); }
 
 /* ─── TARJETA DE INICIO DE SESIÓN ─── */
@@ -60,11 +58,8 @@
 
 /* Enlace genérico */
 a { color: var(--orange); cursor: pointer; font-weight: 600; text-decoration: none; }
-a:hover { text-decoration: underline; }
 
-/* Enlace al portal web con icono de casa */
 .portal-link { display: inline-flex; align-items: center; gap: 4px; color: var(--orange); }
-.portal-link:hover { color: var(--orange-dark); }
 
 /* ─── MODAL ─── */
 /* Fondo de superposición del modal */

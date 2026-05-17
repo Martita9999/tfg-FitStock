@@ -3,6 +3,11 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 
+/*
+ * ContactoComponent: formulario de contacto público.
+ * @Input embed: si está en portal, no muestra navegación extra.
+ * Envía POST a /api/contacto, backend usa PHPMailer para correo.
+ */
 @Component({
   selector: 'app-contacto',
   standalone: true,
@@ -10,27 +15,23 @@ import { Router } from '@angular/router';
   templateUrl: './contacto.html',
   styleUrl: './contacto.css',
 })
-// Componente del formulario de contacto que envía consultas al backend
 export class ContactoComponent {
-  @Input() embed = false;                 // Si es true, se incrusta en otra página (portal) sin navegación externa
-  private http = inject(HttpClient);      // Cliente HTTP para peticiones al backend
-  private router = inject(Router);        // Router para navegación programática
+  @Input() embed = false;                                                // Si está incrustado en portal
+  private http = inject(HttpClient);
+  private router = inject(Router);
 
-  email = '';             // Email del remitente (two-way binding)
-  mensaje = '';           // Texto del mensaje (two-way binding)
-  error = '';             // Mensaje de error a mostrar
-  success = false;        // Indica si el envío fue exitoso
-  sending = false;        // Indica si la petición está en curso (para deshabilitar botón)
+  email = '';
+  mensaje = '';
+  error = '';
+  success = false;
+  sending = false;
 
-  private API_URL = 'http://localhost:8000/api';    // URL base de la API REST
+  private API_URL = 'http://localhost:8000/api';
 
-  // Navega a la página de aterrizaje (solo visible cuando no está embebido)
   irAPortal() {
     this.router.navigate(['/']);
   }
 
-  // Valida los campos y envía el formulario de contacto al backend via POST.
-  // En caso de éxito limpia el formulario; en caso de error muestra el mensaje
   enviar() {
     this.error = '';
     this.success = false;

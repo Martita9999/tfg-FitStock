@@ -51,9 +51,10 @@
   font-weight: 700;
   cursor: pointer;
   font-family: inherit;
-  white-space: nowrap;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: all 0.15s;
 }
+.btn-export:hover { background: var(--blue); color: white; border-color: var(--blue); }
+
 
 .btn-add-material:hover {
   transform: translateY(-2px);
@@ -74,12 +75,6 @@
   padding: 20px;
   text-align: center;
   border: 2px solid var(--border);
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
 .stat-card.stat-total { border-color: var(--blue); }
@@ -154,12 +149,7 @@
   border-radius: 12px;
   border: 1.5px solid var(--border);
   overflow: hidden;
-  transition: box-shadow 0.2s, transform 0.15s;
-}
-
-.loan-card:hover {
-  box-shadow: 0 3px 10px rgba(0,0,0,0.07);
-  transform: translateY(-1px);
+  transition: none;
 }
 
 .loan-card.returned { opacity: 0.75; }
@@ -253,7 +243,6 @@
   font-family: inherit;
   transition: background 0.2s;
 }
-
 .btn-return:hover { background: #15803d; }
 
 .return-date {
@@ -271,19 +260,19 @@
   width: 30px;
   height: 30px;
   border-radius: 7px;
-  border: 1px solid var(--border);
+  border: 1.5px solid var(--blue);
   background: var(--card);
-  color: var(--text-secondary);
+  color: var(--blue);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.15s;
   font-family: inherit;
+  transition: background 0.2s;
 }
+.btn-approve:hover { background: #15803d; }
 
-.btn-icon:hover { background: var(--blue); color: white; border-color: var(--blue); }
-.btn-icon-danger:hover { background: #dc2626; border-color: #dc2626; color: white; }
 
 /* ─── GRID DE MATERIAL DISPONIBLE ─── */
 .materials-grid {
@@ -300,16 +289,8 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  transition: box-shadow 0.2s, transform 0.15s, border-color 0.2s;
+  transition: none;
 }
-
-.material-card:hover {
-  box-shadow: 0 3px 12px rgba(0,0,0,0.08);
-  transform: translateY(-2px);
-  border-color: var(--orange);
-}
-
-.material-card.no-stock:hover { border-color: var(--border); transform: none; box-shadow: none; }
 
 .material-card-header {
   display: flex;
@@ -409,7 +390,6 @@
   font-family: inherit;
   transition: all 0.15s;
 }
-
 .btn-outline:hover { background: var(--blue); color: white; }
 .btn-outline-danger { border-color: #dc2626; color: #dc2626; }
 .btn-outline-danger:hover { background: #dc2626; color: white; }
@@ -465,7 +445,6 @@
   text-decoration: underline;
   font-family: inherit;
 }
-.btn-clear:hover { color: var(--orange); }
 
 .btn-request {
   display: inline-flex;
@@ -483,7 +462,6 @@
   box-shadow: 0 4px 14px rgba(249, 115, 22, 0.3);
   transition: transform 0.2s, box-shadow 0.2s;
 }
-
 .btn-request:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(249, 115, 22, 0.4);
@@ -525,6 +503,47 @@
 }
 
 /* ─── RESPONSIVE ─── */
+/* ─── BOTONES DE EXPORTACIÓN ─── */
+.export-buttons {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.btn-export {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text-secondary);
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* ─── PENDIENTES DE ACEPTAR / DEVOLVER ─── */
+.loan-card.pending-approval { border-color: var(--orange); }
+.loan-card.pending-return { border-color: var(--blue); }
+.loan-status-badge.waiting { background: #dbeafe; color: #1e40af; }
+[data-theme="dark"] .loan-status-badge.waiting { background: var(--info-bg); color: var(--info-color); }
+.btn-approve {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: #16a34a;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
 @media (max-width: 768px) {
   .loans-page { padding: 16px; }
   .loans-header { flex-direction: column; align-items: stretch; }

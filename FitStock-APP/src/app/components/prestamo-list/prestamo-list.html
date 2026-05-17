@@ -1,7 +1,7 @@
-<!-- Página de gestión de préstamos de material deportivo -->
 <div class="loans-page">
   <!-- Cabecera -->
   <div class="loans-header">
+    @if (vista === 'completa') {
     <div class="loans-header-left">
       <h2 class="loans-title">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8.5a2.5 2.5 0 0 0-4 0 2.5 2.5 0 0 0-4 0c0 1.38 1.1 3 4 4.5 2.9-1.5 4-3.12 4-4.5z"/><path d="M2 12a10 10 0 1 0 20 0 10 10 0 0 0-20 0z"/><path d="M8 14v2"/><path d="M16 14v2"/></svg>
@@ -9,18 +9,33 @@
       </h2>
       <p class="loans-subtitle">Gestión de préstamos de material deportivo</p>
     </div>
+    }
+    @if (vista === 'completados') {
+    <div class="loans-header-left">
+      <h2 class="loans-title">Préstamos Completados</h2>
+      <p class="loans-subtitle">Historial de préstamos devueltos</p>
+    </div>
+    }
+    @if (vista === 'pendientes-devolucion') {
+    <div class="loans-header-left">
+      <h2 class="loans-title">Pendientes de Devolver</h2>
+      <p class="loans-subtitle">Devoluciones marcadas por clientes que requieren confirmación</p>
+    </div>
+    }
+    @if (vista === 'completa') {
     <button class="btn-add-material" (click)="abrirCrearMaterial()" *ngIf="userRole !== 'cliente'">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       Añadir Material
     </button>
+    }
   </div>
 
-  <!-- Mensaje de error condicional -->
   @if (error) {
     <div class="error-msg">{{ error }}</div>
   }
 
-  <!-- Tarjetas de resumen -->
+  <!-- Tarjetas de resumen (solo en vista completa) -->
+  @if (vista === 'completa') {
   <div class="stats-row">
     <div class="stat-card stat-total">
       <span class="stat-num">{{ prestamos.length }}</span>
@@ -39,18 +54,19 @@
       <span class="stat-label">Materiales Disponibles</span>
     </div>
   </div>
+  }
 
   <!-- Sección: Préstamos activos -->
-  <div class="section-block">
+  @if (vista === 'completa' || vista === 'activos') {
+  <div class="section-block" id="seccion-activos">
     <h3 class="section-title">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
       {{ userRole === 'cliente' ? 'Mis Préstamos' : 'Préstamos Activos' }}
     </h3>
 
-    <!-- Listado de préstamos del usuario actual -->
-    @if (prestamosUser.length > 0) {
+    @if (prestamosActivos.length > 0) {
       <div class="loans-grid">
-        @for (p of prestamosUser; track p.id) {
+        @for (p of prestamosActivos; track p.id) {
           <div class="loan-card" [class.returned]="p.devolucion">
             <div class="loan-card-top">
               <div class="loan-material-icon">
@@ -61,23 +77,27 @@
                 <span class="loan-date" *ngIf="userRole !== 'cliente'">{{ p.usuario }}</span>
                 <span class="loan-date">{{ p.fecha | date:'dd/MM/yyyy' }}</span>
               </div>
-              <span class="loan-status-badge" [class.pending]="!p.devolucion" [class.done]="p.devolucion">
-                {{ p.devolucion ? 'Devuelto' : 'Pendiente' }}
+              <span class="loan-status-badge" [class.pending]="p.estado === 'pendiente' || (p.estado === 'activo' && !p.devolucion)" [class.done]="p.devolucion" [class.waiting]="p.estado === 'pendiente_devolucion'">
+                {{ p.estado === 'pendiente' ? 'Pendiente aprobar' : p.estado === 'pendiente_devolucion' ? 'Pendiente confirmar' : p.devolucion ? 'Devuelto' : 'Activo' }}
               </span>
             </div>
             <div class="loan-card-bottom">
-              <!-- Botón para marcar como devuelto (solo si no está devuelto) -->
-              @if (!p.devolucion) {
+              @if (p.estado === 'pendiente') {
+                @if (userRole !== 'cliente') {
+                <button class="btn-approve" (click)="aprobarPrestamo(p.id)">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  Aceptar
+                </button>
+                }
+              } @else if (p.estado === 'activo' && !p.devolucion) {
                 <button class="btn-return" (click)="devolverPrestamo(p.id)">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                   Marcar Devuelto
                 </button>
               }
-              <!-- Fecha de devolución si ya se devolvió -->
               @if (p.devolucion) {
                 <span class="return-date">Devuelto {{ p.devolucion | date:'dd/MM/yyyy' }}</span>
               }
-              <!-- Acciones de administración (editar/borrar) solo para no clientes -->
               <div class="loan-actions" *ngIf="userRole !== 'cliente'">
                 <button class="btn-icon" (click)="abrirEditar(p)" title="Editar fecha">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
@@ -97,9 +117,71 @@
       </div>
     }
   </div>
+  }
+
+  <!-- Sección: Préstamos completados -->
+  @if (vista === 'completa' || vista === 'completados') {
+  <div class="section-block" id="seccion-completados">
+    <div class="section-header-row">
+    <h3 class="section-title">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      Completados
+    </h3>
+    @if (userRole !== 'cliente') {
+    <div class="export-buttons">
+      <button class="btn-export" (click)="exportarCSV()" title="Descargar Excel">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Excel
+      </button>
+      <button class="btn-export" (click)="exportarPDF()" title="Descargar PDF">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        PDF
+      </button>
+    </div>
+    }
+    </div>
+
+    @if (prestamosCompletados.length > 0) {
+      <div class="loans-grid">
+        @for (p of prestamosCompletados; track p.id) {
+          <div class="loan-card returned">
+            <div class="loan-card-top">
+              <div class="loan-material-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="4" height="10" rx="1"/><rect x="18" y="7" width="4" height="10" rx="1"/><rect x="7" y="9" width="10" height="6" rx="1"/></svg>
+              </div>
+              <div class="loan-info">
+                <span class="loan-material-name">{{ p.material }}</span>
+                <span class="loan-date" *ngIf="userRole !== 'cliente'">{{ p.usuario }}</span>
+                <span class="loan-date">{{ p.fecha | date:'dd/MM/yyyy' }}</span>
+              </div>
+              <span class="loan-status-badge done">Devuelto</span>
+            </div>
+            <div class="loan-card-bottom">
+              <span class="return-date">Devuelto {{ p.devolucion | date:'dd/MM/yyyy' }}</span>
+              <div class="loan-actions" *ngIf="userRole !== 'cliente'">
+                <button class="btn-icon" (click)="abrirEditar(p)" title="Editar fecha">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                </button>
+                <button class="btn-icon btn-icon-danger" (click)="borrarPrestamo(p.id)" title="Borrar">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="empty-state">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        <p>No hay préstamos completados.</p>
+      </div>
+    }
+  </div>
+  }
 
   <!-- Sección: Material disponible -->
-  <div class="section-block">
+  @if (vista === 'completa' || vista === 'materiales') {
+  <div class="section-block" id="seccion-materiales">
     <div class="section-header-row">
       <h3 class="section-title">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="4" height="10" rx="1"/><rect x="18" y="7" width="4" height="10" rx="1"/><rect x="7" y="9" width="10" height="6" rx="1"/></svg>
@@ -108,7 +190,6 @@
       <span class="material-count" *ngIf="grupos.length > 0">{{ grupos.length }} grupos</span>
     </div>
 
-    <!-- Grid de materiales disponibles con control de cantidad -->
     @if (grupos.length > 0) {
       <div class="materials-grid">
         @for (g of grupos; track g.nombre) {
@@ -130,7 +211,6 @@
               <button class="qty-btn" (click)="incrementar(g)" [disabled]="g.seleccionados >= g.disponibles">+</button>
             </div>
 
-            <!-- Acciones de administración sobre materiales (editar/borrar) -->
             @if (userRole !== 'cliente') {
               <div class="material-actions">
                 <button class="btn-outline" (click)="abrirEditarGrupo(g)">
@@ -153,6 +233,48 @@
       </div>
     }
   </div>
+  }
+
+  <!-- Sección: Pendientes de devolver (solo admin/entrenador, se muestra en completa y en vista propia) -->
+  @if ((vista === 'pendientes-devolucion' || vista === 'completa') && userRole !== 'cliente') {
+  <div class="section-block" id="seccion-pendientes-dev">
+    <h3 class="section-title">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/><path d="M2 12a10 10 0 1 0 20 0 10 10 0 0 0-20 0z"/></svg>
+      Pendientes de Confirmar Devolución
+    </h3>
+
+    @if (prestamosPendientesDev.length > 0) {
+      <div class="loans-grid">
+        @for (p of prestamosPendientesDev; track p.id) {
+          <div class="loan-card pending-return">
+            <div class="loan-card-top">
+              <div class="loan-material-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="4" height="10" rx="1"/><rect x="18" y="7" width="4" height="10" rx="1"/><rect x="7" y="9" width="10" height="6" rx="1"/></svg>
+              </div>
+              <div class="loan-info">
+                <span class="loan-material-name">{{ p.material }}</span>
+                <span class="loan-date">{{ p.usuario }}</span>
+                <span class="loan-date">{{ p.fecha | date:'dd/MM/yyyy' }}</span>
+              </div>
+              <span class="loan-status-badge waiting">Pendiente confirmar</span>
+            </div>
+            <div class="loan-card-bottom">
+              <button class="btn-approve" (click)="confirmarDevolucionPrestamo(p.id)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Confirmar Devolución
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="empty-state">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        <p>No hay devoluciones pendientes de confirmar.</p>
+      </div>
+    }
+  </div>
+  }
 
   <!-- Barra inferior fija de selección -->
   @if (haySeleccion) {

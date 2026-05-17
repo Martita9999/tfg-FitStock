@@ -11,24 +11,32 @@ import { UsuarioList } from './components/usuario-list/usuario-list';
 import { MaterialList } from './components/material-list/material-list';
 import { DashboardHomeComponent } from './components/dashboard-home/dashboard-home';
 
-// Configuración de rutas de la aplicación
+/*
+ * Rutas de la aplicación.
+ * Públicas: portal, login, registro, contacto.
+ * Protegidas (bajo /admin): dashboard con sidebar e hijos.
+ * /usuarios/:rol permite filtrar por tipo desde URL.
+ */
 export const routes: Routes = [
-  { path: '', component: PortalComponent },                // Página de aterrizaje pública
-  { path: 'login', component: LoginComponent },            // Inicio de sesión
-  { path: 'registro', component: RegistroComponent },      // Registro de nuevos usuarios
-  { path: 'contacto', component: ContactoComponent },      // Formulario de contacto
+  { path: '', component: PortalComponent },                              // Landing pública
+  { path: 'login', component: LoginComponent },
+  { path: 'registro', component: RegistroComponent },
+  { path: 'contacto', component: ContactoComponent },
   {
-    path: 'admin',                                          // Panel de administración (requiere sidebar)
-    component: AdminDashboardComponent,
+    path: 'admin',
+    component: AdminDashboardComponent,                                  // Layout con sidebar + header
     children: [
-      { path: 'inventario', component: ProductoList },     // Gestión de productos y stock
-      { path: 'prestamos', component: PrestamoList },      // Préstamos de material
-      { path: 'incidencias', component: IncidenciaList },  // Incidencias de máquinas
-      { path: 'materiales', component: MaterialList },      // Máquinas del gimnasio
-      { path: 'usuarios/:rol', component: UsuarioList },     // Usuarios filtrados por rol
-      { path: 'usuarios', component: UsuarioList },         // Gestión de usuarios (todos)
-      { path: 'home', component: DashboardHomeComponent },  // Resumen general / dashboard principal
-      { path: '', redirectTo: 'home', pathMatch: 'full' }   // Redirección por defecto dentro del panel
+      { path: 'inventario', component: ProductoList },
+      { path: 'prestamos/:vista', component: PrestamoList },
+      { path: 'prestamos', component: PrestamoList },
+      { path: 'materiales/:vista', component: MaterialList },
+      { path: 'materiales', component: MaterialList },
+      { path: 'incidencias/:vista', component: IncidenciaList },
+      { path: 'incidencias', component: IncidenciaList },
+      { path: 'usuarios/:rol', component: UsuarioList },                 // Filtro por rol en URL
+      { path: 'usuarios', component: UsuarioList },
+      { path: 'home', component: DashboardHomeComponent },
+      { path: '', redirectTo: 'home', pathMatch: 'full' }                // Redirige a home por defecto
     ]
   }
 ];

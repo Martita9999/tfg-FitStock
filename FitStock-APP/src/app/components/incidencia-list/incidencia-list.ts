@@ -1,11 +1,20 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { IncidenciasService } from '../../services/incidencias.service';
 import { MaterialesService } from '../../services/materiales.service';
 import { UsuarioService } from '../../services/usuario';
 import { Incidencia, Material } from '../../interfaces/app.interfaces';
 
+/*
+ * IncidenciaList: CRUD de incidencias reportadas en máquinas.
+ * Separa activas (abierta/en_proceso) de resueltas.
+ * Al crear, backend marca máquina como 'averiado'.
+ * Al editar, cambia prioridad y estado.
+ */
 @Component({
   selector: 'app-incidencia-list',
   standalone: true,
@@ -13,82 +22,82 @@ import { Incidencia, Material } from '../../interfaces/app.interfaces';
   templateUrl: './incidencia-list.html',
   styleUrl: './incidencia-list.css',
 })
-// Componente que lista y gestiona las incidencias reportadas en máquinas
 export class IncidenciaList implements OnInit {
-  private incidenciasService = inject(IncidenciasService);   // Servicio de incidencias
-  private materialesService = inject(MaterialesService);     // Servicio de materiales
-  private usuarioService = inject(UsuarioService);            // Servicio de autenticación
-  lista: Incidencia[] = [];      // Lista completa de incidencias
-  materiales: Material[] = [];   // Materiales tipo máquina para el selector
-  userRole = '';                 // Rol del usuario actual
+  private incidenciasService = inject(IncidenciasService);
+  private materialesService = inject(MaterialesService);
+  private usuarioService = inject(UsuarioService);
+  private route = inject(ActivatedRoute);
+  lista: Incidencia[] = [];
+  materiales: Material[] = [];
+  userRole = '';
+  vista: 'completa' | 'activas' | 'resueltas' = 'completa';
 
-  showModal = false;                                                     // Control del modal de creación
-  newIncidencia = { id_material: 0, descripcion: '', prioridad: 'media' };  // Datos de nueva incidencia
-  error = '';   // Mensaje de error
+  showModal = false;
+  newIncidencia = { id_material: 0, descripcion: '', prioridad: 'media' };
+  error = '';
 
-  showEditModal = false;                                    // Control del modal de edición
-  editIncidencia: Incidencia | null = null;                  // Incidencia en edición
-  editData = { descripcion: '', prioridad: '', estado: '' };  // Datos editados
+  showEditModal = false;
+  editIncidencia: Incidencia | null = null;
+  editData = { descripcion: '', prioridad: '', estado: '' };
 
-  // Estados disponibles para editar (excluye 'resuelta' del selector si se desea)
   estadosDisponibles = [
     { value: 'abierta', label: 'Averiado' },
     { value: 'en_proceso', label: 'Mantenimiento' },
   ];
 
-  // Ordena materiales por su etiqueta ID usando comparación numérica
   private sortByIdTag(a: Material, b: Material): number {
     const tagA = a.id_tag_material || '';
     const tagB = b.id_tag_material || '';
     return tagA.localeCompare(tagB, undefined, { numeric: true });
   }
 
-  // Al iniciar, se suscribe al usuario actual, carga las incidencias y los materiales tipo máquina
   ngOnInit() {
     this.usuarioService.currentUser$.subscribe(u => this.userRole = u?.rol ?? '');
     this.loadIncidencias();
     this.materialesService.getMateriales('maquina').subscribe(data => this.materiales = data.sort(this.sortByIdTag));
+    this.route.paramMap.subscribe(params => {
+      const v = params.get('vista');
+      if (v === 'activas' || v === 'resueltas') {
+        this.vista = v;
+      } else {
+        this.vista = 'completa';
+      }
+    });
   }
 
-  // Carga la lista de incidencias desde la API
   loadIncidencias() {
     this.incidenciasService.getIncidencias().subscribe(data => this.lista = data);
   }
 
-  // Filtra las incidencias activas (no resueltas)
+  /* incidenciasActivas: filtro para mostrar solo abiertas/en_proceso */
   get incidenciasActivas(): Incidencia[] {
     return this.lista.filter(i => i.estado !== 'resuelta');
   }
 
-  // Filtra las incidencias ya resueltas
   get incidenciasResueltas(): Incidencia[] {
     return this.lista.filter(i => i.estado === 'resuelta');
   }
 
-  // Convierte el valor del estado a una etiqueta legible
   getEstadoLabel(valor: string): string {
     if (valor === 'abierta') return 'Averiado';
     if (valor === 'en_proceso') return 'Mantenimiento';
     return 'Resuelta';
   }
 
-  // Abre el modal de creación de incidencia
   abrirModal() {
     this.newIncidencia = { id_material: 0, descripcion: '', prioridad: 'media' };
     this.error = '';
     this.showModal = true;
   }
 
-  // Cierra el modal de creación
   cerrarModal() {
     this.showModal = false;
     this.error = '';
   }
 
-  // Crea una nueva incidencia en la API
   crearIncidencia() {
     this.error = '';
-    if (!this.newIncidencia.id_material || !this.newIncidencia.descripcion) {   // Validación: campos obligatorios
+    if (!this.newIncidencia.id_material || !this.newIncidencia.descripcion) {
       this.error = 'Selecciona un material y escribe una descripción';
       return;
     }
@@ -98,7 +107,6 @@ export class IncidenciaList implements OnInit {
     });
   }
 
-  // Abre el modal de edición con los datos de la incidencia
   abrirEditar(inc: Incidencia) {
     this.editIncidencia = inc;
     this.editData = { descripcion: inc.descripcion, prioridad: inc.prioridad, estado: inc.estado };
@@ -106,14 +114,12 @@ export class IncidenciaList implements OnInit {
     this.showEditModal = true;
   }
 
-  // Cierra el modal de edición
   cerrarEditar() {
     this.showEditModal = false;
     this.editIncidencia = null;
     this.error = '';
   }
 
-  // Guarda los cambios de prioridad/estado de la incidencia
   guardarEditar() {
     if (!this.editIncidencia) return;
     this.error = '';
@@ -123,12 +129,52 @@ export class IncidenciaList implements OnInit {
     });
   }
 
-  // Confirma y elimina una incidencia por su ID
   borrarIncidencia(id: number) {
-    if (!confirm('¿Borrar esta incidencia?')) return;    // Confirmación del usuario
+    if (!confirm('¿Borrar esta incidencia?')) return;
     this.incidenciasService.deleteIncidencia(id).subscribe({
       next: () => this.loadIncidencias(),
       error: () => alert('Error al borrar la incidencia')
     });
+  }
+
+  exportarCSV() {
+    const filas = this.incidenciasResueltas.map(inc => [
+      inc.id,
+      inc.nombre_material,
+      inc.ubicacion,
+      inc.descripcion,
+      inc.prioridad,
+      inc.estado,
+      inc.created_at ? new Date(inc.created_at).toLocaleDateString() : '',
+      inc.fecha_resolucion ? new Date(inc.fecha_resolucion).toLocaleDateString() : ''
+    ]);
+    const cabeceras = ['ID', 'Máquina', 'Ubicación', 'Descripción', 'Prioridad', 'Estado', 'Inicio', 'Fin'];
+    const csv = [cabeceras.join(','), ...filas.map(f => f.map(v => `"${v}"`).join(','))].join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `incidencias_resueltas_${new Date().toISOString().slice(0,10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+  }
+
+  exportarPDF() {
+    const doc = new jsPDF();
+    const filas = this.incidenciasResueltas.map(inc => [
+      inc.id.toString(),
+      inc.nombre_material || '—',
+      inc.ubicacion || '—',
+      inc.descripcion,
+      inc.prioridad,
+      inc.estado,
+      inc.created_at ? new Date(inc.created_at).toLocaleDateString() : '',
+      inc.fecha_resolucion ? new Date(inc.fecha_resolucion).toLocaleDateString() : ''
+    ]);
+    autoTable(doc, {
+      head: [['ID', 'Máquina', 'Ubicación', 'Descripción', 'Prioridad', 'Estado', 'Inicio', 'Fin']],
+      body: filas,
+      styles: { fontSize: 8 }
+    });
+    doc.save(`incidencias_resueltas_${new Date().toISOString().slice(0,10)}.pdf`);
   }
 }

@@ -1,16 +1,25 @@
 <?php
-/**
- * Genera la página de documentación de la API FitStock.
- * Define todos los recursos, endpoints y métodos HTTP disponibles,
- * y los renderiza sobre una plantilla HTML.
+/*
+ * Generador de la página de documentación de la API FitStock.
+ * 
+ * Este archivo define todos los recursos, endpoints y métodos HTTP
+ * disponibles en la API, y los renderiza dentro de una plantilla HTML.
+ * 
+ * Os explico cómo funciona para que veáis cómo se genera la documentación
+ * automáticamente a partir de un array de datos.
  */
 
-// Array principal que agrupa todos los recursos de la API.
-// Cada entrada tiene:
-//   - 'base': ruta base del grupo (vacío si no aplica)
-//   - 'endpoints': lista de arrays [método, ruta, descripción, auth]
+/*
+ * $resources: array principal que agrupa todos los recursos de la API.
+ * Cada grupo tiene:
+ *   - 'base': ruta base del grupo (vacío si los endpoints no comparten prefijo)
+ *   - 'endpoints': lista de arrays con 4 elementos:
+ *       [0] método HTTP (GET, POST, PUT, DELETE)
+ *       [1] ruta completa del endpoint
+ *       [2] descripción de lo que hace
+ *       [3] nivel de autenticación requerido: 'any', 'all', 'admin', 'admin-ent'
+ */
 $resources = [
-  // Grupo: Autenticación — endpoints públicos sin ruta base compartida
   '🔐 Autenticación' => [
     'base' => '',
     'endpoints' => [
@@ -19,7 +28,6 @@ $resources = [
       ['POST', '/api/registro', 'Registrar nuevo usuario (rol cliente)', 'any'],
     ]
   ],
-    // Grupo: Usuarios — gestión de cuentas y roles
     '👥 Usuarios' => [
     'base' => '/api/usuarios',
     'endpoints' => [
@@ -31,7 +39,6 @@ $resources = [
       ['DELETE', '/api/usuarios/{id}', 'Eliminar un usuario', 'admin'],
     ]
   ],
-    // Grupo: Materiales — máquinas y material prestable del gimnasio
     '📦 Materiales' => [
     'base' => '/api/materiales',
     'endpoints' => [
@@ -42,7 +49,6 @@ $resources = [
       ['DELETE', '/api/materiales/{id}', 'Eliminar un material', 'admin-ent'],
     ]
   ],
-    // Grupo: Préstamos — registro y control de material prestado
     '🤝 Préstamos' => [
     'base' => '/api/prestamos',
     'endpoints' => [
@@ -52,7 +58,6 @@ $resources = [
       ['DELETE', '/api/prestamos/{id}', 'Eliminar un préstamo', 'admin-ent'],
     ]
   ],
-    // Grupo: Incidencias — reporte de averías y problemas
     '⚠️ Incidencias' => [
     'base' => '/api/incidencias',
     'endpoints' => [
@@ -62,7 +67,6 @@ $resources = [
       ['DELETE', '/api/incidencias/{id}', 'Eliminar una incidencia', 'admin'],
     ]
   ],
-    // Grupo: Productos — artículos disponibles para compra en la tienda
     '📦 Productos' => [
     'base' => '/api/productos',
     'endpoints' => [
@@ -72,7 +76,6 @@ $resources = [
       ['DELETE', '/api/productos/{id}', 'Eliminar un producto', 'admin'],
     ]
   ],
-    // Grupo: Compras — procesamiento de pedidos desde el carrito
     '🛒 Compras' => [
     'base' => '/api/compras',
     'endpoints' => [
@@ -80,14 +83,12 @@ $resources = [
       ['POST', '/api/compras', 'Realizar una compra (vacía el carrito)', 'all'],
     ]
   ],
-    // Grupo: Contacto — formulario público de contacto
     '📧 Contacto' => [
     'base' => '/api/contacto',
     'endpoints' => [
       ['POST', '/api/contacto', 'Enviar mensaje de contacto (email + mensaje)', 'any'],
     ]
   ],
-    // Grupo: Resumen — datos agregados para el dashboard principal
     '📊 Resumen' => [
     'base' => '/api/resumen',
     'endpoints' => [
@@ -96,13 +97,13 @@ $resources = [
   ],
 ];
 
-/**
- * Etiquetas de nivel de autenticación para mostrar en los badges.
- * Clave → [texto visible, clase CSS]
- *   any      → sin autenticación requerida
- *   all      → cualquier usuario autenticado
- *   admin    → solo administradores
- *   admin-ent → administradores y entrenadores
+/*
+ * $authLabels: etiquetas de nivel de autenticación para los badges.
+ * Cada entrada tiene [texto visible, clase CSS]:
+ *   'any'      → sin autenticación (público)
+ *   'all'      → cualquier usuario autenticado
+ *   'admin'    → solo administradores
+ *   'admin-ent' → administradores y entrenadores
  */
 $authLabels = [
   'any' => ['Sin auth', 'auth-any'],
@@ -111,27 +112,34 @@ $authLabels = [
   'admin-ent' => ['Admin/Entrenador', 'auth-admin'],
 ];
 
-// Asocia cada método HTTP con su clase de color CSS
+/*
+ * $methodColors: asociamos cada método HTTP con una clase CSS
+ * para que cada uno tenga su color característico:
+ *   GET    → azul
+ *   POST   → verde
+ *   PUT    → amarillo/naranja
+ *   DELETE → rojo
+ */
 $methodColors = ['GET' => 'get', 'POST' => 'post', 'PUT' => 'put', 'DELETE' => 'delete'];
 
-// Itera sobre cada grupo de recursos para construir el HTML de la documentación
+/*
+ * Generación del HTML:
+ * Iteramos sobre cada grupo de recursos y construimos el HTML
+ * de sus endpoints. Luego inyectamos todo en la plantilla docs.html
+ * reemplazando el marcador {{RESOURCES}}.
+ */
 $rows = '';
 foreach ($resources as $title => $res) {
-  // Construye los endpoints de cada grupo
   $eps = '';
   foreach ($res['endpoints'] as $ep) {
-    // Desestructura: [método HTTP, ruta, descripción, nivel de autenticación]
     [$method, $route, $desc, $auth] = $ep;
-    $color = $methodColors[$method];                       // Clase CSS según el método (get/post/put/delete)
-    [$authLabel, $authClass] = $authLabels[$auth];          // Etiqueta y clase CSS según el rol requerido
-    // Genera el HTML por endpoint: método + ruta + descripción + badge de autenticación
+    $color = $methodColors[$method];
+    [$authLabel, $authClass] = $authLabels[$auth];
     $eps .= <<<ROW
       <div class="endpoint"><span class="method {$color}">{$method}</span><span class="route">{$route}</span><span class="desc">{$desc}</span><span class="tags"><span class="auth {$authClass}">{$authLabel}</span></span></div>
 ROW;
   }
-  // Si el grupo tiene ruta base, la muestra como pequeño texto junto al título
   $base = $res['base'] ? " <small>{$res['base']}</small>" : '';
-  // Genera el HTML del grupo: título + lista de endpoints
   $rows .= <<<RES
   <div class="resource">
     <h2>{$title}{$base}</h2>
@@ -141,6 +149,9 @@ ROW;
 RES;
 }
 
-// Carga la plantilla HTML y reemplaza el marcador {{RESOURCES}} con el contenido generado
+/*
+ * Cargamos la plantilla HTML y reemplazamos {{RESOURCES}} con el HTML
+ * que acabamos de generar. Así separamos la lógica (PHP) de la presentación (HTML).
+ */
 $html = file_get_contents(__DIR__ . '/docs.html');
 echo str_replace('{{RESOURCES}}', $rows, $html);

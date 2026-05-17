@@ -1,13 +1,15 @@
 import { Component, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
-// Componente raíz de la aplicación Angular
+/*
+ * App: componente raíz. Renderiza rutas hijas mediante <router-outlet>.
+ */
 @Component({
-  selector: 'app-root',           // Selector usado en index.html
-  imports: [RouterOutlet],        // Módulo de enrutamiento para cargar las rutas hijas
-  templateUrl: './app.html',      // Plantilla HTML
-  styleUrl: './app.css'           // Estilos globales del componente
+  selector: 'app-root',
+  imports: [RouterOutlet],
+  templateUrl: './app.html',
+  styleUrl: './app.css'
 })
 export class App {
-  protected readonly title = signal('fitStock-front');   // Título de la app (usado en tests)
+  protected readonly title = signal('fitStock-front');
 }

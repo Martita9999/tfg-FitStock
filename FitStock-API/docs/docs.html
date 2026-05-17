@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <!--
-  Plantilla HTML para la documentación de la API FitStock.
-  El contenido dinámico se inyecta reemplazando el marcador {{RESOURCES}}.
+  Plantilla HTML de la documentación de FitStock.
+  El contenido lo inyecta docs.php reemplazando {{RESOURCES}} con los
+  bloques de endpoints generados dinámicamente.
 -->
 <html lang="es">
 <head>
@@ -14,7 +15,7 @@
 <div class="container">
   <h1>FitStock <span>API</span></h1>
   <p class="subtitle">Documentación de la API REST — Backend del sistema de gestión FitStock</p>
-  <!-- Marcador reemplazado por PHP con los bloques .resource generados dinámicamente -->
+  <!-- Aquí docs.php inyecta los .resource con cada grupo de endpoints -->
   {{RESOURCES}}
   <footer>FitStock API — Backend del sistema de gestión</footer>
 </div>

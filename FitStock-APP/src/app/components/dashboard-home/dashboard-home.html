@@ -221,20 +221,18 @@
         </div>
       </div>
 
-      <!-- Mis Préstamos -->
+      <!-- Mis Préstamos Pendientes -->
       <div class="card prestamos-card">
         <div class="card-header prestamos"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8.5a2.5 2.5 0 0 0-4 0 2.5 2.5 0 0 0-4 0c0 1.38 1.1 3 4 4.5 2.9-1.5 4-3.12 4-4.5z"/><path d="M2 12a10 10 0 1 0 20 0 10 10 0 0 0-20 0z"/><path d="M8 14v2"/><path d="M16 14v2"/></svg> Mis Préstamos</div>
         <div class="card-body">
           @if (misPrestamos.length === 0) {
-            <p class="no-data">No tienes préstamos activos</p>
+            <p class="no-data">No tienes préstamos pendientes</p>
           } @else {
             <div class="stock-list">
               @for (p of misPrestamos; track p.id) {
                 <div class="stock-item">
                   <span class="item-name">{{ p.material }}</span>
-                  <span class="item-qty" [class.ok]="p.devolucion" [class.warning]="!p.devolucion">
-                    {{ p.devolucion ? 'Devuelto' : 'Pendiente' }}
-                  </span>
+                  <span class="item-qty warning">Pendiente</span>
                 </div>
               }
             </div>
@@ -243,10 +241,49 @@
         </div>
       </div>
 
-      <!-- Productos Comprados -->
-      <div class="card stock-card">
-        <div class="card-header stock"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg> Productos Comprados</div>
+      <!-- Productos Comprados (como Gasto Total) -->
+      <div class="card ventas-card">
+        <div class="card-header ventas"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Productos Comprados</div>
         <div class="card-body">
+          <div class="stats">
+            <div class="stat">
+              <span class="stat-num success">{{ totalGastado | number:'1.2-2' }}€</span>
+              <span class="stat-label">Total gastado</span>
+            </div>
+          </div>
+          @if (compras.length === 0) {
+            <p class="no-data" style="margin-top:12px;">No has comprado productos todavía</p>
+          } @else {
+            <div class="stock-list" style="margin-top:12px;">
+              @for (c of compras.slice(0, 2); track c.id) {
+                <div class="stock-item">
+                  <span class="item-name">{{ c.nombre_producto }}</span>
+                  <span class="item-qty" style="color:var(--success-color, #16a34a)">{{ c.cantidad }} uds — {{ c.total | number:'1.2-2' }}€</span>
+                </div>
+              }
+            </div>
+          }
+          <a class="card-link" (click)="showGastosModal = true" style="cursor:pointer;">Gasto total →</a>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modal de gastos -->
+  @if (showGastosModal) {
+    <div class="modal-overlay" (click)="showGastosModal = false">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Todos los Gastos</h3>
+          <button class="btn-close" (click)="showGastosModal = false"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div class="modal-body">
+          <div class="stats" style="margin-bottom:16px;">
+            <div class="stat">
+              <span class="stat-num success">{{ totalGastado | number:'1.2-2' }}€</span>
+              <span class="stat-label">Total gastado</span>
+            </div>
+          </div>
           @if (compras.length === 0) {
             <p class="no-data">No has comprado productos todavía</p>
           } @else {
@@ -254,12 +291,11 @@
               @for (c of compras; track c.id) {
                 <div class="stock-item">
                   <span class="item-name">{{ c.nombre_producto }}</span>
-                  <span class="item-qty">{{ c.cantidad }} uds — {{ c.total | number:'1.2-2' }}€</span>
+                  <span class="item-qty" style="color:var(--success-color, #16a34a)">{{ c.cantidad }} uds — {{ c.total | number:'1.2-2' }}€</span>
                 </div>
               }
             </div>
           }
-          <a routerLink="/admin/inventario" class="card-link">Comprar productos →</a>
         </div>
       </div>
     </div>

@@ -158,7 +158,6 @@
   transition: transform 0.15s, box-shadow 0.15s;
   font-family: inherit;
 }
-
 .btn-primary:hover:not(:disabled) {
   transform: translateY(-1px);
   box-shadow: 0 8px 25px rgba(249, 115, 22, 0.4);
@@ -191,10 +190,6 @@
   font-weight: 600;
   text-decoration: none;
   transition: color 0.2s;
-}
-
-.back-link:hover {
-  color: #f97316;
 }
 
 /* ─── RESPONSIVE ─── */

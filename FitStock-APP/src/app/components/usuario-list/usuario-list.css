@@ -5,13 +5,8 @@
   align-items: center;
   margin-bottom: 20px;
 }
+.btn-all:hover { color: var(--orange-dark); }
 
-.header-actions .page-title {
-  margin-bottom: 0;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
 
 .btn-all {
   font-size: 12px;
@@ -22,7 +17,42 @@
   text-underline-offset: 3px;
   white-space: nowrap;
 }
-.btn-all:hover { color: var(--orange-dark); }
+
+/* ─── BARRA DE BÚSQUEDA ─── */
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 0 14px;
+  transition: border-color 0.2s;
+}
+
+.search-bar:focus-within {
+  border-color: var(--blue);
+}
+
+.search-bar input {
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 10px 0;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--text);
+}
+.btn-cancel:hover {
+  background: var(--bg);
+  border-color: #cbd5e1;
+}
+
+
+.search-bar svg {
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
 
 /* ─── BOTÓN CREAR ─── */
 .btn-create {
@@ -41,7 +71,6 @@
   transition: opacity 0.2s, transform 0.15s, box-shadow 0.15s;
   font-family: inherit;
 }
-
 .btn-create:hover {
   opacity: 0.9;
   transform: translateY(-2px);
@@ -55,62 +84,53 @@
   align-items: center;
 }
 
-/* Botón editar */
+/* Botón editar: azul directo */
 .btn-edit {
   background: none;
-  border: 1.5px solid var(--border);
+  border: 1.5px solid var(--blue);
   padding: 7px 11px;
   border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
   transition: all 0.2s;
-  color: var(--text-secondary);
+  color: var(--blue);
 }
-
 .btn-edit:hover {
   background: #dbeafe;
-  border-color: var(--blue);
-  color: var(--blue);
   transform: scale(1.08);
 }
 [data-theme="dark"] .btn-edit:hover { background: #1e3a5f; }
 
-/* Botón borrar */
+/* Botón borrar: rojo directo */
 .btn-delete {
   background: none;
-  border: 1.5px solid var(--border);
+  border: 1.5px solid #dc2626;
   padding: 7px 11px;
   border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
   transition: all 0.2s;
-  color: var(--text-secondary);
+  color: #dc2626;
 }
-
 .btn-delete:hover {
   background: #fef2f2;
-  border-color: #dc2626;
-  color: #dc2626;
   transform: scale(1.08);
 }
 [data-theme="dark"] .btn-delete:hover { background: #2d0a0a; }
 
-/* Botón solicitar cambio de contraseña */
+/* Botón solicitar cambio de contraseña: amarillo directo */
 .btn-key {
   background: none;
-  border: 1.5px solid var(--border);
+  border: 1.5px solid #d97706;
   padding: 7px 11px;
   border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
   transition: all 0.2s;
-  color: var(--text-secondary);
+  color: #d97706;
 }
-
 .btn-key:hover {
   background: #fef3c7;
-  border-color: #d97706;
-  color: #d97706;
   transform: scale(1.08);
 }
 [data-theme="dark"] .btn-key:hover { background: #2d1f0a; }
@@ -130,6 +150,54 @@
   border-radius: 6px;
 }
 [data-theme="dark"] .pwd-pending { background: var(--warning-bg); color: var(--warning-color); }
+
+/* ─── COLUMNAS DE RESUMEN ─── */
+.col-resumen {
+  text-align: center;
+  font-size: 13px;
+}
+
+.summary-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  min-width: 36px;
+}
+
+.summary-badge.gasto {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+[data-theme="dark"] .summary-badge.gasto { background: #1b3d1f; color: #81c784; }
+
+.summary-badge.prestamo {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+[data-theme="dark"] .summary-badge.prestamo { background: #0d2b4a; color: #64b5f6; }
+
+.summary-badge.prestamo.peligro {
+  background: #fce4ec;
+  color: #c62828;
+}
+[data-theme="dark"] .summary-badge.prestamo.peligro { background: #2d0a0a; color: #ef9a9a; }
+
+.summary-badge.incidencia {
+  background: #f3e5f5;
+  color: #7b1fa2;
+}
+[data-theme="dark"] .summary-badge.incidencia { background: #1f0a2d; color: #ce93d8; }
+
+.summary-badge.incidencia.si {
+  background: #fff3e0;
+  color: #e65100;
+}
+[data-theme="dark"] .summary-badge.incidencia.si { background: #2d1a0a; color: #ffb74d; }
 
 /* ─── BADGES DE ROL ─── */
 .role-badge {
@@ -272,9 +340,4 @@
   font-family: inherit;
   transition: all 0.2s;
   color: var(--text);
-}
-
-.btn-cancel:hover {
-  background: var(--bg);
-  border-color: #cbd5e1;
 }

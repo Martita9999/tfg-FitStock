@@ -11,17 +11,17 @@ export interface ResumenData {
   };
 }
 
-// Servicio que obtiene los datos de resumen del panel de administración
-// desde el endpoint GET /api/resumen del backend Laravel
+/*
+ * ResumenService: datos agregados para el dashboard de administración.
+ * Un solo GET que devuelve incidencias, stock bajo, estado máquinas y gastos.
+ */
 @Injectable({ providedIn: 'root' })
 export class ResumenService {
   private http = inject(HttpClient);
   private API_URL = 'http://localhost:8000/api';
   private httpOptions = { withCredentials: true };
 
-  // Obtiene los datos de resumen del panel de administración
-  // (incidencias, stock bajo, máquinas por estado y gastos totales/por usuario)
   obtenerResumen() {
-    return this.http.get<ResumenData>(`${this.API_URL}/resumen`, this.httpOptions);
+    return this.http.get<ResumenData>(`${this.API_URL}/resumen`, this.httpOptions);  // GET con datos agregados
   }
 }

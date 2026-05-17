@@ -1,54 +1,72 @@
 <?php
-require_once __DIR__ . "/../conexion.php";   // Importa la conexión a la base de datos
+/* ----------------------------------------------------
+ * Modelo Producto
+ * ----------------------------------------------------
+ * Gestiona los productos que se venden en la tienda del
+ * gimnasio (suplementos, bebidas, etc.).
+ *
+ * Cada producto tiene:
+ *   - Nombre y descripción
+ *   - Cantidad actual en stock
+ *   - Stock mínimo para saber cuándo reponer
+ *   - Precio unitario
+ *
+ * El dashboard usa este modelo para alertar cuando
+ * un producto tiene stock bajo (cant_actual <= stock_minimo).
+ * ---------------------------------------------------- */
 
-// Clase modelo para la tabla 'productos_stock' - gestiona productos en stock del gimnasio
+require_once __DIR__ . "/../conexion.php";  // Traemos la conexión a la BD
+
 class Producto {
-    private $id_producto;    // ID único del producto
-    private $nombre_prod;    // Nombre del producto
-    private $descripcion;    // Descripción breve del producto
-    private $cant_actual;    // Cantidad actual en stock
-    private $stock_minimo;   // Cantidad mínima antes de alertar
-    private $precio;         // Precio unitario del producto
+    /* Propiedades que se corresponden con la tabla 'productos_stock' */
+    private $id_producto;                 // ID único del producto
+    private $nombre_prod;                 // Nombre del producto
+    private $descripcion;                 // Descripción breve
+    private $cant_actual;                 // Cuántas unidades hay ahora
+    private $stock_minimo;                // Mínimo antes de alertar
+    private $precio;                      // Precio por unidad
 
-    // Constructor: asigna todos los valores al crear una instancia
+    /* Constructor: guarda todos los valores al crear el objeto */
     public function __construct($id_producto, $nombre_prod, $descripcion, $cant_actual, $stock_minimo, $precio) {
-        $this->id_producto = $id_producto;
-        $this->nombre_prod = $nombre_prod;
-        $this->descripcion = $descripcion;
-        $this->cant_actual = $cant_actual;
-        $this->stock_minimo = $stock_minimo;
-        $this->precio = $precio;
+        $this->id_producto = $id_producto;  // Guardamos el ID
+        $this->nombre_prod = $nombre_prod;  // Guardamos el nombre
+        $this->descripcion = $descripcion;  // Guardamos la descripción
+        $this->cant_actual = $cant_actual;  // Guardamos el stock actual
+        $this->stock_minimo = $stock_minimo;  // Guardamos el mínimo
+        $this->precio = $precio;            // Guardamos el precio
     }
 
-    // Obtiene todos los productos ordenados por nombre
+    /* listarTodos(): devuelve todos los productos ordenados por nombre.
+       Se usa en el listado de la tienda. */
     public static function obtenerTodos() {
-        $conexion = Conexion::conectar();
+        $conexion = Conexion::conectar();             // Abrimos conexión
         $stmt = $conexion->prepare("SELECT * FROM productos_stock ORDER BY nombre_prod");
         $stmt->execute();
-        $productos = [];
-        while ($fila = $stmt->fetch(PDO::FETCH_ASSOC)) {   // Itera sobre cada fila
+        $productos = [];                               // Array donde guardamos los objetos
+        while ($fila = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $productos[] = new Producto($fila['id_producto'], $fila['nombre_prod'], $fila['descripcion'] ?? null, $fila['cant_actual'], $fila['stock_minimo'], $fila['precio']);
         }
-        return $productos;   // Devuelve array de objetos Producto
+        return $productos;                             // Devolvemos la lista completa
     }
 
-    // Busca un producto por su ID y devuelve una instancia de Producto o null si no existe
+    /* buscarPorId(): busca un producto por su ID.
+       Consulta parametrizada para evitar SQL injection. */
     public static function obtenerPorId($id) {
         $conexion = Conexion::conectar();
-        $stmt = $conexion->prepare("SELECT * FROM productos_stock WHERE id_producto = ?");
+        $stmt = $conexion->prepare("SELECT * FROM productos_stock WHERE id_producto = ?");  // Placeholder seguro
         $stmt->execute([$id]);
         $fila = $stmt->fetch(PDO::FETCH_ASSOC);
         if ($fila) {
             return new Producto($fila['id_producto'], $fila['nombre_prod'], $fila['descripcion'] ?? null, $fila['cant_actual'], $fila['stock_minimo'], $fila['precio']);
         }
-        return null;
+        return null;                                   // Si no existe, null
     }
 
-    // Obtiene productos cuya cantidad actual es menor o igual al stock mínimo.
-    // Utilizado por el dashboard para alertar sobre productos que necesitan reposición.
+    /* obtenerStockBajo(): productos con cantidad <= stock mínimo.
+       Se usa en el dashboard para alertar de reposición. */
     public static function obtenerStockBajo() {
         $conexion = Conexion::conectar();
-        $stmt = $conexion->prepare("SELECT * FROM productos_stock WHERE cant_actual <= stock_minimo ORDER BY nombre_prod");
+        $stmt = $conexion->prepare("SELECT * FROM productos_stock WHERE cant_actual <= stock_minimo ORDER BY nombre_prod");  // Filtro stock bajo
         $stmt->execute();
         $productos = [];
         while ($fila = $stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -57,45 +75,47 @@ class Producto {
         return $productos;
     }
 
-    // Crea un nuevo producto en la base de datos
+    /* crear(): añade un nuevo producto a la tienda.
+       Devuelve el ID del producto recién creado. */
     public static function crear($nombre_prod, $descripcion, $cant_actual, $stock_minimo, $precio) {
         $conexion = Conexion::conectar();
         $stmt = $conexion->prepare("INSERT INTO productos_stock (nombre_prod, descripcion, cant_actual, stock_minimo, precio) VALUES (?, ?, ?, ?, ?)");
         $resultado = $stmt->execute([$nombre_prod, $descripcion, $cant_actual, $stock_minimo, $precio]);
         if ($resultado) {
-            return $conexion->lastInsertId();   // Devuelve el ID del nuevo producto
+            return $conexion->lastInsertId();            // Devolvemos el ID generado
         }
-        return false;
+        return false;                                    // Si falla, false
     }
 
-    // Actualiza la cantidad de stock de un producto
+    /* actualizarStock(): cambia solo la cantidad de un producto.
+       Se usa al comprar (descontar) o al reponer inventario. */
     public static function actualizarStock($id_producto, $nueva_cantidad) {
         $conexion = Conexion::conectar();
         $stmt = $conexion->prepare("UPDATE productos_stock SET cant_actual = ? WHERE id_producto = ?");
         return $stmt->execute([$nueva_cantidad, $id_producto]);
     }
 
-    // Actualiza todos los campos de un producto
+    /* actualizar(): modifica todos los campos de un producto.
+       Se usa en el modal de edición del panel de admin. */
     public static function actualizar($id_producto, $nombre, $descripcion, $cantidad, $stock_minimo, $precio) {
         $conexion = Conexion::conectar();
         $stmt = $conexion->prepare("UPDATE productos_stock SET nombre_prod = ?, descripcion = ?, cant_actual = ?, stock_minimo = ?, precio = ? WHERE id_producto = ?");
         return $stmt->execute([$nombre, $descripcion, $cantidad, $stock_minimo, $precio, $id_producto]);
     }
 
-    // Elimina un producto por su ID
+    /* eliminar(): borra un producto por su ID */
     public static function eliminar($id) {
         $conexion = Conexion::conectar();
         $stmt = $conexion->prepare("DELETE FROM productos_stock WHERE id_producto = ?");
         return $stmt->execute([$id]);
     }
 
-    // Getters para acceder a las propiedades privadas
+    /* Getters y métodos auxiliares */
     public function getId() { return $this->id_producto; }
     public function getNombre() { return $this->nombre_prod; }
     public function getDescripcion() { return $this->descripcion; }
     public function getCantidadActual() { return $this->cant_actual; }
     public function getStockMinimo() { return $this->stock_minimo; }
     public function getPrecio() { return $this->precio; }
-    // Comprueba si la cantidad actual está por debajo del mínimo establecido, útil para alertas de reposición
     public function tieneStockBajo() { return $this->cant_actual <= $this->stock_minimo; }
 }

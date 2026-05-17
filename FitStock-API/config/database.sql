@@ -1,15 +1,11 @@
--- ============================================================
+
 -- FitStock - Base de datos del gimnasio
--- Generado desde Docker (mysql-container) el 11/05/2026
--- ============================================================
 DROP DATABASE IF EXISTS fitstock;
 
 CREATE DATABASE fitstock CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE fitstock;
 
--- ============================================================
 -- TABLA: usuarios
--- ============================================================
 CREATE TABLE usuarios (
     id_usuario INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
@@ -20,9 +16,7 @@ CREATE TABLE usuarios (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- ============================================================
 -- TABLA: material
--- ============================================================
 CREATE TABLE material (
     id_material INT AUTO_INCREMENT PRIMARY KEY,
     nombre_equipo VARCHAR(100) NOT NULL,
@@ -35,22 +29,23 @@ CREATE TABLE material (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- ============================================================
+
 -- TABLA: prestamos
--- ============================================================
+
 CREATE TABLE prestamos (
     id_prestamo INT AUTO_INCREMENT PRIMARY KEY,
     id_usuario INT,
     id_material INT,
     fecha_inicio TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     fecha_devolucion DATE,
+    estado VARCHAR(30) DEFAULT 'activo',
     FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario) ON DELETE SET NULL,
     FOREIGN KEY (id_material) REFERENCES material(id_material) ON DELETE SET NULL
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- ============================================================
+
 -- TABLA: productos_stock
--- ============================================================
+
 CREATE TABLE productos_stock (
     id_producto INT AUTO_INCREMENT PRIMARY KEY,
     nombre_prod VARCHAR(100) NOT NULL,
@@ -61,9 +56,9 @@ CREATE TABLE productos_stock (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- ============================================================
+
 -- TABLA: compras
--- ============================================================
+
 CREATE TABLE compras (
     id_compra INT AUTO_INCREMENT PRIMARY KEY,
     id_usuario INT NOT NULL,
@@ -76,9 +71,8 @@ CREATE TABLE compras (
     FOREIGN KEY (id_producto) REFERENCES productos_stock(id_producto) ON DELETE CASCADE
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- ============================================================
 -- TABLA: incidencias
--- ============================================================
+
 CREATE TABLE incidencias (
     id_incidencia INT AUTO_INCREMENT PRIMARY KEY,
     id_material INT,
@@ -92,9 +86,9 @@ CREATE TABLE incidencias (
     FOREIGN KEY (id_user_rep) REFERENCES usuarios(id_usuario) ON DELETE SET NULL
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- ============================================================
+
 -- DATOS DE EJEMPLO
--- ============================================================
+
 
 -- Usuarios (password para todos: "password")
 INSERT INTO usuarios (nombre, email, password_hash, rol) VALUES
@@ -154,14 +148,14 @@ INSERT INTO material (nombre_equipo, descripcion, estado, tipo, id_tag_material)
 
 -- Productos en stock
 INSERT INTO productos_stock (nombre_prod, descripcion, cant_actual, stock_minimo, precio) VALUES
-('Barrita proteica chocolate', NULL, 68, 10, 2.50),
-('Barrita proteica vainilla',  NULL, 40, 10, 2.50),
-('Creatina monohidrato 300g',  NULL, 11,  3, 25.00),
-('Whey protein chocolate 1kg', NULL,  8,  2, 40.00),
-('BCAA 200 capsulas',          NULL, 19,  5, 20.00),
-('Whey protein vainilla 1kg',  NULL,  3,  2, 40.00),
-('Pre-entreno 300g',           NULL,  5,  3, 30.00),
-('Proteina',                   NULL, 24,  8, 32.00);
+('Barrita proteica chocolate', 'Deliciosa barrita con 20g de proteína y cobertura de chocolate. Ideal para después del entrenamiento.', 68, 10, 2.50),
+('Barrita proteica vainilla',  'Barrita suave con 20g de proteína sabor vainilla. Perfecta como snack post-entreno.', 40, 10, 2.50),
+('Creatina monohidrato 300g',  'Creatina monohidrato micronizada en polvo. Mejora la fuerza y el rendimiento en ejercicios de alta intensidad.', 11,  3, 25.00),
+('Whey protein chocolate 1kg', 'Proteína de suero de leche sabor chocolate. Aporta 24g de proteína por toma para la recuperación muscular.',  8,  2, 40.00),
+('BCAA 200 capsulas',          'Aminoácidos ramificados (BCAA 2:1:1) en cápsulas. Ayudan a reducir la fatiga y mejorar la recuperación.', 19,  5, 20.00),
+('Whey protein vainilla 1kg',  'Proteína de suero de leche sabor vainilla. 24g de proteína por toma para la recuperación muscular.',  3,  2, 40.00),
+('Pre-entreno 300g',           'Pre-entreno con cafeína y beta-alanina para maximizar la energía, el enfoque y el rendimiento.',  5,  3, 30.00),
+('Proteina',                   'Proteína concentrada de suero de leche. 22g de proteína por toma. Ideal para el día a día.', 24,  8, 32.00);
 
 -- Incidencias
 INSERT INTO incidencias (id_material, id_user_rep, descripcion, prioridad, estado_inc, fecha_resolucion) VALUES

@@ -1,23 +1,32 @@
 <?php
-require_once __DIR__ . "/../conexion.php";   // Importa la conexión a la base de datos
+/* ----------------------------------------------------
+ * Modelo Usuario
+ * ----------------------------------------------------
+ * El modelo más importante del sistema.
+ * Gestiona todo lo relacionado con los usuarios:
+ * registro, login, roles y cambio de contraseña.
+ *
+ * Algo curioso de este modelo: en lugar de usar
+ * AUTO_INCREMENT de MySQL, nosotros mismos calculamos
+ * el siguiente ID libre para reutilizar IDs de usuarios
+ * eliminados (evitamos huecos en la numeración).
+ *
+ * Roles disponibles: admin, entrenador, cliente.
+ * ---------------------------------------------------- */
 
-/*
- * Modelo Usuario.
- * Representa un registro de la tabla 'usuarios' y proporciona métodos estáticos
- * para operaciones CRUD. Incluye funcionalidad para forzar el cambio de contraseña
- * en el primer inicio de sesión o por decisión administrativa.
- */
+require_once __DIR__ . "/../conexion.php";  // Traemos la conexión a la BD
+
 class Usuario {
-    private $id;
-    private $nombre;
-    private $email;
-    private $password_hash;
-    private $rol;
-    // Indica si el usuario debe cambiar su contraseña en el próximo inicio de sesión.
-    //  0 = no forzar, 1 = forzar cambio. Se usa tras crear un usuario admin o para restablecer credenciales.
-    private $forzar_cambio_password;
+    /* Propiedades privadas del usuario */
+    private $id;                           // ID numérico del usuario en la BD
+    private $nombre;                       // Nombre completo
+    private $email;                        // Email único (login)
+    private $password_hash;                // Contraseña guardada con bcrypt
+    private $rol;                          // admin, entrenador o cliente
+    private $forzar_cambio_password;       // 1 = tiene que cambiar contraseña al entrar
 
-    // Constructor: recibe todos los datos del usuario, con valor opcional para forzar_cambio_password (por defecto 0).
+    /* Constructor: creamos el objeto usuario con todos sus datos.
+       forzar_cambio_password es opcional y por defecto vale 0 (no forzar). */
     public function __construct($id, $nombre, $email, $password_hash, $rol, $forzar_cambio_password = 0) {
         $this->id = $id;
         $this->nombre = $nombre;
@@ -27,19 +36,22 @@ class Usuario {
         $this->forzar_cambio_password = $forzar_cambio_password;
     }
 
-    // Busca un usuario por su ID en la base de datos
+    /* buscarPorId(): busca un usuario por su ID numérico en la BD.
+       Usamos consultas preparadas con ? para evitar SQL injection. */
     public static function obtenerPorId($id) {
-        $conexion = Conexion::conectar();                                        // Obtiene la conexión PDO
-        $stmt = $conexion->prepare("SELECT * FROM usuarios WHERE id_usuario = ?"); // Prepara la consulta
-        $stmt->execute([$id]);                                                    // Ejecuta con el ID como parámetro
-        $fila = $stmt->fetch(PDO::FETCH_ASSOC);                                   // Obtiene la fila como array asociativo
+        $conexion = Conexion::conectar();                        // Abrimos conexión
+        $stmt = $conexion->prepare("SELECT * FROM usuarios WHERE id_usuario = ?");  // Consulta con placeholder
+        $stmt->execute([$id]);                                   // Pasamos el ID como parámetro seguro
+        $fila = $stmt->fetch(PDO::FETCH_ASSOC);                  // Obtenemos la fila como array asociativo
         if ($fila) {
             return new Usuario($fila['id_usuario'], $fila['nombre'], $fila['email'], $fila['password_hash'], $fila['rol'], $fila['forzar_cambio_password'] ?? 0);
         }
-        return null;
+        return null;                                             // Si no existe, devolvemos null
     }
 
-    // Busca un usuario por su dirección de email (debe ser único en la BD)
+    /* buscarPorEmail(): busca usuario por email (único en BD).
+       Fundamental para el login: primero localizamos por email,
+       luego verificamos la contraseña con password_verify(). */
     public static function obtenerPorEmail($email) {
         $conexion = Conexion::conectar();
         $stmt = $conexion->prepare("SELECT * FROM usuarios WHERE email = ?");
@@ -51,99 +63,99 @@ class Usuario {
         return null;
     }
 
-    /*
-     * Encuentra el primer ID libre (sin usar) en la tabla 'usuarios'.
-     * Algoritmo de "gap finding": recorre los IDs existentes en orden ascendente
-     * y devuelve el primer número que no está presente. Esto permite reutilizar
-     * IDs de usuarios eliminados sin depender de AUTO_INCREMENT.
-     */
+    /* calcularSiguienteId(): implementa el "gap finding".
+       En lugar de AUTO_INCREMENT, buscamos el primer ID libre
+       recorriendo los existentes. Ej: si hay IDs 1,2,5, devuelve 3.
+       Así reutilizamos IDs de usuarios eliminados. */
     private static function obtenerSiguienteIdLibre() {
         $conexion = Conexion::conectar();
-        $stmt = $conexion->query("SELECT id_usuario FROM usuarios ORDER BY id_usuario");
-        $ids = $stmt->fetchAll(PDO::FETCH_COLUMN);
-        $expected = 1;
-        foreach ($ids as $id) {
-            if ($id > $expected) {
-                return $expected;
+        $stmt = $conexion->query("SELECT id_usuario FROM usuarios ORDER BY id_usuario");  // IDs ordenados
+        $ids = $stmt->fetchAll(PDO::FETCH_COLUMN);                          // Los pasamos a array simple
+        $expected = 1;                                                       // Empezamos por el 1
+        foreach ($ids as $id) {                                              // Recorremos los IDs existentes
+            if ($id > $expected) {                                           // Si hay un salto...
+                return $expected;                                            // ...ese es el primer hueco libre
             }
-            $expected = $id + 1;
+            $expected = $id + 1;                                             // Siguiente número esperado
         }
-        return $expected;
+        return $expected;                                                    // Si no hay huecos, devuelve el siguiente
     }
 
-    /*
-     * Crea un nuevo usuario en la base de datos.
-     * En lugar de usar AUTO_INCREMENT, se calcula el ID mediante obtenerSiguienteIdLibre()
-     * para reutilizar IDs de usuarios previamente eliminados, evitando huecos en la numeración.
-     * La contraseña se almacena hasheada con PASSWORD_DEFAULT (bcrypt).
-     */
+    /* crear(): añade un nuevo usuario a la BD.
+       1. Calculamos el ID con obtenerSiguienteIdLibre()
+       2. La contraseña se hashea con bcrypt (NUNCA texto plano)
+       3. Los nuevos usuarios se crean con forzar_cambio_password = 0 */
     public static function crear($nombre, $email, $password, $rol) {
         $conexion = Conexion::conectar();
-        $password_hash = password_hash($password, PASSWORD_DEFAULT);
-        $nuevoId = self::obtenerSiguienteIdLibre();
+        $password_hash = password_hash($password, PASSWORD_DEFAULT);  // Hasheamos con bcrypt
+        $nuevoId = self::obtenerSiguienteIdLibre();                   // Calculamos ID libre
         $stmt = $conexion->prepare("INSERT INTO usuarios (id_usuario, nombre, email, password_hash, rol) VALUES (?, ?, ?, ?, ?)");
         return $stmt->execute([$nuevoId, $nombre, $email, $password_hash, $rol]);
     }
 
-    // Actualiza un usuario existente desde el panel de administración.
-    // Construye la consulta SQL dinámicamente: solo incluye password_hash y rol
-    // si se proporcionan (evita sobrescribir con null cuando no se modifican).
+    /* actualizarAdmin(): modifica datos de usuario desde el panel admin.
+       La SQL se construye dinámicamente: solo añadimos password_hash
+       y rol si se proporcionan, evitando sobrescribir con NULL. */
     public static function actualizarAdmin($id, $nombre, $email, $password = null, $rol = null) {
         $conexion = Conexion::conectar();
-        $campos = [];
-        $valores = [];
+        $campos = [];                                                    // Lista de campos a actualizar
+        $valores = [];                                                   // Valores correspondientes
         $campos[] = "nombre = ?";
         $valores[] = $nombre;
         $campos[] = "email = ?";
         $valores[] = $email;
-        if ($password) {
+        if ($password) {                                                 // Si pasan contraseña nueva...
             $campos[] = "password_hash = ?";
-            $valores[] = password_hash($password, PASSWORD_DEFAULT);
+            $valores[] = password_hash($password, PASSWORD_DEFAULT);     // ...la hasheamos
         }
-        if ($rol) {
+        if ($rol) {                                                      // Si pasan rol nuevo...
             $campos[] = "rol = ?";
             $valores[] = $rol;
         }
         $valores[] = $id;
-        $sql = "UPDATE usuarios SET " . implode(", ", $campos) . " WHERE id_usuario = ?";
+        $sql = "UPDATE usuarios SET " . implode(", ", $campos) . " WHERE id_usuario = ?";  // SQL dinámica
         $stmt = $conexion->prepare($sql);
         return $stmt->execute($valores);
     }
 
-    // Elimina un usuario por su ID
+    /* eliminar(): borra un usuario por su ID */
     public static function eliminar($id) {
         $conexion = Conexion::conectar();
         $stmt = $conexion->prepare("DELETE FROM usuarios WHERE id_usuario = ?");
-        return $stmt->execute([$id]);   // Ejecuta la eliminación y devuelve true/false
+        return $stmt->execute([$id]);
     }
 
-    // Obtiene todos los usuarios ordenados por nombre
+    /* listarTodos(): devuelve todos los usuarios ordenados por nombre.
+       Se usa en la gestión de usuarios del panel de admin. */
     public static function obtenerTodos() {
         $conexion = Conexion::conectar();
-        $stmt = $conexion->query("SELECT * FROM usuarios ORDER BY nombre");  // Consulta sin parámetros
-        $usuarios = [];
-        while ($fila = $stmt->fetch(PDO::FETCH_ASSOC)) {                      // Itera sobre cada fila
+        $stmt = $conexion->query("SELECT * FROM usuarios ORDER BY nombre");
+        $usuarios = [];                                                  // Array donde guardamos los objetos
+        while ($fila = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $usuarios[] = new Usuario($fila['id_usuario'], $fila['nombre'], $fila['email'], $fila['password_hash'], $fila['rol'], $fila['forzar_cambio_password'] ?? 0);
         }
         return $usuarios;
     }
 
-    // Marca al usuario para que deba cambiar su contraseña en el próximo inicio de sesión.
-    // Útil cuando un administrador restablece credenciales o crea un usuario nuevo.
+    /* forzarCambioPassword(): marca a un usuario para que deba cambiar
+       la contraseña en el próximo login. Lo usa el admin al crear
+       usuarios o por seguridad al resetear credenciales. */
     public static function forzarCambioPassword($id) {
         $conexion = Conexion::conectar();
         $stmt = $conexion->prepare("UPDATE usuarios SET forzar_cambio_password = 1 WHERE id_usuario = ?");
         return $stmt->execute([$id]);
     }
 
-    // Elimina la marca de cambio forzado de contraseña.
-    // Se invoca automáticamente cuando el usuario completa el cambio de contraseña.
+    /* limpiarForzarCambioPassword(): quita la marca de cambio forzado.
+       Se llama automáticamente cuando el usuario cambia su contraseña
+       con éxito desde el formulario de cambio forzado. */
     public static function limpiarForzarCambioPassword($id) {
         $conexion = Conexion::conectar();
         $stmt = $conexion->prepare("UPDATE usuarios SET forzar_cambio_password = 0 WHERE id_usuario = ?");
         return $stmt->execute([$id]);
     }
 
+    /* Getters para acceder a las propiedades privadas desde fuera */
     public function getId() { return $this->id; }
     public function getNombre() { return $this->nombre; }
     public function getEmail() { return $this->email; }
