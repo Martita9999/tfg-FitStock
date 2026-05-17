@@ -85,7 +85,7 @@ export class DashboardHomeComponent implements OnInit {
     this.materialesService.getMateriales('maquina').subscribe({
       next: (data: Material[]) => {
         this.maquinasOperativas = data.filter(m => m.estado === 'operativo').length;
-        this.maquinas = data.sort(this.sortByIdTag);
+        this.maquinas = data.filter(m => m.estado === 'averiado' || m.estado === 'en_reparacion').sort(this.sortByIdTag);
       },
       error: () => this.error = 'Error al cargar máquinas'
     });

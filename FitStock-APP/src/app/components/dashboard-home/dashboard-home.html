@@ -170,6 +170,7 @@
           <div class="info-row"><span class="info-label">Nombre</span><span class="info-value">{{ user?.nombre }}</span></div>
           <div class="info-row"><span class="info-label">Email</span><span class="info-value">{{ user?.email }}</span></div>
           <div class="info-row"><span class="info-label">Rol</span><span class="info-value role-cliente">Cliente</span></div>
+          <div class="info-row"><span class="info-label">Método de pago</span><span class="info-value">Paypal</span></div>
           <div class="info-row">
             <span class="info-label">Contraseña</span>
             <span class="info-value">
@@ -204,14 +205,14 @@
             </div>
           </div>
           @if (maquinas.length === 0) {
-            <p class="no-data">No hay máquinas registradas</p>
+            <p class="no-data">No hay máquinas averiadas o en reparación</p>
           } @else {
             <div class="stock-list" style="margin-top: 12px;">
               @for (m of maquinas; track m.id) {
-                <div class="stock-item" [class.ok]="m.estado === 'operativo'" [class.alert]="m.estado === 'averiado'" [class.warning]="m.estado === 'en_reparacion'">
+                <div class="stock-item" [class.alert]="m.estado === 'averiado'" [class.warning]="m.estado === 'en_reparacion'">
                   <span class="item-name">{{ m.nombre }} <span class="id-tag">{{ m.id_tag_material }}</span></span>
-                  <span class="item-qty" [class.ok]="m.estado === 'operativo'" [class.alert]="m.estado === 'averiado'" [class.warning]="m.estado === 'en_reparacion'">
-                    {{ m.estado === 'operativo' ? 'Operativa' : m.estado === 'averiado' ? 'Averiada' : 'Mantenimiento' }}
+                  <span class="item-qty" [class.alert]="m.estado === 'averiado'" [class.warning]="m.estado === 'en_reparacion'">
+                    {{ m.estado === 'averiado' ? 'Averiada' : 'Mantenimiento' }}
                   </span>
                 </div>
               }

@@ -19,7 +19,7 @@
 
 /* ─── TARJETAS DE ESTADÍSTICAS ─── */
 /* Tarjetas de estadísticas con borde coloreado */
-.card { background: var(--card); border-radius: 16px; overflow: hidden; border: 2px solid var(--border); transition: box-shadow 0.2s, transform 0.15s; display: flex; flex-direction: column; height: 260px; }
+.card { background: var(--card); border-radius: 16px; overflow: hidden; border: 2px solid var(--border); transition: box-shadow 0.2s, transform 0.15s; display: flex; flex-direction: column; height: 300px; }
 .card .card-body { flex: 1; }
 
 .card.incidencias-card { border-color: #fca5a5; }
@@ -27,7 +27,6 @@
 .card.maquinas-card { border-color: #93c5fd; }
 .card.perfil-card { border-color: #a78bfa; }
 .card.prestamos-card { border-color: #86efac; }
-.card.ventas-card { height: 300px; }
 
 /* ─── CABECERAS DE TARJETAS ─── */
 /* Cabeceras coloreadas de cada tarjeta */
