@@ -155,6 +155,7 @@
 .col-resumen {
   text-align: center;
   font-size: 13px;
+  vertical-align: middle;
 }
 
 .summary-badge {
@@ -326,6 +327,11 @@
   font-size: 13px;
   margin-bottom: 16px;
   border: 1px solid var(--error-border);
+}
+
+/* ─── MODAL DE COMPRAS ─── */
+.modal-compras {
+  max-width: 700px;
 }
 
 /* Botón de cancelar del modal */

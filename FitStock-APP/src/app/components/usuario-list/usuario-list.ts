@@ -36,6 +36,14 @@ export class UsuarioList implements OnInit {
   /* resumenUsuario: mapa de resúmenes por id de usuario */
   resumenUsuario: Record<number, { totalGastado: number; prestamosPendientes: number; tieneIncidencias: boolean }> = {};
 
+  /* comprasPorUsuario: mapa de compras por id de usuario para el modal */
+  comprasPorUsuario: Record<number, any[]> = {};
+
+  /* Modal de compras */
+  showComprasModal = false;
+  selectedUserCompras: any[] = [];
+  selectedUserName = '';
+
   showModal = false;
   newUser = { nombre: '', email: '', password: '', rol: 'cliente' };
   error = '';
@@ -89,6 +97,7 @@ export class UsuarioList implements OnInit {
   private cargarResumenes() {
     /* Iniciamos todos en 0/false */
     this.resumenUsuario = {};
+    this.comprasPorUsuario = {};
 
     this.comprasService.getCompras().subscribe(compras => {
       for (const c of compras) {
@@ -96,6 +105,10 @@ export class UsuarioList implements OnInit {
           this.resumenUsuario[c.id_usuario] = { totalGastado: 0, prestamosPendientes: 0, tieneIncidencias: false };
         }
         this.resumenUsuario[c.id_usuario].totalGastado += c.total;
+        if (!this.comprasPorUsuario[c.id_usuario]) {
+          this.comprasPorUsuario[c.id_usuario] = [];
+        }
+        this.comprasPorUsuario[c.id_usuario].push(c);
       }
     });
 
@@ -120,6 +133,18 @@ export class UsuarioList implements OnInit {
         this.resumenUsuario[i.id_user_rep].tieneIncidencias = true;
       }
     });
+  }
+
+  abrirComprasModal(userId: number, userName: string) {
+    this.selectedUserCompras = this.comprasPorUsuario[userId] || [];
+    this.selectedUserName = userName;
+    this.showComprasModal = true;
+  }
+
+  cerrarComprasModal() {
+    this.showComprasModal = false;
+    this.selectedUserCompras = [];
+    this.selectedUserName = '';
   }
 
   abrirModal() {

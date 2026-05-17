@@ -51,6 +51,9 @@
         @if (filtroRol) {
           <td class="col-resumen">
             <span class="summary-badge gasto">{{ resumenUsuario[u.id] ? (resumenUsuario[u.id].totalGastado | currency:'EUR':'symbol':'1.2-2') : '—' }}</span>
+            @if (comprasPorUsuario[u.id] && comprasPorUsuario[u.id].length > 0) {
+              <a class="btn-all" (click)="abrirComprasModal(u.id, u.nombre)">Mostrar todo</a>
+            }
           </td>
           <td class="col-resumen">
             <span class="summary-badge prestamo" [class.peligro]="resumenUsuario[u.id] && resumenUsuario[u.id].prestamosPendientes > 0">
@@ -156,6 +159,41 @@
     <div class="modal-footer">
       <button class="btn-cancel" (click)="cerrarEditar()">Cancelar</button>
       <button class="btn-save" (click)="guardarEditar()">Guardar Cambios</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de compras del usuario -->
+<div class="modal-overlay" *ngIf="showComprasModal" (click)="cerrarComprasModal()">
+  <div class="modal-card modal-compras" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Compras de {{ selectedUserName }}</h3>
+      <button class="btn-close" (click)="cerrarComprasModal()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <table class="data-table" *ngIf="selectedUserCompras.length > 0">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Cantidad</th>
+            <th>Precio Ud.</th>
+            <th>Total</th>
+            <th>Fecha</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let c of selectedUserCompras">
+            <td>{{ c.nombre_producto }}</td>
+            <td>{{ c.cantidad }}</td>
+            <td>{{ c.precio_unitario | currency:'EUR':'symbol':'1.2-2' }}</td>
+            <td><strong>{{ c.total | currency:'EUR':'symbol':'1.2-2' }}</strong></td>
+            <td>{{ c.fecha_compra | date:'dd/MM/yyyy' }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="empty-state" *ngIf="selectedUserCompras.length === 0">
+        <p>Este usuario no ha realizado compras.</p>
+      </div>
     </div>
   </div>
 </div>
