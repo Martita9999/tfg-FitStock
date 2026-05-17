@@ -44,7 +44,7 @@ export class DashboardHomeComponent implements OnInit {
   currentPassword = '';
   newPassword = '';
   showPasswordForm = false;
-  showGastosModal = false;
+  showGastosModal = false;                                            // Controla apertura/cierre del modal de todas las compras
 
   ngOnInit() {
     const userStr = localStorage.getItem('user');
@@ -84,8 +84,8 @@ export class DashboardHomeComponent implements OnInit {
   cargarDatosCliente() {
     this.materialesService.getMateriales('maquina').subscribe({
       next: (data: Material[]) => {
-        this.maquinasOperativas = data.filter(m => m.estado === 'operativo').length;
-        this.maquinas = data.filter(m => m.estado === 'averiado' || m.estado === 'en_reparacion').sort(this.sortByIdTag);
+        this.maquinasOperativas = data.filter(m => m.estado === 'operativo').length;  // Contador de operativas para stats
+        this.maquinas = data.filter(m => m.estado === 'averiado' || m.estado === 'en_reparacion').sort(this.sortByIdTag);  // Solo incidencias en la lista
       },
       error: () => this.error = 'Error al cargar máquinas'
     });
@@ -97,8 +97,8 @@ export class DashboardHomeComponent implements OnInit {
     });
     this.comprasService.getCompras().subscribe({
       next: (data: Compra[]) => {
-        this.compras = data.sort((a, b) => new Date(b.fecha_compra).getTime() - new Date(a.fecha_compra).getTime());
-        this.totalGastado = data.reduce((sum, c) => sum + (+c.total || 0), 0);
+        this.compras = data.sort((a, b) => new Date(b.fecha_compra).getTime() - new Date(a.fecha_compra).getTime());  // Más reciente primero
+        this.totalGastado = data.reduce((sum, c) => sum + (+c.total || 0), 0);  // Suma total para la card
       },
       error: () => this.error = 'Error al cargar compras'
     });

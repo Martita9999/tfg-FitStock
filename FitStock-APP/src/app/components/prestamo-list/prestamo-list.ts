@@ -10,6 +10,8 @@ import { MaterialesService } from '../../services/materiales.service';
 import { UsuarioService } from '../../services/usuario';
 import { Prestamo, Usuario, Material } from '../../interfaces/app.interfaces';
 
+/* MaterialGroup: agrupa materiales del mismo nombre para mostrar unidades disponibles.
+ * Ej: "Banco" con 3 unidades -> total:3, disponibles:2, seleccionados:1 */
 interface MaterialGroup {
   nombre: string;
   descripcion: string;
@@ -33,15 +35,17 @@ export class PrestamoList implements OnInit {
   private route = inject(ActivatedRoute);
   materiales: Material[] = [];
   prestamos: Prestamo[] = [];
-  prestamosPendientesDev: Prestamo[] = [];
+  prestamosPendientesDev: Prestamo[] = [];         // Préstamos en estado pendiente_devolucion
   usuarios: Usuario[] = [];
   userRole = '';
   currentUserId = 0;
 
+  /* selecciones: mapa de nombre_material -> cantidad seleccionada por el usuario */
   selecciones: { [nombre: string]: number } = {};
   error = '';
   vista: 'completa' | 'activos' | 'materiales' | 'completados' | 'pendientes-devolucion' = 'completa';
 
+  /* Modales */
   showEditModal = false;
   editPrestamo: Prestamo | null = null;
   editFechaDevolucion = '';
@@ -62,6 +66,7 @@ export class PrestamoList implements OnInit {
     });
     this.loadMateriales();
     this.loadPrestamos();
+    /* Lee la URL para determinar qué vista de préstamos mostrar (activos, completados, etc.) */
     this.route.paramMap.subscribe(params => {
       const v = params.get('vista');
       if (v === 'activos') { this.vista = 'activos'; }
@@ -73,35 +78,45 @@ export class PrestamoList implements OnInit {
     });
   }
 
+  /* loadMateriales: carga materiales de tipo 'prestable' desde la API */
   loadMateriales() {
     this.materialesService.getMateriales('prestable').subscribe(data => this.materiales = data);
   }
 
+  /* loadPrestamos: carga todos los préstamos (cliente solo ve los suyos por backend) */
   loadPrestamos() {
     this.prestamosService.getPrestamos().subscribe(data => this.prestamos = data);
   }
 
+  /* cargarPendientes: carga los préstamos marcados como pendiente_devolucion (solo admin/entrenador) */
   cargarPendientes() {
     if (this.userRole === 'cliente') return;
     this.prestamosService.getPrestamosPorEstado('pendiente_devolucion').subscribe(data => this.prestamosPendientesDev = data);
   }
 
+  /* idsEnPrestamoActivo: Set con los ids de material actualmente en préstamo (pendiente o activo, sin devolver).
+   * Se usa para ocultar materiales no disponibles de la lista seleccionable. */
   get idsEnPrestamoActivo(): Set<number> {
     return new Set(
       this.prestamos.filter(p => (p.estado === 'pendiente' || p.estado === 'activo') && !p.devolucion).map(p => p.id_material).filter((id): id is number => id != null)
     );
   }
 
+  /* grupos: computa los grupos de material disponibles organizados por nombre,
+   * excluyendo los que ya están en préstamo. */
   get grupos(): MaterialGroup[] {
     return this._grupos(this.selecciones);
   }
 
+  /* sortByIdTag: ordena materiales por id_tag_material (ej: BAN-001, BAN-002) */
   private sortByIdTag(a: Material, b: Material): number {
     const tagA = a.id_tag_material || '';
     const tagB = b.id_tag_material || '';
     return tagA.localeCompare(tagB, undefined, { numeric: true });
   }
 
+  /* _grupos: lógica interna de agrupación. Agrupa por nombre, cuenta operativos,
+   * descuenta los que están en préstamo activo, y respeta selecciones actuales. */
   private _grupos(selecciones: { [nombre: string]: number }): MaterialGroup[] {
     const sorted = [...this.materiales].sort(this.sortByIdTag);
     const agrupados: { [key: string]: Material[] } = {};
@@ -132,6 +147,7 @@ export class PrestamoList implements OnInit {
     });
   }
 
+  /* incrementar: suma 1 a la selección de un grupo, sin superar los disponibles */
   incrementar(g: MaterialGroup) {
     const actual = this.selecciones[g.nombre] ?? 0;
     if (actual < g.disponibles) {
@@ -139,6 +155,7 @@ export class PrestamoList implements OnInit {
     }
   }
 
+  /* decrementar: resta 1 a la selección de un grupo */
   decrementar(g: MaterialGroup) {
     const actual = this.selecciones[g.nombre] ?? 0;
     if (actual > 0) {
@@ -146,10 +163,14 @@ export class PrestamoList implements OnInit {
     }
   }
 
+  /* haySeleccion: true si hay al menos un material seleccionado para préstamo */
   get haySeleccion(): boolean {
     return Object.values(this.selecciones).some(v => v > 0);
   }
 
+  /* prestarSeleccion: ejecuta el préstamo de todos los materiales seleccionados.
+   * Cliente: crea préstamos en estado 'pendiente' (requiere aprobación).
+   * Admin/entrenador: pasa por abrirModalUsuario() para seleccionar usuario primero. */
   prestarSeleccion() {
     this.error = '';
     const promesas: Promise<any>[] = [];
@@ -181,6 +202,7 @@ export class PrestamoList implements OnInit {
   newPrestamoUsuario = 0;
   showUserModal = false;
 
+  /* abrirModalUsuario: admin/entrenador selecciona a qué usuario asignar el préstamo */
   abrirModalUsuario() {
     this.newPrestamoUsuario = 0;
     this.error = '';
@@ -201,6 +223,8 @@ export class PrestamoList implements OnInit {
     this.error = '';
   }
 
+  /* prestarSeleccionAdmin: crea préstamos directamente como 'activo' (sin pasar por pendiente).
+   * Solo admin/entrenador. */
   prestarSeleccionAdmin() {
     this.error = '';
     const promesas: Promise<any>[] = [];
@@ -229,6 +253,7 @@ export class PrestamoList implements OnInit {
     });
   }
 
+  /* abrirEditar: abre modal para editar fecha de devolución de un préstamo */
   abrirEditar(p: Prestamo) {
     this.editPrestamo = p;
     this.editFechaDevolucion = p.devolucion ? p.devolucion.split('T')[0] : new Date().toISOString().split('T')[0];
@@ -242,6 +267,7 @@ export class PrestamoList implements OnInit {
     this.error = '';
   }
 
+  /* guardarEditar: envía la nueva fecha de devolución a la API */
   guardarEditar() {
     if (!this.editPrestamo) return;
     this.error = '';
@@ -253,6 +279,7 @@ export class PrestamoList implements OnInit {
     });
   }
 
+  /* abrirEditarGrupo: abre modal para cambiar nombre/descripción de todo un grupo de materiales */
   abrirEditarGrupo(g: MaterialGroup) {
     this.editGroupData = {
       nombreOriginal: g.nombre,
@@ -269,6 +296,7 @@ export class PrestamoList implements OnInit {
     this.error = '';
   }
 
+  /* guardarEditarGrupo: actualiza nombre/descripción de todas las unidades del grupo */
   guardarEditarGrupo() {
     this.error = '';
     if (!this.editGroupData.nombre) {
@@ -289,6 +317,7 @@ export class PrestamoList implements OnInit {
     });
   }
 
+  /* borrarUnidad: elimina una unidad física de material del grupo */
   borrarUnidad(g: MaterialGroup) {
     const disponible = g.idsDisponibles[0];
     if (!disponible) {
@@ -303,6 +332,7 @@ export class PrestamoList implements OnInit {
     });
   }
 
+  /* abrirCrearMaterial: abre modal para crear una o varias unidades de material */
   abrirCrearMaterial() {
     this.newMaterial = { nombre: '', descripcion: '', cantidad: 1 };
     this.error = '';
@@ -314,6 +344,7 @@ export class PrestamoList implements OnInit {
     this.error = '';
   }
 
+  /* crearMaterial: envía a la API tantas peticiones como unidades se quieran crear */
   crearMaterial() {
     this.error = '';
     if (!this.newMaterial.nombre) {
@@ -341,6 +372,7 @@ export class PrestamoList implements OnInit {
     });
   }
 
+  /* borrarPrestamo: elimina un préstamo (solo admin/entrenador) */
   borrarPrestamo(id: number) {
     if (!confirm('¿Borrar este préstamo?')) return;
     this.prestamosService.deletePrestamo(id).subscribe({
@@ -349,6 +381,7 @@ export class PrestamoList implements OnInit {
     });
   }
 
+  /* devolverPrestamo: el cliente marca el préstamo para devolución (estado -> pendiente_devolucion) */
   devolverPrestamo(id: number) {
     this.prestamosService.devolverPrestamo(id).subscribe({
       next: () => {
@@ -359,6 +392,7 @@ export class PrestamoList implements OnInit {
     });
   }
 
+  /* aprobarPrestamo: admin/entrenador aprueba préstamo pendiente (estado -> activo) */
   aprobarPrestamo(id: number) {
     this.prestamosService.aprobarPrestamo(id).subscribe({
       next: () => { this.loadPrestamos(); this.cargarPendientes(); },
@@ -366,6 +400,7 @@ export class PrestamoList implements OnInit {
     });
   }
 
+  /* confirmarDevolucionPrestamo: admin/entrenador confirma devolución (estado -> devuelto + fecha) */
   confirmarDevolucionPrestamo(id: number) {
     this.prestamosService.confirmarDevolucion(id).subscribe({
       next: () => { this.loadPrestamos(); this.cargarPendientes(); },
@@ -373,14 +408,17 @@ export class PrestamoList implements OnInit {
     });
   }
 
+  /* totalSeleccionados: suma total de materiales seleccionados en todos los grupos */
   get totalSeleccionados(): number {
     return Object.values(this.selecciones).reduce((sum, v) => sum + v, 0);
   }
 
+  /* limpiarSeleccion: resetea todas las selecciones a 0 */
   limpiarSeleccion() {
     this.selecciones = {};
   }
 
+  /* prestamosUser: cliente solo ve sus préstamos; admin/entrenador ven todos */
   get prestamosUser() {
     if (this.userRole === 'cliente') {
       return this.prestamos.filter(p => p.id_usuario === this.currentUserId);
@@ -388,14 +426,17 @@ export class PrestamoList implements OnInit {
     return this.prestamos;
   }
 
+  /* prestamosActivos: filtra préstamos NO devueltos (pendiente, activo, pendiente_devolucion) */
   get prestamosActivos() {
     return this.prestamosUser.filter(p => p.estado !== 'devuelto' && !p.devolucion);
   }
 
+  /* prestamosCompletados: filtra préstamos ya devueltos */
   get prestamosCompletados() {
     return this.prestamosUser.filter(p => p.estado === 'devuelto' || p.devolucion);
   }
 
+  /* exportarCSV: descarga los préstamos completados como archivo CSV con BOM para Excel */
   exportarCSV() {
     const filas = this.prestamosCompletados.map(p => [
       p.id,
@@ -414,6 +455,7 @@ export class PrestamoList implements OnInit {
     URL.revokeObjectURL(link.href);
   }
 
+  /* exportarPDF: descarga los préstamos completados como PDF con jspdf + autoTable */
   exportarPDF() {
     const doc = new jsPDF();
     const filas = this.prestamosCompletados.map(p => [

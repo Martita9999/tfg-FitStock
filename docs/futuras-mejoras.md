@@ -89,3 +89,13 @@
 ### 4.3 Monitorización
 - Sentry para errores en frontend y backend
 - Alertas ante caídas del servidor
+
+---
+
+## 5. Funcionalidades transversales
+
+### 5.1 Geolocalización
+- Usar **Geolocation API** del navegador (`navigator.geolocation`) para registrar la ubicación al crear un préstamo o reportar una incidencia desde el móvil
+- Guardar coordenadas (lat, lng) en las tablas `prestamos` e `incidencias`
+- Mostrar en un mapa (Leaflet/OpenStreetMap) las ubicaciones en el panel de admin para visualizar dónde están los materiales prestados o las máquinas con incidencias
+- Beneficio: el entrenador sabe exactamente dónde recoger el material o revisar la máquina

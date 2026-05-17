@@ -170,6 +170,7 @@
           <div class="info-row"><span class="info-label">Nombre</span><span class="info-value">{{ user?.nombre }}</span></div>
           <div class="info-row"><span class="info-label">Email</span><span class="info-value">{{ user?.email }}</span></div>
           <div class="info-row"><span class="info-label">Rol</span><span class="info-value role-cliente">Cliente</span></div>
+          <!-- Método de pago estático (futura mejora: integración real con pasarela de pago) -->
           <div class="info-row"><span class="info-label">Método de pago</span><span class="info-value">Paypal</span></div>
           <div class="info-row">
             <span class="info-label">Contraseña</span>
@@ -264,6 +265,7 @@
               }
             </div>
           }
+          <!-- Botón "Mostrar todo": abre modal con listado completo de compras y fechas -->
           <button class="btn-ver-todo" (click)="showGastosModal = true">Mostrar todo</button>
         </div>
       </div>
@@ -290,6 +292,7 @@
           } @else {
             <div class="stock-list">
               @for (c of compras; track c.id) {
+                <!-- stock-item-col: layout vertical con nombre, cantidad+total y fecha de compra -->
                 <div class="stock-item stock-item-col">
                   <span class="item-name">{{ c.nombre_producto }}</span>
                   <span class="item-qty" style="color:var(--success-color, #16a34a)">{{ c.cantidad }} uds {{ c.total | number:'1.2-2' }}€</span>
