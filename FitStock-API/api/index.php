@@ -464,6 +464,10 @@ function handleApi($method, $resource, $path) {
                 $password = $data['password'] ?? '';
                 $rol = $data['rol'] ?? 'cliente';
 
+                if (!in_array($rol, ['admin', 'entrenador', 'cliente'])) {
+                    jsonResponse(["error" => "Rol inválido"], 400);
+                }
+
                 if (strlen($password) < 8) {
                     jsonResponse(["error" => "La contraseña debe tener al menos 8 caracteres"], 400);
                 }
@@ -482,6 +486,9 @@ function handleApi($method, $resource, $path) {
                 $email = trim($data['email'] ?? '');
                 $password = $data['password'] ?? null;
                 $rol = $data['rol'] ?? null;
+                if ($rol !== null && !in_array($rol, ['admin', 'entrenador', 'cliente'])) {
+                    jsonResponse(["error" => "Rol inválido"], 400);
+                }
                 if ($nombre && $email) {
                     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                         jsonResponse(["error" => "Email inválido"], 400);
@@ -553,6 +560,12 @@ function handleApi($method, $resource, $path) {
                 $tipo = $data['tipo'] ?? 'maquina';
                 $id_tag_material = trim($data['id_tag_material'] ?? '');
                 $ubicacion = trim($data['ubicacion'] ?? '');
+                if (!in_array($estado, ['operativo','averiado','mantenimiento','en_proceso','saliendo','en_reparacion','baja'])) {
+                    jsonResponse(["error" => "Estado inválido"], 400);
+                }
+                if (!in_array($tipo, ['maquina', 'prestable'])) {
+                    jsonResponse(["error" => "Tipo inválido"], 400);
+                }
                 if ($nombre) {
                     Material::crear($nombre, $descripcion, $estado, $tipo, $id_tag_material, null, $ubicacion ?: null);
                     jsonResponse(["success" => true]);
@@ -565,6 +578,9 @@ function handleApi($method, $resource, $path) {
                 $ultima_rev = $data['ultima_rev'] ?? null;
                 $ubicacion = trim($data['ubicacion'] ?? '');
                 $id_tag_material = trim($data['id_tag_material'] ?? '');
+                if ($estado !== null && $nombre && $estado && !in_array($estado, ['operativo','averiado','mantenimiento','en_proceso','saliendo','en_reparacion','baja'])) {
+                    jsonResponse(["error" => "Estado inválido"], 400);
+                }
                 if ($nombre && $estado) {
                     Material::actualizar($path[2], $nombre, $descripcion, $estado, $ultima_rev, $ubicacion ?: null, $id_tag_material ?: null);
                     jsonResponse(["success" => true]);
@@ -627,6 +643,9 @@ function handleApi($method, $resource, $path) {
                 $id_material = $data['id_material'] ?? '';
                 $fecha_devolucion = $data['fecha_devolucion'] ?? null;
                 if ($id_material) {
+                    if (!Material::obtenerPorId($id_material)) {
+                        jsonResponse(["error" => "El material no existe"], 400);
+                    }
                     Prestamo::crear($id_usuario, $id_material, $fecha_devolucion, $estado);
                     jsonResponse(["success" => true]);
                 }
@@ -729,6 +748,12 @@ function handleApi($method, $resource, $path) {
                 $stock_minimo = intval($data['stock_minimo'] ?? 0);
                 $precio = floatval($data['precio'] ?? 0);
                 if ($nombre) {
+                    if ($cantidad < 0) {
+                        jsonResponse(["error" => "La cantidad no puede ser negativa"], 400);
+                    }
+                    if ($precio <= 0) {
+                        jsonResponse(["error" => "El precio debe ser mayor que 0"], 400);
+                    }
                     Producto::crear($nombre, $descripcion ?: null, $cantidad, $stock_minimo, $precio);
                     jsonResponse(["success" => true]);
                 }
@@ -792,6 +817,12 @@ function handleApi($method, $resource, $path) {
                 $cantidad = intval($data['cantidad'] ?? 1);
                 $precio_unitario = floatval($data['precio_unitario'] ?? 0);
                 if ($id_producto && $cantidad > 0 && $precio_unitario > 0) {
+                    $conexion = Conexion::conectar();
+                    $stmt = $conexion->prepare("SELECT id_producto FROM productos_stock WHERE id_producto = ?");
+                    $stmt->execute([$id_producto]);
+                    if (!$stmt->fetch()) {
+                        jsonResponse(["error" => "El producto no existe"], 400);
+                    }
                     Compra::crear($_SESSION['usuario_id'], $id_producto, $cantidad, $precio_unitario);
                     jsonResponse(["success" => true]);
                 }
@@ -844,7 +875,13 @@ function handleApi($method, $resource, $path) {
                 $id_material = $data['id_material'] ?? '';
                 $descripcion = trim($data['descripcion'] ?? '');
                 $prioridad = $data['prioridad'] ?? 'media';
+                if (!in_array($prioridad, ['baja', 'media', 'alta'])) {
+                    jsonResponse(["error" => "Prioridad inválida"], 400);
+                }
                 if ($id_material && $descripcion) {
+                    if (!Material::obtenerPorId($id_material)) {
+                        jsonResponse(["error" => "El material no existe"], 400);
+                    }
                     Incidencia::crear($id_material, $_SESSION['usuario_id'], $descripcion, $prioridad);
                     $conexion = Conexion::conectar();
                     $stmt = $conexion->prepare("UPDATE material SET estado = 'averiado' WHERE id_material = ?");
