@@ -52,7 +52,7 @@
           <td class="col-resumen">
             <span class="summary-badge gasto">{{ resumenUsuario[u.id] ? (resumenUsuario[u.id].totalGastado | currency:'EUR':'symbol':'1.2-2') : '—' }}</span>
             @if (comprasPorUsuario[u.id] && comprasPorUsuario[u.id].length > 0) {
-              <a class="btn-all" (click)="abrirComprasModal(u.id, u.nombre)">Mostrar todo</a>
+              <br><a class="btn-all" (click)="abrirComprasModal(u.id, u.nombre)">Mostrar todo</a>
             }
           </td>
           <td class="col-resumen">
