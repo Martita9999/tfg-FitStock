@@ -1,0 +1,336 @@
+### ============================================
+### FITSTOCK API - Tests de endpoints
+### ============================================
+### Usa VS Code + REST Client (humao.rest-client)
+### Primero haz login para obtener la cookie de sesión
+### ============================================
+
+### Variables
+@baseUrl = http://localhost:8000/api
+
+### ============================================
+### 1. LOGIN
+### ============================================
+
+### Login como admin
+# @name loginAdmin
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+    "email": "admin@fitstock.com",
+    "password": "password"
+}
+
+### Login como entrenador
+# @name loginEntrenador
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+    "email": "carlos@gym.com",
+    "password": "carlos1234"
+}
+
+### Login como cliente
+# @name loginCliente
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+    "email": "ilsa@fitstock.com",
+    "password": "ilsa1234"
+}
+
+### ============================================
+### 2. REGISTRO
+### ============================================
+
+### Registrar nuevo cliente
+POST {{baseUrl}}/registro
+Content-Type: application/json
+
+{
+    "nombre": "Alba",
+    "email": "alba@fistock.com",
+    "password": "alba12345"
+}
+
+### ============================================
+### 3. LOGOUT
+### ============================================
+
+### Cerrar sesión
+POST {{baseUrl}}/logout
+Content-Type: application/json
+
+### ============================================
+### 4. USUARIOS (admin/entrenador)
+### ============================================
+
+### Listar todos los usuarios
+GET {{baseUrl}}/usuarios
+Content-Type: application/json
+
+### Crear nuevo usuario (admin)
+POST {{baseUrl}}/usuarios
+Content-Type: application/json
+
+{
+    "nombre": "Alberto",
+    "email": "alberto@fitstock.com",
+    "password": "alberto123",
+    "rol": "cliente"
+}
+
+### Editar usuario (id=5)
+PUT {{baseUrl}}/usuarios/5
+Content-Type: application/json
+
+{
+    "nombre": "Julio",
+    "email": "julio-editado@fitstock.com",
+    "rol": "entrenador"
+}
+
+### Editar usuario + cambiar contraseña (id=5)
+PUT {{baseUrl}}/usuarios/5
+Content-Type: application/json
+
+{
+    "nombre": "Test Usuario",
+    "email": "test@fitstock.com",
+    "password": "nuevaPassword123",
+    "rol": "cliente"
+}
+
+### Forzar cambio de contraseña (id=5)
+POST {{baseUrl}}/usuarios/forzar-cambio
+Content-Type: application/json
+
+{
+    "id_usuario": 5
+}
+
+### Cambiar propia contraseña
+PUT {{baseUrl}}/usuarios/cambiar-password
+Content-Type: application/json
+
+{
+    "old_password": "password123",
+    "new_password": "nuevaPassword123"
+}
+
+### Eliminar usuario (id=5)
+DELETE {{baseUrl}}/usuarios/5
+Content-Type: application/json
+
+### ============================================
+### 5. MATERIALES (máquinas)
+### ============================================
+
+### Listar materiales
+GET {{baseUrl}}/materiales
+Content-Type: application/json
+
+### Crear material
+POST {{baseUrl}}/materiales
+Content-Type: application/json
+
+{
+    "nombre": "Cinta de correr Test",
+    "descripcion": "Máquina para pruebas",
+    "ubicacion": "Sala 1",
+    "estado": "operativo",
+    "tipo": "maquina"
+}
+
+### Editar material (id=1)
+PUT {{baseUrl}}/materiales/1
+Content-Type: application/json
+
+{
+    "nombre": "Cinta de correr Editada",
+    "ubicacion": "Sala 2",
+    "estado": "en_reparacion",
+    "ultima_rev": "2026-05-18"
+}
+
+### Eliminar material (id=1)
+DELETE {{baseUrl}}/materiales/1
+Content-Type: application/json
+
+### ============================================
+### 6. PRÉSTAMOS
+### ============================================
+
+### Listar préstamos
+GET {{baseUrl}}/prestamos
+Content-Type: application/json
+
+### Crear préstamo (cliente)
+POST {{baseUrl}}/prestamos
+Content-Type: application/json
+
+{
+    "id_material": 2
+}
+
+### Crear préstamo (admin - asignando a usuario)
+POST {{baseUrl}}/prestamos
+Content-Type: application/json
+
+{
+    "id_usuario": 3,
+    "id_material": 2,
+    "estado": "activo"
+}
+
+### Aprobar préstamo (id=1)
+PUT {{baseUrl}}/prestamos/1/aprobar
+Content-Type: application/json
+
+### Marcar como devuelto
+PUT {{baseUrl}}/prestamos/1
+Content-Type: application/json
+
+{}
+
+### Confirmar devolución (admin)
+PUT {{baseUrl}}/prestamos/1/confirmar-devolucion
+Content-Type: application/json
+
+### Editar fecha devolución (id=1)
+PUT {{baseUrl}}/prestamos/1
+Content-Type: application/json
+
+{
+    "fecha_devolucion": "2026-06-01"
+}
+
+### Eliminar préstamo (id=1)
+DELETE {{baseUrl}}/prestamos/1
+Content-Type: application/json
+
+### ============================================
+### 7. PRODUCTOS
+### ============================================
+
+### Listar productos
+GET {{baseUrl}}/productos
+Content-Type: application/json
+
+### Crear producto
+POST {{baseUrl}}/productos
+Content-Type: application/json
+
+{
+    "nombre": "Proteína Test",
+    "descripcion": "Suplemento para pruebas",
+    "cantidad": 50,
+    "stock_minimo": 10,
+    "precio": 29.99
+}
+
+### Editar producto (id=1) - stock
+PUT {{baseUrl}}/productos/1
+Content-Type: application/json
+
+{
+    "cantidad": 45
+}
+
+### Editar producto (id=1) - todos los campos
+PUT {{baseUrl}}/productos/1
+Content-Type: application/json
+
+{
+    "nombre": "Proteína Test Editada",
+    "descripcion": "Descripción actualizada",
+    "cantidad": 40,
+    "stock_minimo": 5,
+    "precio": 34.99
+}
+
+### Eliminar producto (id=1)
+DELETE {{baseUrl}}/productos/1
+Content-Type: application/json
+
+### ============================================
+### 8. COMPRAS
+### ============================================
+
+### Listar compras
+GET {{baseUrl}}/compras
+Content-Type: application/json
+
+### Registrar compra
+POST {{baseUrl}}/compras
+Content-Type: application/json
+
+{
+    "id_producto": 2,
+    "cantidad": 5,
+    "precio_unitario": 29.99
+}
+
+### ============================================
+### 9. INCIDENCIAS
+### ============================================
+
+### Listar incidencias
+GET {{baseUrl}}/incidencias
+Content-Type: application/json
+
+### Crear incidencia
+POST {{baseUrl}}/incidencias
+Content-Type: application/json
+
+{
+    "id_material": 2,
+    "descripcion": "Máquina no enciende - test",
+    "prioridad": "alta"
+}
+
+### Editar incidencia (id=1)
+PUT {{baseUrl}}/incidencias/1
+Content-Type: application/json
+
+{
+    "descripcion": "Descripción actualizada",
+    "prioridad": "media",
+    "estado": "en_proceso"
+}
+
+### Cerrar incidencia como resuelta (id=1)
+PUT {{baseUrl}}/incidencias/1
+Content-Type: application/json
+
+{
+    "estado": "resuelta"
+}
+
+### Eliminar incidencia (id=1)
+DELETE {{baseUrl}}/incidencias/1
+Content-Type: application/json
+
+### ============================================
+### 10. DASHBOARD
+### ============================================
+
+### Obtener resumen dashboard
+GET {{baseUrl}}/resumen
+Content-Type: application/json
+
+### ============================================
+### 11. CONTACTO
+### ============================================
+
+### Enviar mensaje de contacto
+POST {{baseUrl}}/contacto
+Content-Type: application/json
+
+{
+    "email": "usuario@example.com",
+    "mensaje": "Mensaje de prueba desde el test"
+}

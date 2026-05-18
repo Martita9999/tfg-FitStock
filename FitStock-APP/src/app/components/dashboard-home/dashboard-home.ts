@@ -7,7 +7,8 @@ import { MaterialesService } from '../../services/materiales.service';
 import { PrestamosService } from '../../services/prestamos.service';
 import { ComprasService } from '../../services/compras.service';
 import { Material, Prestamo, Compra } from '../../interfaces/app.interfaces';
-import { UsuarioService, Usuario } from '../../services/usuario';
+import { UsuarioService } from '../../services/usuario';
+import { Usuario } from '../../interfaces/app.interfaces';
 
 /*
  * DashboardHomeComponent: página principal del panel.

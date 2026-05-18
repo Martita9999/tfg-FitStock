@@ -54,9 +54,12 @@ export class ProductoList implements OnInit {
   }
 
   toggleDescripcion(p: ProductoStock) {
-    this.selectedProductId = this.selectedProductId === p.id ? null : p.id;  // Toggle descripción
+    this.selectedProductId = this.selectedProductId === p.id ? null : p.id;
+  }
+
+  agregarAlCarrito(p: ProductoStock) {
     this.cartService.agregar(p);
-    this.cartService.triggerOpenCart();                                   // Abre el carrito automáticamente
+    this.cartService.triggerOpenCart();
   }
 
   abrirModal() {
