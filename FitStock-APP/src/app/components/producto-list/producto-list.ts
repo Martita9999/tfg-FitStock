@@ -60,6 +60,7 @@ export class ProductoList implements OnInit {
   agregarAlCarrito(p: ProductoStock) {
     this.cartService.agregar(p);
     this.cartService.triggerOpenCart();
+    this.selectedProductId = p.id;
   }
 
   abrirModal() {

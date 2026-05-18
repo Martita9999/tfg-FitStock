@@ -19,7 +19,7 @@
 
 /* ─── TARJETAS DE ESTADÍSTICAS ─── */
 /* Tarjetas de estadísticas con borde coloreado */
-.card { background: var(--card); border-radius: 16px; overflow: hidden; border: 2px solid var(--border); transition: box-shadow 0.2s, transform 0.15s; display: flex; flex-direction: column; height: 300px; }
+.card { background: var(--card); border-radius: 16px; overflow: hidden; border: 2px solid var(--border); transition: box-shadow 0.2s, transform 0.15s; display: flex; flex-direction: column; height: 320px; }
 .card .card-body { flex: 1; }
 
 .card.incidencias-card { border-color: #fca5a5; }
@@ -27,6 +27,7 @@
 .card.maquinas-card { border-color: #93c5fd; }
 .card.perfil-card { border-color: #a78bfa; }
 .card.prestamos-card { border-color: #86efac; }
+.card.ventas-card { border-color: #f59e0b; }
 
 /* ─── CABECERAS DE TARJETAS ─── */
 /* Cabeceras coloreadas de cada tarjeta */
@@ -62,10 +63,20 @@
 .stock-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 4px; }
 
 /* Scrollbar en listas largas de stock, gastos y préstamos */
+.card.ventas-card .card-body {
+  overflow: hidden;
+  min-height: 0;
+}
+
 .card.stock-card .stock-list,
-.card.ventas-card .stock-list,
 .card.prestamos-card .stock-list {
-  max-height: 180px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.card.ventas-card .stock-list {
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
 }
 
@@ -101,7 +112,7 @@
 
 /* ─── ENLACES ─── */
 /* Enlace a detalle de tarjeta */
-.card-link { display: inline-block; margin-top: 16px; font-size: 13px; font-weight: 600; color: var(--orange); text-decoration: none; }
+.card-link { display: inline-block; margin-top: auto; font-size: 13px; font-weight: 600; color: var(--orange); text-decoration: none; }
 .btn-ver-todo { display: block; width: 100%; margin-top: 16px; padding: 8px 16px; background: var(--orange); color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; text-align: center; }
 .btn-ver-todo:hover { background: var(--orange-dark); }
 .id-tag { background: var(--border); padding: 1px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; color: var(--text-secondary); margin-left: 4px; }

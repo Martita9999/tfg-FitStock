@@ -583,11 +583,11 @@ function handleApi($method, $resource, $path) {
                 $ultima_rev = $data['ultima_rev'] ?? null;
                 $ubicacion = trim($data['ubicacion'] ?? '');
                 $id_tag_material = trim($data['id_tag_material'] ?? '');
-                if ($estado !== null && $nombre && $estado && !in_array($estado, ['operativo','averiado','mantenimiento','en_proceso','saliendo','en_reparacion','baja'])) {
+                if ($estado !== null && !in_array($estado, ['operativo','averiado','mantenimiento','en_proceso','saliendo','en_reparacion','baja'])) {
                     jsonResponse(["error" => "Estado inválido"], 400);
                 }
-                if ($nombre && $estado) {
-                    Material::actualizar($path[2], $nombre, $descripcion, $estado, $ultima_rev, $ubicacion ?: null, $id_tag_material ?: null);
+                if ($nombre) {
+                    Material::actualizar($path[2], $nombre, $descripcion, $estado ?? 'operativo', $ultima_rev, $ubicacion ?: null, $id_tag_material ?: null);
                     jsonResponse(["success" => true]);
                 }
                 jsonResponse(["error" => "Datos inválidos"], 400);

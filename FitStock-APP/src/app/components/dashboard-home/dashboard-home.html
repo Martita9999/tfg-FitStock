@@ -174,23 +174,10 @@
           <div class="info-row">
             <span class="info-label">Contraseña</span>
             <span class="info-value">
-              @if (!showPasswordForm) {
-                <span class="password-mask">********</span>
-                <button class="btn-link" (click)="showPasswordForm = true">Cambiar</button>
-              }
+              <span class="password-mask">********</span>
+              <button class="btn-link" (click)="abrirModalPassword()">Cambiar</button>
             </span>
           </div>
-          <!-- Formulario de cambio de contraseña -->
-          @if (showPasswordForm) {
-            <div class="password-form">
-              <input type="password" [(ngModel)]="currentPassword" name="currentPass" placeholder="Contraseña actual" class="input-sm">
-              <input type="password" [(ngModel)]="newPassword" name="newPass" placeholder="Nueva contraseña" class="input-sm">
-              <div class="password-actions">
-                <button class="btn-sm btn-save-sm" (click)="cambiarPassword()">Guardar</button>
-                <button class="btn-sm btn-cancel-sm" (click)="showPasswordForm = false; currentPassword = ''; newPassword = ''">Cancelar</button>
-              </div>
-            </div>
-          }
         </div>
       </div>
 
@@ -265,6 +252,42 @@
             </div>
           }
           <button class="btn-ver-todo" (click)="showGastosModal = true">Mostrar todo</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modal de cambio de contraseña -->
+  @if (showPasswordModal) {
+    <div class="modal-overlay" (click)="cerrarModalPassword()">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Cambiar Contraseña</h3>
+          <button class="btn-close" (click)="cerrarModalPassword()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div class="modal-body">
+          @if (passwordModalMessage) {
+            <div [class.success-msg]="passwordModalSuccess" [class.error-msg]="!passwordModalSuccess">
+              {{ passwordModalMessage }}
+            </div>
+          } @else {
+            <div class="field">
+              <label>Contraseña actual</label>
+              <input type="password" [(ngModel)]="currentPassword" name="currentPass" placeholder="Contraseña actual">
+            </div>
+            <div class="field">
+              <label>Nueva contraseña</label>
+              <input type="password" [(ngModel)]="newPassword" name="newPass" placeholder="Nueva contraseña">
+            </div>
+          }
+        </div>
+        <div class="modal-footer">
+          @if (passwordModalMessage) {
+            <button class="btn-save" (click)="cerrarModalPassword()">Aceptar</button>
+          } @else {
+            <button class="btn-cancel" (click)="cerrarModalPassword()">Cancelar</button>
+            <button class="btn-save" (click)="cambiarPassword()">Guardar</button>
+          }
         </div>
       </div>
     </div>

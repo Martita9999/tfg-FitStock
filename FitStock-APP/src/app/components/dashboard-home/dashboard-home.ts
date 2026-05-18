@@ -44,8 +44,11 @@ export class DashboardHomeComponent implements OnInit {
 
   currentPassword = '';
   newPassword = '';
-  showPasswordForm = false;
   showGastosModal = false;
+
+  showPasswordModal = false;
+  passwordModalMessage = '';
+  passwordModalSuccess = false;
 
   ngOnInit() {
     const userStr = localStorage.getItem('user');
@@ -105,27 +108,41 @@ export class DashboardHomeComponent implements OnInit {
     });
   }
 
+  abrirModalPassword() {
+    this.currentPassword = '';
+    this.newPassword = '';
+    this.passwordModalMessage = '';
+    this.showPasswordModal = true;
+  }
+
+  cerrarModalPassword() {
+    this.showPasswordModal = false;
+    this.passwordModalMessage = '';
+  }
+
   cambiarPassword() {
-    this.error = '';
-    this.successMsg = '';
+    this.passwordModalMessage = '';
     if (!this.currentPassword.trim()) {
-      this.error = 'Introduce tu contraseña actual';
+      this.passwordModalMessage = 'Introduce tu contraseña actual';
+      this.passwordModalSuccess = false;
       return;
     }
     if (!this.newPassword.trim()) {
-      this.error = 'Introduce la nueva contraseña';
+      this.passwordModalMessage = 'Introduce la nueva contraseña';
+      this.passwordModalSuccess = false;
       return;
     }
     this.usuarioService.cambiarPassword(this.currentPassword.trim(), this.newPassword.trim()).subscribe({
       next: () => {
-        this.successMsg = 'Contraseña actualizada correctamente';
+        this.passwordModalMessage = 'Contraseña actualizada correctamente';
+        this.passwordModalSuccess = true;
         this.currentPassword = '';
         this.newPassword = '';
-        this.showPasswordForm = false;
       },
       error: (err) => {
         const backendError = err.error?.error;
-        this.error = backendError || 'Error al cambiar la contraseña';
+        this.passwordModalMessage = backendError || 'Error al cambiar la contraseña';
+        this.passwordModalSuccess = false;
       }
     });
   }
