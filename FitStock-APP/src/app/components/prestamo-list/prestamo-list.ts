@@ -10,6 +10,12 @@ import { MaterialesService } from '../../services/materiales.service';
 import { UsuarioService } from '../../services/usuario';
 import { Prestamo, Usuario, Material } from '../../interfaces/app.interfaces';
 
+/*
+ * MaterialGroup: interfaz local para agrupar materiales por nombre
+ * en la vista de préstamos. No está en app.interfaces porque es
+ * específica de este componente y no se reutiliza en otros.
+ * Facilita el control de selección múltiple de unidades.
+ */
 interface MaterialGroup {
   nombre: string;
   descripcion: string;
@@ -154,16 +160,17 @@ export class PrestamoList implements OnInit {
     this.error = '';
     const promesas: Promise<any>[] = [];
 
+    if (this.userRole !== 'cliente') {
+      this.abrirModalUsuario();
+      return;
+    }
+
     for (const g of this.grupos) {
       const cantidad = this.selecciones[g.nombre] ?? 0;
       for (let i = 0; i < cantidad; i++) {
         const idMaterial = g.idsDisponibles[i];
         if (idMaterial) {
-          const data: any = { id_material: idMaterial };
-          if (this.userRole !== 'cliente') {
-            data.id_usuario = this.newPrestamoUsuario;
-          }
-          promesas.push(firstValueFrom(this.prestamosService.createPrestamo(data)));
+          promesas.push(firstValueFrom(this.prestamosService.createPrestamo({ id_material: idMaterial })));
         }
       }
     }

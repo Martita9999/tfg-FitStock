@@ -19,6 +19,13 @@
  * o Netlify puede comunicarse con el backend sin problemas de CORS,
  * y además no hace falta tocar el código cuando cambiamos de dominio.
  */
+
+/*
+ * Cargamos las variables del .env antes de leer FRONTEND_URL,
+ * para que getenv() encuentre el valor definido en el archivo.
+ */
+require_once __DIR__ . '/conexion.php';
+
 $allowedOrigin = getenv('FRONTEND_URL') ?: 'http://localhost:4200';
 
 /*

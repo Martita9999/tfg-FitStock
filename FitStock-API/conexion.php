@@ -85,7 +85,7 @@ function obtenerConexion() {
          * genérico "Error interno del servidor" al usuario.
          */
         error_log("Error de conexión DB: " . $e->getMessage());
-        die("Error interno del servidor");
+        throw new PDOException ("Error interno del servidor");
     }
 }
 

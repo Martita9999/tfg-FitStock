@@ -89,7 +89,11 @@ export class UsuarioService {
   checkSession() {
     const userStr = localStorage.getItem('user');
     if (userStr) {
-      this.currentUserSubject.next(JSON.parse(userStr));                     // Recuperamos usuario guardado
+      try {
+        this.currentUserSubject.next(JSON.parse(userStr));
+      } catch {
+        localStorage.removeItem('user');
+      }
     }
   }
 }

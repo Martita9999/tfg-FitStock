@@ -14,6 +14,12 @@
  */
 
 /*
+ * Cargamos las variables del .env antes de leer FRONTEND_URL,
+ * para que getenv() encuentre el valor definido en el archivo.
+ */
+require_once __DIR__ . "/../conexion.php";
+
+/*
  * Origen CORS dinámico:
  * Usamos la variable de entorno FRONTEND_URL para saber desde dónde
  * puede llegar el frontend. En desarrollo es localhost:4200 (Angular),
@@ -22,7 +28,7 @@
  * Así no hace falta cambiar el código cuando pase a producción:
  * solo configurar la variable de entorno en el servidor.
  */
-$allowedOrigin = getenv('FRONTEND_URL') ?: 'http://localhost:4200';  // Origen dinámico CORS (variable de entorno o fallback local)
+$allowedOrigin = getenv('FRONTEND_URL') ?: 'http://localhost:4200';  // Origen CORS dinámico
 
 /*
  * Cabeceras CORS y tipo de contenido:
@@ -177,7 +183,6 @@ function checkRateLimitContacto($ip) {
  * También importamos PHPMailer para el envío de correos desde
  * el formulario de contacto.
  */
-require_once __DIR__ . "/../conexion.php";
 require_once __DIR__ . "/../models/Usuario.php";
 require_once __DIR__ . "/../models/Material.php";
 require_once __DIR__ . "/../models/Prestamo.php";
