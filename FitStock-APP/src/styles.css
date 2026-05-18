@@ -105,6 +105,15 @@ router-outlet + * {
   animation: fadeIn 0.3s ease;
 }
 
+/* Con sidebar abierto, wrapper sin borde visual */
+@media (max-width: 1028px) {
+  .table-wrapper {
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
+
 /* Cabecera compartida: título a la izquierda, botón de acción a la derecha */
 .header-actions {
   display: flex;
@@ -231,6 +240,8 @@ router-outlet + * {
 
 .modal-body {
   padding: 24px;
+  overflow-y: auto;
+  max-height: 70vh;
 }
 
 .modal-footer {
@@ -300,6 +311,31 @@ router-outlet + * {
 }
 
 /*
+ * Table wrapper: contenedor responsive que permite scroll horizontal
+ * cuando la tabla es más ancha que el contenedor padre.
+ */
+.table-wrapper {
+  overflow-x: auto;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  margin-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-wrapper::-webkit-scrollbar {
+  height: 6px;
+}
+.table-wrapper::-webkit-scrollbar-track {
+  background: var(--bg);
+  border-radius: 0 0 14px 14px;
+}
+.table-wrapper::-webkit-scrollbar-thumb {
+  background: var(--orange);
+  border-radius: 3px;
+}
+
+/*
  * Tabla de datos: bordes redondeados, sombra sutil,
  * cabeceras en mayúsculas y hover en filas.
  */
@@ -308,10 +344,6 @@ router-outlet + * {
   border-collapse: separate;
   border-spacing: 0;
   background: var(--card);
-  border-radius: 14px;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-  border: 1px solid var(--border);
 }
 
 .data-table th.td-center, .data-table td.td-center {
@@ -395,4 +427,77 @@ router-outlet + * {
 
 .btn-save:active {
   transform: translateY(0);
+}
+
+/* ─── CONFIRM MODAL (ConfirmService) ─── */
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+  padding: 20px;
+  animation: fadeIn 0.15s ease;
+}
+
+.confirm-card {
+  background: var(--card);
+  border-radius: 14px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.3);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.confirm-body {
+  padding: 28px 24px 16px;
+  font-size: 15px;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.confirm-body p {
+  margin: 0;
+}
+
+.confirm-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 12px 24px 20px;
+}
+
+.btn-confirm-cancel {
+  padding: 10px 20px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--text);
+  transition: all 0.2s;
+}
+.btn-confirm-cancel:hover {
+  background: var(--bg);
+}
+
+.btn-confirm-ok {
+  padding: 10px 20px;
+  background: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+.btn-confirm-ok:hover {
+  background: #b91c1c;
 }

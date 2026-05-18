@@ -20,7 +20,7 @@
   inset: 0;
   background:
     linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(30, 41, 59, 0.7) 100%),
-    url('/images/portal-web/portal.jpg');
+    url('/API/images/portal-web/portal.jpg');
   background-size: cover;
   background-position: center;
   z-index: -1;

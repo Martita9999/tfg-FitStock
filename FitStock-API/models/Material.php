@@ -98,19 +98,6 @@ class Material {
         return null;
     }
 
-    /* buscarPorIdTag(): busca material por su código visible (ej: "CIN-001").
-       Diferente del ID numérico interno. */
-    public static function obtenerPorIdTag($id_tag_material) {
-        $conexion = Conexion::conectar();
-        $stmt = $conexion->prepare("SELECT * FROM material WHERE id_tag_material = ?");  // Buscamos por tag
-        $stmt->execute([$id_tag_material]);
-        $fila = $stmt->fetch(PDO::FETCH_ASSOC);
-        if ($fila) {
-            return new Material($fila['id_material'], $fila['nombre_equipo'], $fila['descripcion'], $fila['estado'], $fila['tipo'], $fila['id_tag_material'], $fila['ultima_rev'], $fila['ubicacion'] ?? null);
-        }
-        return null;
-    }
-
     /* crear(): añade un material nuevo. Si no se pasa id_tag_material,
        se genera automáticamente con el algoritmo generarIdTag(). */
     public static function crear($nombre_equipo, $descripcion, $estado, $tipo, $id_tag_material, $ultima_rev = null, $ubicacion = null) {

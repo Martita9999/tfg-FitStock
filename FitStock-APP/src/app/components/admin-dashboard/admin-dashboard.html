@@ -5,11 +5,16 @@
     <div class="sidebar-overlay" (click)="closeSidebar()"></div>
   }
   <!-- Barra lateral de navegación -->
-  <app-admin-sidebar [collapsed]="sidebarCollapsed" (toggleSidebar)="toggleSidebar()"></app-admin-sidebar>
+  <app-admin-sidebar [collapsed]="sidebarCollapsed" (toggleSidebar)="toggleSidebar()" (closeSidebar)="closeSidebar()"></app-admin-sidebar>
   <!-- Área de contenido principal -->
   <main class="main-content">
     <!-- Cabecera superior: logo, carrito, tema y cierre de sesión -->
     <header class="app-header" *ngIf="user">
+      <div class="header-left">
+        <button class="menu-toggle" (click)="toggleSidebar()" aria-label="Menú">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+      </div>
       <div class="header-content">
         <!-- Botón y desplegable del carrito de compras -->
         <div class="cart-btn-wrapper">
@@ -46,7 +51,23 @@
                     <span>Total</span>
                     <strong>{{ cartService.totalCarrito.toFixed(2) }}€</strong>
                   </div>
-                  <button class="btn-buy" (click)="comprar()">Comprar Ahora</button>
+                  <!--
+                    Dos estados del footer del carrito:
+
+                    1. showCardForm → formulario de tarjeta Stripe + botón "Pagar X€"
+                       El usuario introduce los datos de la tarjeta cada vez
+
+                    2. else → estado inicial: botón "Comprar Ahora"
+                  -->
+                  @if (showCardForm) {
+                    <div id="card-element" class="stripe-card"></div>
+                    <div id="card-errors" class="stripe-error"></div>
+                    <button class="btn-buy" (click)="onCardSubmit()" [disabled]="processingPayment">
+                      {{ processingPayment ? 'Procesando...' : 'Pagar ' + cartService.totalCarrito.toFixed(2) + '€' }}
+                    </button>
+                  } @else {
+                    <button class="btn-buy" (click)="comprar()">Comprar Ahora</button>
+                  }
                 </div>
               } @else {
                 <div class="cart-empty">

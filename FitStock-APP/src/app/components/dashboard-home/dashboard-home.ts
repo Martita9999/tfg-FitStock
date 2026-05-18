@@ -6,9 +6,8 @@ import { ResumenService, ResumenData } from '../../services/resumen.service';
 import { MaterialesService } from '../../services/materiales.service';
 import { PrestamosService } from '../../services/prestamos.service';
 import { ComprasService } from '../../services/compras.service';
-import { Material, Prestamo, Compra } from '../../interfaces/app.interfaces';
+import { Material, Prestamo, Compra, Usuario } from '../../interfaces/app.interfaces';
 import { UsuarioService } from '../../services/usuario';
-import { Usuario } from '../../interfaces/app.interfaces';
 
 /*
  * DashboardHomeComponent: página principal del panel.
@@ -44,7 +43,7 @@ export class DashboardHomeComponent implements OnInit {
 
   currentPassword = '';
   newPassword = '';
-  showPasswordForm = false;
+  showPasswordModal = false;
   showGastosModal = false;                                            // Controla apertura/cierre del modal de todas las compras
 
   ngOnInit() {
@@ -52,10 +51,23 @@ export class DashboardHomeComponent implements OnInit {
     if (userStr) {
       this.user = JSON.parse(userStr);
     }
-    if (this.user?.rol === 'cliente') {
-      this.cargarDatosCliente();                                         // Cliente: carga vista simplificada
+    if (this.user) {
+      if (this.user.rol === 'cliente') {
+        this.cargarDatosCliente();
+      } else {
+        this.cargarResumen();
+      }
     } else {
-      this.cargarResumen();                                              // Admin/entrenador: carga resumen completo
+      this.usuarioService.currentUser$.subscribe(u => {
+        if (u) {
+          this.user = u;
+          if (u.rol === 'cliente') {
+            this.cargarDatosCliente();
+          } else {
+            this.cargarResumen();
+          }
+        }
+      });
     }
   }
 
@@ -121,7 +133,7 @@ export class DashboardHomeComponent implements OnInit {
         this.successMsg = 'Contraseña actualizada correctamente';
         this.currentPassword = '';
         this.newPassword = '';
-        this.showPasswordForm = false;
+        this.showPasswordModal = false;
       },
       error: (err) => {
         const backendError = err.error?.error;

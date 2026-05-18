@@ -10,6 +10,7 @@ import { IncidenciaList } from './components/incidencia-list/incidencia-list';
 import { UsuarioList } from './components/usuario-list/usuario-list';
 import { MaterialList } from './components/material-list/material-list';
 import { DashboardHomeComponent } from './components/dashboard-home/dashboard-home';
+import { authGuard } from './guards/auth.guard';
 
 /*
  * Rutas de la aplicación.
@@ -24,6 +25,7 @@ export const routes: Routes = [
   { path: 'contacto', component: ContactoComponent },
   {
     path: 'admin',
+    canActivate: [authGuard],                                            // Protegida: redirige a /login si no hay sesión
     component: AdminDashboardComponent,                                  // Layout con sidebar + header
     children: [
       { path: 'inventario', component: ProductoList },

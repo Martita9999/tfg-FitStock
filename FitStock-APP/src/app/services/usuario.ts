@@ -1,4 +1,5 @@
 import { Injectable, inject } from '@angular/core';
+import { environment } from '../../environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, tap } from 'rxjs';
 
@@ -25,9 +26,9 @@ export interface LoginResponse {
 @Injectable({ providedIn: 'root' })
 export class UsuarioService {
   private http = inject(HttpClient);
-  private API_URL = 'https://chomsky.es/API/api';
+  private readonly API_URL = environment.API_URL;
 
-  private currentUserSubject = new BehaviorSubject<Usuario | null>(null);  // Estado del usuario en memoria
+  currentUserSubject = new BehaviorSubject<Usuario | null>(null);  // Estado del usuario en memoria
   currentUser$ = this.currentUserSubject.asObservable();                    // Observable público para componentes
 
   private httpOptions = { withCredentials: true };                          // Envía cookies de sesión

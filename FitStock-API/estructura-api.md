@@ -1,30 +1,43 @@
-# Estructura de la API REST (PHP)
+# Estructura de la API REST (PHP) — MVC
 
 ```
 FitStock-API/
 ├── api/
-│   └── index.php          → Enrutador interno. Recibe peticiones /api y las distribuye
-│                              por recurso (login, usuarios, materiales, prestamos, etc.)
-│                              mediante handleApi(). Contiene toda la lógica de negocio
-│                              y responde siempre en JSON con códigos HTTP.
+│   └── index.php          → Enrutador puro. Recibe peticiones /api, mapea el recurso
+│                              a su controlador y lo ejecuta. Sin lógica de negocio.
+├── controllers/
+│   ├── AuthController.php     → Login, registro, logout
+│   ├── UsuarioController.php  → CRUD usuarios + cambiar password
+│   ├── MaterialController.php → CRUD materiales
+│   ├── PrestamoController.php → CRUD préstamos + aprobar/devolver
+│   ├── ProductoController.php → CRUD productos + subir imagen
+│   ├── CompraController.php   → CRUD compras
+│   ├── IncidenciaController.php → CRUD incidencias
+│   ├── ResumenController.php  → Dashboard resumen
+│   ├── ContactoController.php → Formulario contacto (PHPMailer)
+│   └── StripeController.php   → Payment Intent Stripe
+├── helpers/
+│   ├── json.php            → jsonResponse(), getJsonInput()
+│   ├── auth.php            → requireSession()
+│   └── ratelimit.php       → Rate limiting (login + contacto)
+├── models/
+│   ├── Compra.php         → CRUD compras (consultas SQL)
+│   ├── Incidencia.php     → CRUD incidencias
+│   ├── Material.php       → CRUD material/maquinas
+│   ├── Prestamo.php       → CRUD préstamos
+│   ├── Producto.php       → CRUD productos en stock
+│   └── Usuario.php        → CRUD usuarios
 ├── config/
 │   └── database.sql       → Script SQL completo: CREATE DATABASE, tablas, datos de ejemplo
 ├── docs/
 │   ├── docs.css
 │   ├── docs.html
-│   └── docs.php           → Documentación HTML de la API (se muestra al acceder a la raíz)
-├── models/
-│   ├── Compra.php         → CRUD de compras (consultas SQL)
-│   ├── Incidencia.php     → CRUD de incidencias
-│   ├── Material.php       → CRUD de material/maquinas
-│   ├── Prestamo.php       → CRUD de préstamos
-│   ├── Producto.php       → CRUD de productos en stock
-│   └── Usuario.php        → CRUD de usuarios
+│   └── docs.php           → Documentación HTML de la API
 ├── vendor/
-│   └── PHPMailer/         → Librería para envío de correos SMTP (formulario de contacto)
-├── .env                   → Variables de entorno (FRONTEND_URL, MAIL_PASSWORD...)
+│   └── PHPMailer/         → Librería SMTP (formulario de contacto)
+├── .env                   → Variables de entorno (FRONTEND_URL, MAIL_PASSWORD, STRIPE_SECRET_KEY)
 ├── conexion.php           → Clase Conexion con PDO (MySQL). Singleton.
-└── router.php             → Front controller. Configura CORS, seguridad, sirve estáticos,
+└── router.php             → Front controller. CORS, seguridad, sirve estáticos,
                               redirige /api a api/index.php y muestra docs como fallback.
 ```
 
@@ -35,8 +48,12 @@ Navegador/Angular
        ↓
    router.php              → CORS, seguridad, OPTIONS preflight
        ↓
-   ¿/api/recurso?          → Sí → api/index.php → handleApi() → switch($resource)
-       ↓                                                        ↓
+   ¿/api/recurso?          → Sí → api/index.php (router)
+       ↓                                       ↓
+   Mapea recurso a controller                recurso existe?
+       ↓                                       ↓
+   Controller::handle()       Sí → ejecuta → jsonResponse()
+       ↓
    No → ¿archivo estático? → Sí → return false (Apache sirve directo)
        ↓
    No → docs/docs.php       (documentación)
@@ -60,12 +77,15 @@ Navegador/Angular
 | `/api/incidencias` | GET, POST, PUT, DELETE | Autenticado (según rol) |
 | `/api/resumen` | GET | Autenticado |
 | `/api/contacto` | POST | Público (con rate limit) |
+| `/api/crear-payment-intent` | POST | Autenticado |
 
 ## Patrón usado
 
-**Front Controller + DAO** (no MVC estricto):
+**MVC (Modelo-Vista-Controlador)**:
 
 - `router.php` → punto de entrada único (front controller)
-- `api/index.php` → controlador con toda la lógica de negocio
+- `api/index.php` → enrutador, mapea recursos a controladores
+- `controllers/*.php` → lógica de negocio por recurso
 - `models/*.php` → DAOs con consultas SQL, sin lógica de negocio
+- `helpers/*.php` → funciones auxiliares (respuestas, sesión, rate limiting)
 - `conexion.php` → PDO con prepared statements (anti-SQL injection)

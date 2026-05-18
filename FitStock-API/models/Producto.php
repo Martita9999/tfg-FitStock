@@ -62,19 +62,6 @@ class Producto {
         return null;                                   // Si no existe, null
     }
 
-    /* obtenerStockBajo(): productos con cantidad <= stock mínimo.
-       Se usa en el dashboard para alertar de reposición. */
-    public static function obtenerStockBajo() {
-        $conexion = Conexion::conectar();
-        $stmt = $conexion->prepare("SELECT * FROM productos_stock WHERE cant_actual <= stock_minimo ORDER BY nombre_prod");  // Filtro stock bajo
-        $stmt->execute();
-        $productos = [];
-        while ($fila = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $productos[] = new Producto($fila['id_producto'], $fila['nombre_prod'], $fila['descripcion'] ?? null, $fila['cant_actual'], $fila['stock_minimo'], $fila['precio']);
-        }
-        return $productos;
-    }
-
     /* crear(): añade un nuevo producto a la tienda.
        Devuelve el ID del producto recién creado. */
     public static function crear($nombre_prod, $descripcion, $cant_actual, $stock_minimo, $precio) {

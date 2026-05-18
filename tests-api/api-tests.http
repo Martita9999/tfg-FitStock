@@ -1,8 +1,5 @@
 ### ============================================
-### FITSTOCK API - Tests de endpoints
-### ============================================
-### Usa VS Code + REST Client (humao.rest-client)
-### Primero haz login para obtener la cookie de sesión
+### FITSTOCK API - Pruebas de endpoints
 ### ============================================
 
 ### Variables
@@ -19,7 +16,7 @@ Content-Type: application/json
 
 {
     "email": "admin@fitstock.com",
-    "password": "password"
+    "password": "admin123"
 }
 
 ### Login como entrenador
@@ -28,8 +25,8 @@ POST {{baseUrl}}/login
 Content-Type: application/json
 
 {
-    "email": "carlos@gym.com",
-    "password": "carlos1234"
+    "email": "alegonol@gmail.com",
+    "password": "entrenador13"
 }
 
 ### Login como cliente
@@ -38,8 +35,8 @@ POST {{baseUrl}}/login
 Content-Type: application/json
 
 {
-    "email": "ilsa@fitstock.com",
-    "password": "ilsa1234"
+    "email": "jorge@gmail.com",
+    "password": "cliente123"
 }
 
 ### ============================================

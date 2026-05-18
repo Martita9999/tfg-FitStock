@@ -33,7 +33,12 @@ export class ToastService {
     const el = document.createElement('div');                                // Creamos elemento toast
     el.className = `toast toast-${type}`;
     const icons = { success: '✅', error: '❌', info: 'ℹ️' };
-    el.innerHTML = `<span>${icons[type]}</span><span>${message}</span>`;
+    const iconSpan = document.createElement('span');
+    iconSpan.textContent = icons[type];
+    const msgSpan = document.createElement('span');
+    msgSpan.textContent = message;
+    el.appendChild(iconSpan);
+    el.appendChild(msgSpan);
     this.getContainer().appendChild(el);                                     // Lo añadimos al contenedor
     setTimeout(() => el.remove(), duration);                                 // Auto-eliminación tras duration ms
   }

@@ -3,7 +3,7 @@
   <!-- Bloque visible para admin y entrenador -->
   @if (user?.rol !== 'cliente') {
     <div class="welcome-card">
-      <h2>Panel de Control</h2>
+      <h2>Panel de Control, {{ user?.nombre }}</h2>
       <p>Resumen general del estado del gimnasio</p>
     </div>
 
@@ -26,7 +26,7 @@
               </div>
               <div class="stat">
                 <span class="stat-num warning">{{ resumen.incidencias.en_proceso }}</span>
-                <span class="stat-label">En proceso</span>
+                <span class="stat-label">Mantenimiento</span>
               </div>
               <div class="stat">
                 <span class="stat-num ok">{{ resumen.incidencias.resuelta }}</span>
@@ -170,28 +170,14 @@
           <div class="info-row"><span class="info-label">Nombre</span><span class="info-value">{{ user?.nombre }}</span></div>
           <div class="info-row"><span class="info-label">Email</span><span class="info-value">{{ user?.email }}</span></div>
           <div class="info-row"><span class="info-label">Rol</span><span class="info-value role-cliente">Cliente</span></div>
-          <!-- Método de pago estático (futura mejora: integración real con pasarela de pago) -->
-          <div class="info-row"><span class="info-label">Método de pago</span><span class="info-value">Paypal</span></div>
+          <div class="info-row"><span class="info-label">Método de pago</span><span class="info-value">Stripe</span></div>
           <div class="info-row">
             <span class="info-label">Contraseña</span>
             <span class="info-value">
-              @if (!showPasswordForm) {
-                <span class="password-mask">********</span>
-                <button class="btn-link" (click)="showPasswordForm = true">Cambiar</button>
-              }
+              <span class="password-mask">********</span>
+              <button class="btn-link" (click)="showPasswordModal = true">Cambiar</button>
             </span>
           </div>
-          <!-- Formulario de cambio de contraseña -->
-          @if (showPasswordForm) {
-            <div class="password-form">
-              <input type="password" [(ngModel)]="currentPassword" name="currentPass" placeholder="Contraseña actual" class="input-sm">
-              <input type="password" [(ngModel)]="newPassword" name="newPass" placeholder="Nueva contraseña" class="input-sm">
-              <div class="password-actions">
-                <button class="btn-sm btn-save-sm" (click)="cambiarPassword()">Guardar</button>
-                <button class="btn-sm btn-cancel-sm" (click)="showPasswordForm = false; currentPassword = ''; newPassword = ''">Cancelar</button>
-              </div>
-            </div>
-          }
         </div>
       </div>
 
@@ -301,6 +287,29 @@
               }
             </div>
           }
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modal de cambio de contraseña -->
+  @if (showPasswordModal) {
+    <div class="modal-overlay" (click)="showPasswordModal = false; currentPassword = ''; newPassword = ''">
+      <div class="modal-card modal-password" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Cambiar Contraseña</h3>
+          <button class="btn-close" (click)="showPasswordModal = false; currentPassword = ''; newPassword = ''"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div class="modal-body">
+          @if (error) {
+            <div class="error-msg" style="margin-bottom:12px;">{{ error }}</div>
+          }
+          <input type="password" [(ngModel)]="currentPassword" name="currentPass" placeholder="Contraseña actual" class="input-modal">
+          <input type="password" [(ngModel)]="newPassword" name="newPass" placeholder="Nueva contraseña" class="input-modal">
+        </div>
+        <div class="modal-footer">
+          <button class="btn-modal btn-modal-primary" (click)="cambiarPassword()">Guardar</button>
+          <button class="btn-modal btn-modal-secondary" (click)="showPasswordModal = false; currentPassword = ''; newPassword = ''">Cancelar</button>
         </div>
       </div>
     </div>

@@ -21,7 +21,8 @@
   </div>
 
   <!-- Tabla de usuarios filtrados por rol -->
-  <table class="data-table" *ngIf="listaFiltrada.length > 0">
+  <div class="table-wrapper" *ngIf="listaFiltrada.length > 0">
+  <table class="data-table">
     <thead>
       <tr>
         <th>ID</th>
@@ -38,10 +39,10 @@
     </thead>
     <tbody>
       <tr *ngFor="let u of listaFiltrada">
-        <td>{{ u.id }}</td>
-        <td><strong>{{ u.nombre }}</strong></td>
-        <td>{{ u.email }}</td>
-        <td>
+        <td data-label="ID">{{ u.id }}</td>
+        <td data-label="Nombre"><strong>{{ u.nombre }}</strong></td>
+        <td data-label="Email">{{ u.email }}</td>
+        <td data-label="Rol">
           <span class="role-badge" [class.admin]="u.rol === 'admin'"
                 [class.entrenador]="u.rol === 'entrenador'"
                 [class.cliente]="u.rol === 'cliente'">
@@ -49,25 +50,24 @@
           </span>
         </td>
         @if (filtroRol) {
-          <td class="col-resumen">
+          <td class="col-resumen" data-label="Gasto Total">
             <span class="summary-badge gasto">{{ resumenUsuario[u.id] ? (resumenUsuario[u.id].totalGastado | currency:'EUR':'symbol':'1.2-2') : '—' }}</span>
-            <!-- Mostrar todo: enlace que abre modal con todas las compras del usuario; <br> separa del importe -->
             @if (comprasPorUsuario[u.id] && comprasPorUsuario[u.id].length > 0) {
               <br><a class="btn-all" (click)="abrirComprasModal(u.id, u.nombre)">Mostrar todo</a>
             }
           </td>
-          <td class="col-resumen">
+          <td class="col-resumen" data-label="Préstamos Pend.">
             <span class="summary-badge prestamo" [class.peligro]="resumenUsuario[u.id] && resumenUsuario[u.id].prestamosPendientes > 0">
               {{ resumenUsuario[u.id] ? resumenUsuario[u.id].prestamosPendientes : '—' }}
             </span>
           </td>
-          <td class="col-resumen">
+          <td class="col-resumen" data-label="Incidencias">
             <span class="summary-badge incidencia" [class.si]="resumenUsuario[u.id]?.tieneIncidencias">
               {{ resumenUsuario[u.id] ? (resumenUsuario[u.id].tieneIncidencias ? 'Sí' : 'No') : '—' }}
             </span>
           </td>
         }
-        <td>
+        <td data-label="Acciones">
           <!-- Acciones por usuario: editar, cambiar contraseña, borrar -->
           <div class="action-btns">
             <button class="btn-edit" (click)="abrirEditar(u)" title="Editar usuario" *ngIf="(userRole === 'admin' || userRole === 'entrenador') && (userRole === 'admin' || u.rol !== 'admin')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></button>
@@ -81,6 +81,7 @@
       </tr>
     </tbody>
   </table>
+  </div>
 
   <!-- Estado cuando no hay usuarios que coincidan con el filtro -->
   <div class="empty-state" *ngIf="listaFiltrada.length === 0">
@@ -172,7 +173,8 @@
       <button class="btn-close" (click)="cerrarComprasModal()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
-      <table class="data-table" *ngIf="selectedUserCompras.length > 0">
+      <div class="table-wrapper" *ngIf="selectedUserCompras.length > 0">
+      <table class="data-table">
         <thead>
           <tr>
             <th>Producto</th>
@@ -184,14 +186,15 @@
         </thead>
         <tbody>
           <tr *ngFor="let c of selectedUserCompras">
-            <td>{{ c.nombre_producto }}</td>
-            <td>{{ c.cantidad }}</td>
-            <td>{{ c.precio_unitario | currency:'EUR':'symbol':'1.2-2' }}</td>
-            <td><strong>{{ c.total | currency:'EUR':'symbol':'1.2-2' }}</strong></td>
-            <td>{{ c.fecha_compra | date:'dd/MM/yyyy' }}</td>
+            <td data-label="Producto">{{ c.nombre_producto }}</td>
+            <td data-label="Cantidad">{{ c.cantidad }}</td>
+            <td data-label="Precio Ud.">{{ c.precio_unitario | currency:'EUR':'symbol':'1.2-2' }}</td>
+            <td data-label="Total"><strong>{{ c.total | currency:'EUR':'symbol':'1.2-2' }}</strong></td>
+            <td data-label="Fecha">{{ c.fecha_compra | date:'dd/MM/yyyy' }}</td>
           </tr>
         </tbody>
       </table>
+      </div>
       <div class="empty-state" *ngIf="selectedUserCompras.length === 0">
         <p>Este usuario no ha realizado compras.</p>
       </div>

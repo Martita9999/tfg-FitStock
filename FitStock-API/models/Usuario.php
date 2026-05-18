@@ -146,15 +146,6 @@ class Usuario {
         return $stmt->execute([$id]);
     }
 
-    /* limpiarForzarCambioPassword(): quita la marca de cambio forzado.
-       Se llama automáticamente cuando el usuario cambia su contraseña
-       con éxito desde el formulario de cambio forzado. */
-    public static function limpiarForzarCambioPassword($id) {
-        $conexion = Conexion::conectar();
-        $stmt = $conexion->prepare("UPDATE usuarios SET forzar_cambio_password = 0 WHERE id_usuario = ?");
-        return $stmt->execute([$id]);
-    }
-
     /* Getters para acceder a las propiedades privadas desde fuera */
     public function getId() { return $this->id; }
     public function getNombre() { return $this->nombre; }

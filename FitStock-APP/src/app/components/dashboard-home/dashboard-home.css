@@ -19,7 +19,7 @@
 
 /* ─── TARJETAS DE ESTADÍSTICAS ─── */
 /* Tarjetas de estadísticas con borde coloreado */
-.card { background: var(--card); border-radius: 16px; overflow: hidden; border: 2px solid var(--border); transition: box-shadow 0.2s, transform 0.15s; display: flex; flex-direction: column; height: 300px; }  /* Altura aumentada a 300px para que quepa el botón */
+.card { background: var(--card); border-radius: 16px; overflow: hidden; border: 2px solid var(--border); transition: box-shadow 0.2s, transform 0.15s; display: flex; flex-direction: column; min-height: 300px; height: auto; }
 .card .card-body { flex: 1; }
 
 .card.incidencias-card { border-color: #fca5a5; }
@@ -119,14 +119,129 @@
 .btn-link { background: none; border: none; color: var(--orange); font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: underline; font-family: inherit; padding: 0; }
 .btn-link:hover { color: var(--orange-dark); }
 
-/* ─── FORMULARIO DE CONTRASEÑA ─── */
-/* Formulario de cambio de contraseña */
-.password-form { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
-.input-sm { width: 100%; padding: 8px 12px; border: 2px solid var(--border); border-radius: 8px; font-size: 14px; outline: none; font-family: inherit; background: var(--card); color: var(--text); }
-.input-sm:focus { border-color: var(--orange); }
-.password-actions { display: flex; gap: 8px; }
-.btn-sm { padding: 6px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; border: none; }
-.btn-save-sm { background: var(--orange); color: white; }
-.btn-save-sm:hover { background: var(--orange-dark); }
-.btn-cancel-sm { background: var(--bg); color: var(--text-secondary); border: 1px solid var(--border); }
-.btn-cancel-sm:hover { background: var(--border); }
+/* ─── MODAL DE GASTOS (Productos Comprados) ─── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 20px;
+}
+
+.modal-card {
+  background: var(--card);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 520px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  border: 1px solid var(--border);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.modal-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 20px 24px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--orange) transparent;
+}
+.modal-body::-webkit-scrollbar {
+  width: 6px;
+}
+.modal-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+.modal-body::-webkit-scrollbar-thumb {
+  background: var(--orange);
+  border-radius: 3px;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+/* Responsive modal en móvil */
+@media (max-width: 480px) {
+  .modal-overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+  .modal-card {
+    max-width: 100vw;
+    max-height: 85vh;
+    border-radius: 16px 16px 0 0;
+  }
+}
+
+/* ─── MODAL DE CONTRASEÑA ─── */
+.modal-password .modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.input-modal {
+  width: 100%;
+  padding: 10px 14px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  font-size: 14px;
+  outline: none;
+  font-family: inherit;
+  background: var(--card);
+  color: var(--text);
+}
+.input-modal:focus {
+  border-color: var(--orange);
+}
+
+.btn-modal {
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  border: none;
+}
+.btn-modal-primary {
+  background: var(--orange);
+  color: white;
+}
+.btn-modal-primary:hover {
+  background: var(--orange-dark);
+}
+.btn-modal-secondary {
+  background: var(--bg);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+.btn-modal-secondary:hover {
+  background: var(--border);
+}

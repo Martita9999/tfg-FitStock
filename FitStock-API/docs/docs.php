@@ -95,6 +95,12 @@ $resources = [
       ['GET', '/api/resumen', 'Obtener resumen del dashboard (incidencias, stock bajo, máquinas)', 'admin-ent'],
     ]
   ],
+    '💳 Pagos' => [
+    'base' => '/api/crear-payment-intent',
+    'endpoints' => [
+      ['POST', '/api/crear-payment-intent', 'Crear un PaymentIntent de Stripe para pagar el carrito', 'all'],
+    ]
+  ],
 ];
 
 /*

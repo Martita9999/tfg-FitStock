@@ -8,6 +8,8 @@ import { IncidenciasService } from '../../services/incidencias.service';
 import { MaterialesService } from '../../services/materiales.service';
 import { UsuarioService } from '../../services/usuario';
 import { Incidencia, Material } from '../../interfaces/app.interfaces';
+import { ConfirmService } from '../../services/confirm.service';
+import { ToastService } from '../../services/toast.service';
 
 /*
  * IncidenciaList: CRUD de incidencias reportadas en máquinas.
@@ -27,6 +29,8 @@ export class IncidenciaList implements OnInit {
   private materialesService = inject(MaterialesService);
   private usuarioService = inject(UsuarioService);
   private route = inject(ActivatedRoute);
+  private confirmService = inject(ConfirmService);
+  private toastService = inject(ToastService);
   lista: Incidencia[] = [];
   materiales: Material[] = [];
   userRole = '';
@@ -129,11 +133,12 @@ export class IncidenciaList implements OnInit {
     });
   }
 
-  borrarIncidencia(id: number) {
-    if (!confirm('¿Borrar esta incidencia?')) return;
+  async borrarIncidencia(id: number) {
+    const ok = await this.confirmService.confirm('¿Borrar esta incidencia?');
+    if (!ok) return;
     this.incidenciasService.deleteIncidencia(id).subscribe({
       next: () => this.loadIncidencias(),
-      error: () => alert('Error al borrar la incidencia')
+      error: () => this.toastService.show('Error al borrar la incidencia', 'error')
     });
   }
 
