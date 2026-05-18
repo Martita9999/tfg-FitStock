@@ -41,7 +41,6 @@ header("Access-Control-Allow-Origin: $allowedOrigin");
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Access-Control-Allow-Credentials: true");
-
 /*
  * Cabeceras de seguridad HTTP:
  * Son medidas defensivas para proteger a los usuarios que visitan la app.

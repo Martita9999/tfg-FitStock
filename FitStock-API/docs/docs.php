@@ -55,6 +55,8 @@ $resources = [
       ['GET', '/api/prestamos', 'Obtener todos los préstamos', 'all'],
       ['POST', '/api/prestamos', 'Crear uno o varios préstamos', 'all'],
       ['PUT', '/api/prestamos/{id}', 'Actualizar fecha devolución o marcar como devuelto', 'all'],
+      ['PUT', '/api/prestamos/{id}/aprobar', 'Aprobar un préstamo pendiente', 'admin-ent'],
+      ['PUT', '/api/prestamos/{id}/confirmar-devolucion', 'Confirmar la devolución de un préstamo', 'admin-ent'],
       ['DELETE', '/api/prestamos/{id}', 'Eliminar un préstamo', 'admin-ent'],
     ]
   ],
@@ -72,6 +74,7 @@ $resources = [
     'endpoints' => [
       ['GET', '/api/productos', 'Obtener todos los productos', 'all'],
       ['POST', '/api/productos', 'Crear un producto', 'admin-ent'],
+      ['POST', '/api/productos/subir-imagen', 'Subir una imagen para un producto', 'admin-ent'],
       ['PUT', '/api/productos/{id}', 'Actualizar un producto', 'admin-ent'],
       ['DELETE', '/api/productos/{id}', 'Eliminar un producto', 'admin'],
     ]
