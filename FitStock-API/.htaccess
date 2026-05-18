@@ -1,0 +1,12 @@
+RewriteEngine On
+
+# Si el archivo o carpeta existe, se sirve directamente
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Peticiones a la API -> router.php
+RewriteRule ^api/ router.php [L]
+
+# Todo lo demás -> Angular index.html
+RewriteRule ^ index.html [L]

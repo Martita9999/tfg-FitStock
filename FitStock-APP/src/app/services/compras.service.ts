@@ -10,7 +10,7 @@ import { Compra } from '../interfaces/app.interfaces';
 @Injectable({ providedIn: 'root' })
 export class ComprasService {
   private http = inject(HttpClient);
-  private API_URL = 'http://localhost:8000/api';
+  private API_URL = 'https://chomsky.es/API/api';
   private opts = { withCredentials: true };
 
   /* getCompras(id_usuario?): filtra por usuario si se pasa. Cliente filtra por sesión automáticamente. */

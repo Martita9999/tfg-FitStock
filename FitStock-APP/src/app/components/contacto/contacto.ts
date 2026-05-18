@@ -26,7 +26,7 @@ export class ContactoComponent {
   success = false;
   sending = false;
 
-  private API_URL = 'http://localhost:8000/api';
+  private API_URL = 'https://chomsky.es/API/api';
 
   irAPortal() {
     this.router.navigate(['/']);

@@ -25,7 +25,7 @@ export interface LoginResponse {
 @Injectable({ providedIn: 'root' })
 export class UsuarioService {
   private http = inject(HttpClient);
-  private API_URL = 'http://localhost:8000/api';
+  private API_URL = 'https://chomsky.es/API/api';
 
   private currentUserSubject = new BehaviorSubject<Usuario | null>(null);  // Estado del usuario en memoria
   currentUser$ = this.currentUserSubject.asObservable();                    // Observable público para componentes

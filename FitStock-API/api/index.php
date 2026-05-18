@@ -13,31 +13,9 @@
  * Os explico cada sección para que entendáis cómo funciona cada endpoint.
  */
 
-/*
- * Cargamos las variables del .env antes de leer FRONTEND_URL,
- * para que getenv() encuentre el valor definido en el archivo.
- */
-require_once __DIR__ . "/../conexion.php";
-
-/*
- * Origen CORS dinámico:
- * Usamos la variable de entorno FRONTEND_URL para saber desde dónde
- * puede llegar el frontend. En desarrollo es localhost:4200 (Angular),
- * en producción será la URL donde esté desplegado el frontend.
- * 
- * Así no hace falta cambiar el código cuando pase a producción:
- * solo configurar la variable de entorno en el servidor.
- */
-$allowedOrigin = getenv('FRONTEND_URL') ?: 'http://localhost:4200';  // Origen CORS dinámico
-
-/*
- * Cabeceras CORS y tipo de contenido:
- * Decimos que devolvemos JSON, permitimos peticiones desde nuestro
- * frontend con cualquier método HTTP, y permitimos credenciales
- * (cookies de sesión) para mantener la autenticación.
- */
-header("Content-Type: application/json");                          // Respuestas en JSON
-header("Access-Control-Allow-Origin: $allowedOrigin");             // CORS: permitimos nuestro frontend
+// Cabeceras CORS para permitir peticiones desde el frontend Angular con credenciales
+header("Content-Type: application/json");                                          // Tipo de contenido JSON
+header("Access-Control-Allow-Origin: https://chomsky.es");                       // Origen permitido
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");  // Métodos HTTP permitidos
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Access-Control-Allow-Credentials: true");                  // Permitimos cookies de sesión
@@ -183,6 +161,7 @@ function checkRateLimitContacto($ip) {
  * También importamos PHPMailer para el envío de correos desde
  * el formulario de contacto.
  */
+require_once __DIR__ . "/../conexion.php";
 require_once __DIR__ . "/../models/Usuario.php";
 require_once __DIR__ . "/../models/Material.php";
 require_once __DIR__ . "/../models/Prestamo.php";
@@ -213,6 +192,13 @@ $path = explode('/', trim($uri, '/'));
 
 $action = $path[0] ?? '';
 $resource = $path[1] ?? '';
+
+// Normalizar ruta cuando está dentro de subcarpeta (ej: /API/api/login)
+if (strtoupper($path[0] ?? '') === 'API' && strtolower($path[1] ?? '') === 'api') {
+    array_shift($path); // Elimina 'API' → path = ['api', 'login', ...]
+    $action = $path[0] ?? '';
+    $resource = $path[1] ?? '';
+}
 
 /*
  * jsonResponse($data, $code):
@@ -245,7 +231,7 @@ function getJsonInput() {
  * Si es 'api', llamamos a handleApi() que procesa el recurso.
  * Si no, respondemos 404 porque no hay nada aquí.
  */
-switch ($action) {
+switch (strtolower($action)) {
     case 'api':
         handleApi($method, $resource, $path);
         break;
@@ -1002,7 +988,7 @@ function handleApi($method, $resource, $path) {
          * para evitar spam.
          * 
          * La contraseña de Gmail se obtiene de la variable de entorno
-         * MAIL_PASSWORD por seguridad, nunca hardcodeada.
+         * MAIL_PASSWORD configurada directamente para producción.
          * 
          * El proceso:
          * 1. Validar email y mensaje
@@ -1029,14 +1015,14 @@ function handleApi($method, $resource, $path) {
                     $mail->isSMTP();
                     $mail->Host       = 'smtp.gmail.com';
                     $mail->SMTPAuth   = true;
-                    $mail->Username   = 'infofitstock@gmail.com';
-                    $mail->Password   = getenv('MAIL_PASSWORD') ?: '';
+                    $mail->Username   = 'infofitstockmadrid@gmail.com';
+                    $mail->Password   = 'fzrnntoggugkocog';
                     $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
                     $mail->Port       = 587;
                     $mail->CharSet    = 'UTF-8';
 
-                    $mail->setFrom('infofitstock@gmail.com', 'FitStock Contacto');
-                    $mail->addAddress('infofitstock@gmail.com');
+                    $mail->setFrom('infofitstockmadrid@gmail.com', 'FitStock Contacto');
+                    $mail->addAddress('infofitstockmadrid@gmail.com');
                     $mail->addReplyTo($email);
 
                     $mail->Subject = 'Nuevo contacto desde FitStock';
