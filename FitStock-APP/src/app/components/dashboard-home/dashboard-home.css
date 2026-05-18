@@ -19,7 +19,7 @@
 
 /* ─── TARJETAS DE ESTADÍSTICAS ─── */
 /* Tarjetas de estadísticas con borde coloreado */
-.card { background: var(--card); border-radius: 16px; overflow: hidden; border: 2px solid var(--border); transition: box-shadow 0.2s, transform 0.15s; display: flex; flex-direction: column; height: 300px; }  /* Altura aumentada a 300px para que quepa el botón */
+.card { background: var(--card); border-radius: 16px; overflow: hidden; border: 2px solid var(--border); transition: box-shadow 0.2s, transform 0.15s; display: flex; flex-direction: column; height: 320px; }
 .card .card-body { flex: 1; }
 
 .card.incidencias-card { border-color: #fca5a5; }
@@ -27,6 +27,7 @@
 .card.maquinas-card { border-color: #93c5fd; }
 .card.perfil-card { border-color: #a78bfa; }
 .card.prestamos-card { border-color: #86efac; }
+.card.ventas-card { border-color: #f59e0b; }
 
 /* ─── CABECERAS DE TARJETAS ─── */
 /* Cabeceras coloreadas de cada tarjeta */
@@ -43,8 +44,8 @@
 
 /* ─── CUERPO DE TARJETA ─── */
 /* Cuerpo de la tarjeta */
-.card-body { padding: 20px; display: flex; flex-direction: column; }  /* Flex column para que btn-ver-todo se vaya al fondo con margin-top:auto */
-.card-body .btn-ver-todo { margin-top: auto; }  /* Empuja el botón al final de la card */
+.card-body { padding: 20px; display: flex; flex-direction: column; }
+.card-body .btn-ver-todo { margin-top: auto; }
 .card h3 { font-size: 15px; font-weight: 700; margin-bottom: 16px; color: var(--text); }
 
 /* ─── ESTADÍSTICAS ─── */
@@ -62,10 +63,20 @@
 .stock-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 4px; }
 
 /* Scrollbar en listas largas de stock, gastos y préstamos */
+.card.ventas-card .card-body {
+  overflow: hidden;
+  min-height: 0;
+}
+
 .card.stock-card .stock-list,
-.card.ventas-card .stock-list,
 .card.prestamos-card .stock-list {
-  max-height: 180px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.card.ventas-card .stock-list {
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
 }
 
@@ -78,7 +89,7 @@
 .card.stock-card .stock-list::-webkit-scrollbar-track,
 .card.ventas-card .stock-list::-webkit-scrollbar-track,
 .card.prestamos-card .stock-list::-webkit-scrollbar-track {
-  background: transparent;  /* Fondo del track transparente para evitar zona oscura */
+  background: transparent;
 }
 
 .card.stock-card .stock-list::-webkit-scrollbar-thumb,
@@ -88,7 +99,7 @@
   border-radius: 3px;
 }
 
-.stock-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; font-size: 14px; border-bottom: 1px solid var(--border); }  /* Sin background ni border-radius, solo separador inferior */
+.stock-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; font-size: 14px; border-bottom: 1px solid var(--border); }
 .stock-item.alert { background: var(--error-bg); }
 .stock-item.warning { background: var(--warning-bg); }
 .item-name { font-weight: 500; color: var(--text); }
@@ -96,13 +107,13 @@
 .item-qty.alert { color: #dc2626; }
 .item-qty.warning { color: #d97706; }
 .no-data { color: var(--text-secondary); font-size: 14px; font-style: italic; padding: 8px 0; }
-.stock-item-col { flex-direction: column; align-items: flex-start; gap: 2px; }  /* Vertical: nombre, cantidad+total, fecha */
-.item-date { font-size: 11px; color: var(--text-secondary); }  /* Fecha de compra en tamaño pequeño */
+.stock-item-col { flex-direction: column; align-items: flex-start; gap: 2px; }
+.item-date { font-size: 11px; color: var(--text-secondary); }
 
 /* ─── ENLACES ─── */
 /* Enlace a detalle de tarjeta */
-.card-link { display: inline-block; margin-top: 16px; font-size: 13px; font-weight: 600; color: var(--orange); text-decoration: none; }
-.btn-ver-todo { display: block; width: 100%; margin-top: 16px; padding: 8px 16px; background: var(--orange); color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; text-align: center; }  /* Botón naranja ancho completo para "Mostrar todo" */
+.card-link { display: inline-block; margin-top: auto; font-size: 13px; font-weight: 600; color: var(--orange); text-decoration: none; }
+.btn-ver-todo { display: block; width: 100%; margin-top: 16px; padding: 8px 16px; background: var(--orange); color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; text-align: center; }
 .btn-ver-todo:hover { background: var(--orange-dark); }
 .id-tag { background: var(--border); padding: 1px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; color: var(--text-secondary); margin-left: 4px; }
 

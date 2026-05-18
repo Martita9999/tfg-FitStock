@@ -66,6 +66,7 @@ class Compra {
 
     /* crear(): inserta una nueva compra en la BD.
        Calculamos el total automáticamente (cantidad * precio).
+       El stock se descuenta desde el frontend antes de crear la compra.
        Devuelve el ID de la compra creada. */
     public static function crear($id_usuario, $id_producto, $cantidad, $precio_unitario) {
         $conexion = Conexion::conectar();
