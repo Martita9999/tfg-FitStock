@@ -9,6 +9,8 @@ import { PrestamosService } from '../../services/prestamos.service';
 import { MaterialesService } from '../../services/materiales.service';
 import { UsuarioService } from '../../services/usuario';
 import { Prestamo, Usuario, Material } from '../../interfaces/app.interfaces';
+import { ConfirmService } from '../../services/confirm.service';
+import { ToastService } from '../../services/toast.service';
 
 /*
  * MaterialGroup: interfaz local para agrupar materiales por nombre
@@ -37,6 +39,8 @@ export class PrestamoList implements OnInit {
   private materialesService = inject(MaterialesService);
   private usuarioService = inject(UsuarioService);
   private route = inject(ActivatedRoute);
+  private confirmService = inject(ConfirmService);
+  private toastService = inject(ToastService);
   materiales: Material[] = [];
   prestamos: Prestamo[] = [];
   prestamosPendientesDev: Prestamo[] = [];
@@ -296,13 +300,14 @@ export class PrestamoList implements OnInit {
     });
   }
 
-  borrarUnidad(g: MaterialGroup) {
+  async borrarUnidad(g: MaterialGroup) {
     const disponible = g.idsDisponibles[0];
     if (!disponible) {
       this.error = 'No hay unidades disponibles para borrar';
       return;
     }
-    if (!confirm(`¿Borrar una unidad de "${g.nombre}"?`)) return;
+    const ok = await this.confirmService.confirm(`¿Borrar una unidad de "${g.nombre}"?`);
+    if (!ok) return;
     this.error = '';
     this.materialesService.deleteMaterial(disponible).subscribe({
       next: () => this.loadMateriales(),
@@ -348,11 +353,12 @@ export class PrestamoList implements OnInit {
     });
   }
 
-  borrarPrestamo(id: number) {
-    if (!confirm('¿Borrar este préstamo?')) return;
+  async borrarPrestamo(id: number) {
+    const ok = await this.confirmService.confirm('¿Borrar este préstamo?');
+    if (!ok) return;
     this.prestamosService.deletePrestamo(id).subscribe({
       next: () => { this.loadPrestamos(); this.cargarPendientes(); },
-      error: () => alert('Error al borrar el préstamo')
+      error: () => this.toastService.show('Error al borrar el préstamo', 'error')
     });
   }
 

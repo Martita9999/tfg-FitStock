@@ -1,9 +1,6 @@
-
--- FitStock - Base de datos del gimnasio
-DROP DATABASE IF EXISTS fitstock;
-
-CREATE DATABASE fitstock CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE fitstock;
+-- FitStock - Esquema de base de datos para importar en phpMyAdmin
+-- Copia este contenido y pégalo en la pestaña SQL de phpMyAdmin
+-- Asegúrate de tener seleccionada la base de datos antes de importar
 
 -- TABLA: usuarios
 CREATE TABLE usuarios (
@@ -12,8 +9,7 @@ CREATE TABLE usuarios (
     email VARCHAR(100) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     rol ENUM('admin','entrenador','cliente') NOT NULL DEFAULT 'cliente',
-    forzar_cambio_password TINYINT(1) NOT NULL DEFAULT 0, -- 1 = obliga al usuario a cambiar su contraseña en el próximo login; se usa al crear usuarios administrados o restablecer credenciales
-    stripe_pm_id VARCHAR(255) DEFAULT NULL, -- ID del método de pago de Stripe guardado para cobros recurrentes sin reintroducir tarjeta
+    forzar_cambio_password TINYINT(1) NOT NULL DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -30,9 +26,7 @@ CREATE TABLE material (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
-
 -- TABLA: prestamos
-
 CREATE TABLE prestamos (
     id_prestamo INT AUTO_INCREMENT PRIMARY KEY,
     id_usuario INT,
@@ -44,9 +38,7 @@ CREATE TABLE prestamos (
     FOREIGN KEY (id_material) REFERENCES material(id_material) ON DELETE SET NULL
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
-
 -- TABLA: productos_stock
-
 CREATE TABLE productos_stock (
     id_producto INT AUTO_INCREMENT PRIMARY KEY,
     nombre_prod VARCHAR(100) NOT NULL,
@@ -57,9 +49,7 @@ CREATE TABLE productos_stock (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
-
 -- TABLA: compras
-
 CREATE TABLE compras (
     id_compra INT AUTO_INCREMENT PRIMARY KEY,
     id_usuario INT NOT NULL,
@@ -73,7 +63,6 @@ CREATE TABLE compras (
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- TABLA: incidencias
-
 CREATE TABLE incidencias (
     id_incidencia INT AUTO_INCREMENT PRIMARY KEY,
     id_material INT,
@@ -87,9 +76,7 @@ CREATE TABLE incidencias (
     FOREIGN KEY (id_user_rep) REFERENCES usuarios(id_usuario) ON DELETE SET NULL
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
-
 -- DATOS DE EJEMPLO
-
 
 -- Usuarios (password para todos: "password")
 INSERT INTO usuarios (nombre, email, password_hash, rol) VALUES
@@ -176,8 +163,3 @@ INSERT INTO compras (id_usuario, id_producto, cantidad, precio_unitario, total, 
 (2, 1, 3, 2.50, 7.50, '2026-05-08 16:00:00'),
 (3, 4, 1, 40.00, 40.00, '2026-05-10 09:00:00'),
 (2, 5, 2, 20.00, 40.00, '2026-05-12 11:00:00');
-
--- Usuario de BD para la aplicacion (ejecutar como root si no existe)
-CREATE USER IF NOT EXISTS fitstock IDENTIFIED BY 'Tokio2324';
-GRANT ALL ON fitstock.* TO fitstock;
-FLUSH PRIVILEGES;

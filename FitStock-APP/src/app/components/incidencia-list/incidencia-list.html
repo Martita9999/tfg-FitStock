@@ -12,7 +12,8 @@
   @if (vista === 'completa' || vista === 'activas') {
   <!-- Tabla de incidencias activas (no resueltas) -->
   <h3 class="section-title inc-active-title"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="6"/></svg> Incidencias Activas</h3>
-  <table class="data-table" *ngIf="incidenciasActivas.length > 0">
+  <div class="table-wrapper" *ngIf="incidenciasActivas.length > 0">
+  <table class="data-table">
     <colgroup>
       <col style="width:18%">
       <col style="width:13%">
@@ -35,39 +36,40 @@
         <th class="td-center" *ngIf="userRole !== 'cliente'">Acciones</th>
       </tr>
     </thead>
-    <tbody>
-      <tr *ngFor="let inc of incidenciasActivas">
-        <td>
-          <strong>{{ inc.nombre_material || '—' }}</strong>
-          <span class="id-tag">{{ inc.id_tag_material || '—' }}</span>
-        </td>
-        <td>{{ inc.ubicacion || '—' }}</td>
-        <td>{{ inc.descripcion }}</td>
-        <td class="td-center">
-          <span class="priority-badge"
-                [class.priority-high]="inc.prioridad === 'alta'"
-                [class.priority-medium]="inc.prioridad === 'media'"
-                [class.priority-low]="inc.prioridad === 'baja'">
-            {{ inc.prioridad | uppercase }}
-          </span>
-        </td>
-        <td class="td-center">
-          <span class="status-badge"
-                [class.averiado]="inc.estado === 'abierta'"
-                [class.en_reparacion]="inc.estado === 'en_proceso'">
-            {{ getEstadoLabel(inc.estado) }}
-          </span>
-        </td>
-        <td class="td-center">{{ inc.created_at ? (inc.created_at | date:'dd/MM/yyyy') : '—' }}</td>
-        <td class="td-center" *ngIf="userRole !== 'cliente'">
-          <div class="action-btns" style="justify-content:center">
-            <button class="btn-edit" (click)="abrirEditar(inc)" title="Editar incidencia"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></button>
-            <button class="btn-delete" (click)="borrarIncidencia(inc.id)" title="Borrar incidencia"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
-          </div>
-        </td>
-      </tr>
-    </tbody>
+      <tbody>
+        <tr *ngFor="let inc of incidenciasActivas">
+          <td data-label="Máquina">
+            <strong>{{ inc.nombre_material || '—' }}</strong>
+            <span class="id-tag">{{ inc.id_tag_material || '—' }}</span>
+          </td>
+          <td data-label="Ubicación">{{ inc.ubicacion || '—' }}</td>
+          <td data-label="Descripción">{{ inc.descripcion }}</td>
+          <td class="td-center" data-label="Prioridad">
+            <span class="priority-badge"
+                  [class.priority-high]="inc.prioridad === 'alta'"
+                  [class.priority-medium]="inc.prioridad === 'media'"
+                  [class.priority-low]="inc.prioridad === 'baja'">
+              {{ inc.prioridad | uppercase }}
+            </span>
+          </td>
+          <td class="td-center" data-label="Estado">
+            <span class="status-badge"
+                  [class.averiado]="inc.estado === 'abierta'"
+                  [class.en_reparacion]="inc.estado === 'en_proceso'">
+              {{ getEstadoLabel(inc.estado) }}
+            </span>
+          </td>
+          <td class="td-center" data-label="Inicio">{{ inc.created_at ? (inc.created_at | date:'dd/MM/yyyy') : '—' }}</td>
+          <td class="td-center" data-label="Acciones" *ngIf="userRole !== 'cliente'">
+            <div class="action-btns" style="justify-content:center">
+              <button class="btn-edit" (click)="abrirEditar(inc)" title="Editar incidencia"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></button>
+              <button class="btn-delete" (click)="borrarIncidencia(inc.id)" title="Borrar incidencia" *ngIf="userRole === 'admin'"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
   </table>
+  </div>
 
   <!-- Mensaje de tabla vacía (activas) -->
   <div class="empty-state" *ngIf="incidenciasActivas.length === 0">
@@ -92,7 +94,8 @@
   </div>
   }
   </div>
-  <table class="data-table" *ngIf="incidenciasResueltas.length > 0">
+  <div class="table-wrapper" *ngIf="incidenciasResueltas.length > 0">
+  <table class="data-table">
     <colgroup>
       <col style="width:16%">
       <col style="width:12%">
@@ -115,33 +118,34 @@
         <th class="td-center" *ngIf="userRole !== 'cliente'">Acciones</th>
       </tr>
     </thead>
-    <tbody>
-      <tr *ngFor="let inc of incidenciasResueltas">
-        <td>
-          <strong>{{ inc.nombre_material || '—' }}</strong>
-          <span class="id-tag">{{ inc.id_tag_material || '—' }}</span>
-        </td>
-        <td>{{ inc.ubicacion || '—' }}</td>
-        <td>{{ inc.descripcion }}</td>
-        <td class="td-center">
-          <span class="priority-badge"
-                [class.priority-high]="inc.prioridad === 'alta'"
-                [class.priority-medium]="inc.prioridad === 'media'"
-                [class.priority-low]="inc.prioridad === 'baja'">
-            {{ inc.prioridad | uppercase }}
-          </span>
-        </td>
-        <td class="td-center">{{ inc.created_at ? (inc.created_at | date:'dd/MM/yyyy') : '—' }}</td>
-        <td class="td-center">{{ inc.fecha_resolucion ? (inc.fecha_resolucion | date:'dd/MM/yyyy') : '—' }}</td>
-        <td class="td-center" *ngIf="userRole !== 'cliente'">
-          <div class="action-btns" style="justify-content:center">
-            <button class="btn-edit" (click)="abrirEditar(inc)" title="Editar incidencia"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></button>
-            <button class="btn-delete" (click)="borrarIncidencia(inc.id)" title="Borrar incidencia"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
-          </div>
-        </td>
-      </tr>
-    </tbody>
+      <tbody>
+        <tr *ngFor="let inc of incidenciasResueltas">
+          <td data-label="Máquina">
+            <strong>{{ inc.nombre_material || '—' }}</strong>
+            <span class="id-tag">{{ inc.id_tag_material || '—' }}</span>
+          </td>
+          <td data-label="Ubicación">{{ inc.ubicacion || '—' }}</td>
+          <td data-label="Descripción">{{ inc.descripcion }}</td>
+          <td class="td-center" data-label="Prioridad">
+            <span class="priority-badge"
+                  [class.priority-high]="inc.prioridad === 'alta'"
+                  [class.priority-medium]="inc.prioridad === 'media'"
+                  [class.priority-low]="inc.prioridad === 'baja'">
+              {{ inc.prioridad | uppercase }}
+            </span>
+          </td>
+          <td class="td-center" data-label="Inicio">{{ inc.created_at ? (inc.created_at | date:'dd/MM/yyyy') : '—' }}</td>
+          <td class="td-center" data-label="Fin">{{ inc.fecha_resolucion ? (inc.fecha_resolucion | date:'dd/MM/yyyy') : '—' }}</td>
+          <td class="td-center" data-label="Acciones" *ngIf="userRole !== 'cliente'">
+            <div class="action-btns" style="justify-content:center">
+              <button class="btn-edit" (click)="abrirEditar(inc)" title="Editar incidencia"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></button>
+              <button class="btn-delete" (click)="borrarIncidencia(inc.id)" title="Borrar incidencia" *ngIf="userRole === 'admin'"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
   </table>
+  </div>
 
   <!-- Mensaje de tabla vacía (resueltas) -->
   <div class="empty-state" *ngIf="incidenciasResueltas.length === 0">

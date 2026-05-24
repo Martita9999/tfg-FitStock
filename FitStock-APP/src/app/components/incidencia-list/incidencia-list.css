@@ -4,6 +4,12 @@
   padding-right: 16px;
 }
 
+@media (max-width: 1028px) {
+  .page-content {
+    padding-right: 0;
+  }
+}
+
 /* ─── TÍTULOS ─── */
 .section-title {
   font-size: 18px;
@@ -117,4 +123,83 @@
   background: var(--orange);
   color: white;
   border-color: var(--orange);
+}
+
+/* ─── RESPONSIVE (sidebar abierto): tabla → cards ─── */
+@media (max-width: 1028px) {
+  .header-actions {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .section-header-row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .section-header-row .section-title {
+    width: 100%;
+  }
+
+  .export-buttons {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .data-table,
+  .data-table thead,
+  .data-table tbody,
+  .data-table tr,
+  .data-table td {
+    display: block; /* Convertir tabla en bloques para cards */
+  }
+
+  .data-table thead { display: none; } /* Ocultar cabecera, usamos data-label */
+
+  /* Cada fila → card con borde redondeado */
+  .data-table tr {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+
+  /* Cada celda → fila flex con etiqueta a la izquierda y valor a la derecha */
+  .data-table td {
+    padding: 6px 0;
+    border: none;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 13px;
+    min-width: 0;
+    overflow: hidden;
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+
+  /* Etiqueta generada desde data-label, no se encoge */
+  .data-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 11px;
+    text-transform: uppercase;
+    min-width: 90px;
+    flex-shrink: 0;
+  }
+
+  .data-table td:first-child { padding-top: 0; }
+  .data-table td:last-child { padding-bottom: 0; }
+
+  .action-btns {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .data-table td .action-btns {
+    justify-content: flex-start !important;
+  }
 }

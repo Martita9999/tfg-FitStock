@@ -7,6 +7,8 @@ import { ComprasService } from '../../services/compras.service';
 import { PrestamosService } from '../../services/prestamos.service';
 import { IncidenciasService } from '../../services/incidencias.service';
 import { Usuario } from '../../interfaces/app.interfaces';
+import { ConfirmService } from '../../services/confirm.service';
+import { ToastService } from '../../services/toast.service';
 
 /*
  * UsuarioList: CRUD de usuarios del sistema.
@@ -27,6 +29,8 @@ export class UsuarioList implements OnInit {
   private incidenciasService = inject(IncidenciasService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private confirmService = inject(ConfirmService);
+  private toastService = inject(ToastService);
   lista: Usuario[] = [];
   listaFiltrada: Usuario[] = [];
   userRole = '';
@@ -216,8 +220,9 @@ export class UsuarioList implements OnInit {
   }
 
   /* forzarCambioPassword: marca usuario para que cambie contraseña en próximo login */
-  forzarCambioPassword(u: Usuario) {
-    if (!confirm(`¿Enviar solicitud de cambio de contraseña a "${u.nombre}"?`)) return;
+  async forzarCambioPassword(u: Usuario) {
+    const ok = await this.confirmService.confirm(`¿Enviar solicitud de cambio de contraseña a "${u.nombre}"?`);
+    if (!ok) return;
     this.usuarioService.forzarCambioPassword(u.id).subscribe({
       next: () => {
         u.forzar_cambio_password = 1;                                     // Actualiza visualmente
@@ -227,11 +232,12 @@ export class UsuarioList implements OnInit {
     });
   }
 
-  borrarUsuario(id: number, nombre: string) {
-    if (!confirm(`¿Borrar usuario "${nombre}"?`)) return;
+  async borrarUsuario(id: number, nombre: string) {
+    const ok = await this.confirmService.confirm(`¿Borrar usuario "${nombre}"?`);
+    if (!ok) return;
     this.usuarioService.deleteUsuario(id).subscribe({
       next: () => this.loadUsuarios(),
-      error: () => alert('Error al borrar el usuario')
+      error: () => this.toastService.show('Error al borrar el usuario', 'error')
     });
   }
 }

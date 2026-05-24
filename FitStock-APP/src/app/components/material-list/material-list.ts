@@ -6,6 +6,8 @@ import { MaterialesService } from '../../services/materiales.service';
 import { IncidenciasService } from '../../services/incidencias.service';
 import { UsuarioService } from '../../services/usuario';
 import { Material, Incidencia } from '../../interfaces/app.interfaces';
+import { ConfirmService } from '../../services/confirm.service';
+import { ToastService } from '../../services/toast.service';
 
 /*
  * MaterialList: CRUD de máquinas del gimnasio.
@@ -24,6 +26,8 @@ export class MaterialList implements OnInit {
   private incidenciasService = inject(IncidenciasService);
   private usuarioService = inject(UsuarioService);
   private route = inject(ActivatedRoute);
+  private confirmService = inject(ConfirmService);
+  private toastService = inject(ToastService);
   lista: Material[] = [];
   incidencias: Incidencia[] = [];
   userRole = '';
@@ -159,11 +163,12 @@ export class MaterialList implements OnInit {
     });
   }
 
-  borrarMaterial(id: number, nombre: string) {
-    if (!confirm(`¿Borrar material "${nombre}"?`)) return;
+  async borrarMaterial(id: number, nombre: string) {
+    const ok = await this.confirmService.confirm(`¿Borrar material "${nombre}"?`);
+    if (!ok) return;
     this.materialesService.deleteMaterial(id).subscribe({
       next: () => this.loadMateriales(),
-      error: () => alert('Error al borrar el material')
+      error: () => this.toastService.show('Error al borrar el material', 'error')
     });
   }
 

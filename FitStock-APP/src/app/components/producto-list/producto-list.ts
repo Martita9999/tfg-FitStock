@@ -6,6 +6,8 @@ import { ProductosService } from '../../services/productos.service';
 import { UsuarioService } from '../../services/usuario';
 import { CartService } from '../../services/cart.service';
 import { ProductoStock } from '../../interfaces/app.interfaces';
+import { ConfirmService } from '../../services/confirm.service';
+import { ToastService } from '../../services/toast.service';
 
 /*
  * ProductoList: CRUD de productos del inventario.
@@ -23,6 +25,8 @@ export class ProductoList implements OnInit {
   private productosService = inject(ProductosService);
   private usuarioService = inject(UsuarioService);
   cartService = inject(CartService);
+  private confirmService = inject(ConfirmService);
+  private toastService = inject(ToastService);
   lista: ProductoStock[] = [];
   userRole = '';
   selectedProductId: number | null = null;
@@ -164,11 +168,12 @@ export class ProductoList implements OnInit {
     }
   }
 
-  borrarProducto(id: number, nombre: string) {
-    if (!confirm(`¿Borrar producto "${nombre}"?`)) return;
+  async borrarProducto(id: number, nombre: string) {
+    const ok = await this.confirmService.confirm(`¿Borrar producto "${nombre}"?`);
+    if (!ok) return;
     this.productosService.deleteProducto(id).subscribe({
       next: () => this.loadProductos(),
-      error: () => alert('Error al borrar el producto')
+      error: () => this.toastService.show('Error al borrar el producto', 'error')
     });
   }
 }
